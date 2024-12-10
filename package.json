@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
+    "@hookform/resolvers": "^3.9.1",
     "@react-navigation/native": "^7.0.0",
     "expo": "~52.0.17",
     "expo-constants": "~17.0.3",
@@ -33,6 +34,7 @@
     "react-native-screens": "~4.1.0",
     "react-native-web": "~0.19.10",
     "twrnc": "^4.6.0",
+    "zod": "^3.23.8",
     "zustand": "^4.5.1"
   },
   "devDependencies": {
