@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
@@ -23,19 +22,19 @@ export default function GenerateInvoice() {
   const methods = useForm<SenderInfo>({
     resolver: zodResolver(senderInfoSchema),
     defaultValues: {
-      name: 'Hamdi',
-      address: '123 rue de la paix',
-      tva: '1234567890',
+      name: 'Hatem',
+      address: '456 rue alger',
+      tva: '+21698307956',
     },
   });
   const onSubmit = (data: SenderInfo) => {
-    router.push('/invoices/generate/recipient');
+    console.log('All good, go to next step', data);
   };
 
   return (
     <FormProvider {...methods}>
       <KeyboardAwareScrollView>
-        <Text className="mb-4 text-2xl font-bold">Sender info</Text>
+        <Text className="mb-4 text-2xl font-bold">Recipient info</Text>
 
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
         <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />
