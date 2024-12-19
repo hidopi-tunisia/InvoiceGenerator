@@ -1,22 +1,45 @@
 import { forwardRef } from 'react';
 import { Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
+import { style } from 'twrnc';
 
 type ButtonProps = {
-  title: string;
+  title: string; // Titre du bouton
+  variant?: 'primary' | 'secondary' | 'link'; // Variantes disponibles
 } & TouchableOpacityProps;
 
-export const Button = forwardRef<View, ButtonProps>(({ title, ...touchableProps }, ref) => {
-  return (
-    <TouchableOpacity
-      ref={ref}
-      {...touchableProps}
-      className={`${styles.button} ${touchableProps.className}`}>
-      <Text className={styles.buttonText}>{title}</Text>
-    </TouchableOpacity>
-  );
-});
+export const Button = forwardRef<View, ButtonProps>(
+  ({ title, variant = 'primary', ...touchableProps }, ref) => {
+    const variantStyles = {
+      primary: styles.primary,
+      secondary: styles.secondary,
+      link: styles.link,
+    };
+
+    return (
+      <TouchableOpacity
+        ref={ref}
+        {...touchableProps}
+        className={`${styles.baseButton} ${variantStyles[variant]?.button} ${
+          touchableProps.className || ''
+        }`}>
+        <Text className={variantStyles[variant]?.text}>{title}</Text>
+      </TouchableOpacity>
+    );
+  }
+);
 
 const styles = {
-  button: 'items-center bg-indigo-500 rounded-[28px] shadow-md p-4',
-  buttonText: 'text-white text-lg font-semibold text-center',
+  baseButton: 'items-center bg-indigo-500 rounded-[28px] shadow-md p-4',
+  primary: {
+    button: 'bg-indigo-500 shadow-md',
+    text: 'text-white text-lg font-semibold text-center',
+  },
+  secondary: {
+    button: 'border-2 border-indigo-500 bg-white',
+    text: 'text-indigo-500 text-lg font-semibold text-center',
+  },
+  link: {
+    button: 'bg-transparent p-4',
+    text: 'text-indigo-500 text-lg font-bold',
+  },
 };

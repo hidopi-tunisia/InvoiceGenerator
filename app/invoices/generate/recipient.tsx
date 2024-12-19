@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
@@ -28,7 +29,7 @@ export default function GenerateInvoice() {
     },
   });
   const onSubmit = (data: SenderInfo) => {
-    console.log('All good, go to next step', data);
+    router.push('/invoices/generate/invoice-info');
   };
 
   return (
