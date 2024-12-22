@@ -3,36 +3,26 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
-import { z } from 'zod';
 
 import { Button } from '../../../components/Button';
 import CustomInputText from '../../../components/CustomInputText';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
+import { InvoiceInfo, InvoiceInfoSchema } from '../../schema/invoice';
 
-const InvoiceInfoSchema = z.object({
-  invoiceNumber: z
-    .string({ required_error: 'Le numéro de facture est obligatoire' })
-    .min(1, 'Le numéro de facture est obligatoire'),
-  invoiceDate: z
-    .string({ required_error: 'La date de facture est obligatoire' })
-    .min(1, 'La date de facture est obligatoire'),
-  invoiceDueDate: z
-    .string({ required_error: "La date d'échéance de facture est obligatoire" })
-    .min(1, "La date d'échéance de facture est obligatoire"),
-});
-
-type InvoiceInfo = z.infer<typeof InvoiceInfoSchema>;
+import { useStore } from '~/store';
 
 export default function GenerateInvoice() {
+  const addInvoiceInfo = useStore((state) => state.addInvoiceInfo);
   const methods = useForm<InvoiceInfo>({
     resolver: zodResolver(InvoiceInfoSchema),
     defaultValues: {
-      invoiceNumber: '1234567890',
+      invoiceNumber: 'INV-1408-2024',
       invoiceDate: new Date().toISOString(),
       invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
     },
   });
   const onSubmit = (data: InvoiceInfo) => {
+    addInvoiceInfo(data);
     router.push('/invoices/generate/items');
   };
 

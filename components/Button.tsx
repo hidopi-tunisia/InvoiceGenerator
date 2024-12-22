@@ -19,7 +19,7 @@ export const Button = forwardRef<View, ButtonProps>(
       <TouchableOpacity
         ref={ref}
         {...touchableProps}
-        className={`${styles.baseButton} ${variantStyles[variant]?.button} ${
+        className={`${styles.primary} ${variantStyles[variant]?.button} ${
           touchableProps.className || ''
         }`}>
         <Text className={variantStyles[variant]?.text}>{title}</Text>
@@ -29,9 +29,8 @@ export const Button = forwardRef<View, ButtonProps>(
 );
 
 const styles = {
-  baseButton: 'items-center bg-indigo-500 rounded-[28px] shadow-md p-4',
   primary: {
-    button: 'bg-indigo-500 shadow-md',
+    button: 'items-center bg-indigo-500 rounded-[28px] shadow-md p-4',
     text: 'text-white text-lg font-semibold text-center',
   },
   secondary: {
@@ -39,7 +38,7 @@ const styles = {
     text: 'text-indigo-500 text-lg font-semibold text-center',
   },
   link: {
-    button: 'bg-transparent p-4',
+    button: 'items-center p-4',
     text: 'text-indigo-500 text-lg font-bold',
   },
 };

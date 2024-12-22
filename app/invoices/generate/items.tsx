@@ -3,25 +3,18 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { z } from 'zod';
 import tw from 'twrnc';
+import { z } from 'zod';
+
 import { Button } from '../../../components/Button';
 import CustomInputText from '../../../components/CustomInputText';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
+import { InvoiceItem, invoiceItemSchema } from '../../schema/invoice';
 
-// Définition du schéma Zod pour validation
-const invoiceItemSchema = z.object({
-  name: z.string({ required_error: 'Le nom est obligatoire' }).min(1, 'Le nom est obligatoire'),
-  quantity: z
-    .number({ required_error: 'La quantité est obligatoire' })
-    .min(1, 'La quantité est obligatoire'),
-  price: z.number({ required_error: 'Le prix est obligatoire' }).min(1, 'Le prix est obligatoire'),
-});
-
-type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+import { useStore } from '~/store';
 
 const itemsSchema = z.object({
-  items: z.array(invoiceItemSchema),
+  items: z.array(invoiceItemSchema), //TODO: Add minimum 1 item
 });
 
 type Items = z.infer<typeof itemsSchema>;
@@ -32,10 +25,11 @@ type FormValues = {
 
 export default function GenerateInvoice() {
   // Configuration du formulaire avec React Hook Form et Zod
+  const addItems = useStore((data) => data.addItems);
   const methods = useForm<FormValues>({
     resolver: zodResolver(itemsSchema),
     defaultValues: {
-      items: [{ name: 'Prestation', quantity: 1 }],
+      items: [{ name: 'Prestation', quantity: 1, price: 55 }],
     },
   });
   const { control, handleSubmit } = methods;
@@ -43,9 +37,9 @@ export default function GenerateInvoice() {
     control,
     name: 'items',
   });
-  const onSubmit = (data: InvoiceItem) => {
-    console.log(data);
-    //router.push('/invoices/generate/invoice-info');
+  const onSubmit = (data: any) => {
+    addItems(data.items);
+    router.push('/invoices/generate/summary');
   };
 
   return (
@@ -54,7 +48,7 @@ export default function GenerateInvoice() {
         {/* Champs de formulaire */}
 
         {/* Champs dynamiques */}
-        <View className="mb-5 gap-3 shadow">
+        <View className="mb-5 gap-1 shadow">
           {fields.map((item, index) => (
             <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-50 p-4 shadow-md">
               {/* Ajout de la marge inférieure pour séparer les items */}
@@ -109,7 +103,6 @@ export default function GenerateInvoice() {
             </View>
           ))}
           {/* Bouton pour ajouter un nouvel item (link) */}
-
           <Button
             variant="link"
             title="Add item"

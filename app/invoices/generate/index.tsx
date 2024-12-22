@@ -3,32 +3,26 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
-import { z } from 'zod';
 
 import { Button } from '../../../components/Button';
 import CustomInputText from '../../../components/CustomInputText';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
+import { BusinessEntity, businessEntitySchema } from '../../schema/invoice';
 
-const senderInfoSchema = z.object({
-  name: z.string({ required_error: 'Le nom est obligatoire' }).min(1, 'Le nom est obligatoire'),
-  address: z
-    .string({ required_error: "L'adresse postale est obligatoire" })
-    .min(1, "L'adresse obligatoire"),
-  tva: z.string().optional(),
-});
-
-type SenderInfo = z.infer<typeof senderInfoSchema>;
+import { useStore } from '~/store';
 
 export default function GenerateInvoice() {
-  const methods = useForm<SenderInfo>({
-    resolver: zodResolver(senderInfoSchema),
+  const addSenderInfo = useStore((data) => data.addSenderInfo);
+  const methods = useForm<BusinessEntity>({
+    resolver: zodResolver(businessEntitySchema),
     defaultValues: {
-      name: 'Hamdi',
-      address: '123 rue de la paix',
+      name: 'Hidopi',
+      address: '105 Rue de Verdun, Bagneux, 92220',
       tva: '1234567890',
     },
   });
-  const onSubmit = (data: SenderInfo) => {
+  const onSubmit = (data: BusinessEntity) => {
+    addSenderInfo(data);
     router.push('/invoices/generate/recipient');
   };
 
