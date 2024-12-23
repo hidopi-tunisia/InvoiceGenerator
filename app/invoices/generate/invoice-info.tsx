@@ -17,8 +17,8 @@ export default function GenerateInvoice() {
     resolver: zodResolver(InvoiceInfoSchema),
     defaultValues: {
       invoiceNumber: 'INV-1408-2024',
-      invoiceDate: new Date().toISOString(),
-      invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
+      invoiceDate: new Date().toLocaleDateString(),
+      invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toLocaleDateString(),
     },
   });
   const onSubmit = (data: InvoiceInfo) => {
