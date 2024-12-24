@@ -35,7 +35,10 @@
     "react-native-web": "~0.19.10",
     "twrnc": "^4.6.0",
     "zod": "^3.23.8",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "expo-print": "~14.0.2",
+    "expo-sharing": "~13.0.0",
+    "expo-file-system": "~18.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

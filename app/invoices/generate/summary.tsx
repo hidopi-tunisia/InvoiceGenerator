@@ -1,5 +1,8 @@
 import React from 'react';
 import { Text, View } from 'react-native';
+import * as Print from 'expo-print';
+import { shareAsync } from 'expo-sharing';
+import { generateInvoicePdf } from '../../utils/pdf' ;
 
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView'; // Utilisation du composant personnalisé
@@ -13,6 +16,11 @@ export default function InvoiceSummary() {
   const subtotal = useStore((data) => data.getSubtotal());
   const total = useStore((data) => data.getTotal());
 
+  const handleGeneratePdf = () =>
+  {
+    generateInvoicePdf();
+  };
+
   // Calculs financiers
   // const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   // const tva = subtotal * 0.2; // 20% de TVA
@@ -21,7 +29,7 @@ export default function InvoiceSummary() {
 
   return (
     <KeyboardAwareScrollView>
-      <View className='flex-1 gap-4'>
+      <View className='flex-1 gap-1'>
       {/* Header avec Invoice Info */}
       <View className="mb-6 rounded-b-lg bg-indigo-500 p-4 shadow-lg">
         <Text className="mb-2 text-2xl font-bold text-white">
@@ -117,7 +125,7 @@ export default function InvoiceSummary() {
       <Button
         title="Confirmer et genérer"
         className="mt-auto"
-        onPress={() => console.log('Confirmer et envoyer')}
+        onPress={handleGeneratePdf}
       />
       </View>
     </KeyboardAwareScrollView>
