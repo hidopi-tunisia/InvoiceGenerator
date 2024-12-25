@@ -17,8 +17,8 @@ export default function GenerateInvoice() {
     resolver: zodResolver(businessEntitySchema),
     defaultValues: {
       name: 'Hidopi',
-      address: '105 Rue de Verdun, Bagneux, 92220',
-      tva: '1234567890',
+      address: '105 Rue de Verdun',
+      tva: 'HI-55607-AD',
     },
   });
   const onSubmit = (data: BusinessEntity) => {

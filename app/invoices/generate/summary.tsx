@@ -8,6 +8,7 @@ import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView'; // Utilisation du composant personnalisé
 
 import { useStore } from '~/store';
+import { Invoice } from '~/app/schema/invoice';
 
 export default function InvoiceSummary() {
   const invoice = useStore((data) => data.newInvoice);
@@ -18,7 +19,8 @@ export default function InvoiceSummary() {
 
   const handleGeneratePdf = () =>
   {
-    generateInvoicePdf();
+    //TODO do better than this :(
+    generateInvoicePdf( invoice as Invoice, subtotal,total);
   };
 
   // Calculs financiers
@@ -103,7 +105,7 @@ export default function InvoiceSummary() {
         <View className="mb-4 gap-1 rounded-lg bg-white p-4 ">
           <View className="flex-row justify-between">
             <Text className="text-gray-700">Subtotal</Text>
-            <Text className="font-semibold text-gray-700">{subtotal} TND</Text>
+            <Text className="font-semibold text-gray-700">{subtotal.toFixed(2)} TND</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-700">TVA (20%)</Text>
@@ -115,7 +117,7 @@ export default function InvoiceSummary() {
           </View>
           <View className="mt-2 flex-row justify-between border-t border-gray-300 pt-2">
             <Text className="text-lg font-bold">Total</Text>
-            <Text className="text-lg font-bold text-gray-800">{total} TND</Text>
+            <Text className="text-lg font-bold text-gray-800">{total.toFixed(2)} TND</Text>
           </View>
         </View>
       </View>
