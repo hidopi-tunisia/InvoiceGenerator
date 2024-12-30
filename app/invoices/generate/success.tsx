@@ -1,11 +1,10 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useNavigation } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
-import LottieView from 'lottie-react-native';
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
 
 import { generateInvoicePdf } from '../../utils/pdf';
-
 import { Invoice } from '~/app/schema/invoice';
 import { useStore } from '~/store';
 
@@ -21,6 +20,9 @@ export default function SuccessScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUri, setPdfUri] = useState<string | null>(null);
 
+  // Référence pour l'animation Lottie
+  const animation = useRef<LottieView>(null);
+
   // Génération du PDF au chargement de la page
   useEffect(() => {
     const handleGeneratePdf = async () => {
@@ -29,6 +31,7 @@ export default function SuccessScreen() {
         const uri = await generateInvoicePdf(invoice as Invoice, subtotal, total);
         if (uri) {
           setPdfUri(uri);
+          animation.current?.play(); //une fois le pdf est généré, HOP, l'animation se déclanche.
         } else {
           console.error('Erreur : Impossible de générer le fichier PDF.');
         }
@@ -62,11 +65,18 @@ export default function SuccessScreen() {
   };
 
   return (
-    <View className="flex-1 items-center justify-center bg-white p-6">
-      {/* Icône de félicitations */}
-      <View className="mb-6">
-        <Text className="text-6xl font-bold text-green-500">🎉</Text>
-      </View>
+    <View className="flex-1 items-center justify-center bg-white p-4">
+      {/* Animation Lottie */}
+      <LottieView
+        ref={animation}
+        source={require('../../../assets/nice.lottie')}
+        autoPlay
+        loop={false}
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: '#eee',
+        }}
+      />
 
       {/* Texte de succès */}
       <Text className="mb-4 text-center text-2xl font-bold text-gray-800">Félicitations !</Text>
