@@ -13,13 +13,14 @@ import { useStore } from '~/store';
 
 export default function GenerateInvoice() {
   const addRecipientInfo = useStore((data) => data.addRecipientInfo);
+  const recipient = useStore((data) => data.newInvoice.recipient);
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
     defaultValues: {
-      name: 'V art Vision',
-      address: '17 rue dalger, El Mourouj 3, Ben Arous',
-      tva: 'AF8889XR-TN',
-      email: 'contact@vartvision.com',
+      name: recipient?.name,
+      address: recipient?.address,
+      tva: recipient?.tva,
+      email: recipient?.email,
     },
   });
   const onSubmit = (data: BusinessEntity) => {

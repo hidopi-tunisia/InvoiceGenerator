@@ -3,7 +3,9 @@ import { create } from 'zustand';
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
 
 export type InvoiceState = {
-  newInvoice: Partial<Invoice>;
+  newInvoice: Partial<Invoice> | null;
+  startNewInvoice: () => void;
+  resetNewInvoice: () => void;
   addSenderInfo: (sender: BusinessEntity) => void;
   addRecipientInfo: (recipient: BusinessEntity) => void;
   addInvoiceInfo: (invoiceInfo: InvoiceInfo) => void;
@@ -13,7 +15,18 @@ export type InvoiceState = {
 };
 
 export const useStore = create<InvoiceState>((set, get) => ({
-  newInvoice: {}, // Objet pour stocker les données
+  newInvoice: null,
+  startNewInvoice: () =>
+    set(() => ({
+      newInvoice: {
+        items: [{ name: 'Prestation 1', quantity: 1, price: 100 }],
+        invoiceDate: new Date(new Date().setDate(new Date().getDate())).toLocaleDateString(),
+        invoiceDueDate: new Date(
+          new Date().setDate(new Date().getDate() + 14)
+        ).toLocaleDateString(),
+      },
+    })), // Objet pour stocker les données
+  resetNewInvoice: () => set(() => ({ newInvoice: null })),
   addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"
   addRecipientInfo: (recipient) =>
     set((state) => ({ newInvoice: { ...state.newInvoice, recipient } })), // Clé "recipientInfo"

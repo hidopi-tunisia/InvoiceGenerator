@@ -1,6 +1,6 @@
-import { printToFileAsync } from 'expo-print';
-import { shareAsync } from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import { printToFileAsync } from 'expo-print';
+
 import { Invoice } from '../schema/invoice';
 
 const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
@@ -168,15 +168,17 @@ const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
               </tr>
             </thead>
             <tbody>
-            ${invoice.items.map((item) =>
-        `
+            ${invoice.items.map(
+              (item) =>
+                `
             <tr>
                 <td>${item.name}</td>
                 <td>${item.quantity}</td>
                 <td>${item.price.toFixed(2)} TND</td>
                 <td>${(item.quantity * item.price).toFixed(2)} TND</td>
               </tr>
-              `)}
+              `
+            )}
             </tbody>
           </table>
         </div>
@@ -203,26 +205,25 @@ const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
     </html>
     
     `;
-    return html;
+  return html;
 };
 
 export const generateInvoicePdf = async (invoice: Invoice, subtotal: number, total: number) => {
-    try {
-        // On iOS/android prints the given html. On web prints the HTML from the current page.
-        const { uri } = await printToFileAsync({ html: generateHtml(invoice, subtotal, total) });
-        const permanentUri = FileSystem.documentDirectory + `facture-${invoice.invoiceInfo.invoiceNumber}.pdf`;
-        // move to document directory 
-        const file = await FileSystem.moveAsync({
-            from: uri,
-            to: permanentUri,
-        });
-        console.log('Fichier transféré à ', permanentUri);
-        console.log('File has been saved to:', permanentUri);
-        return permanentUri;
-        // await shareAsync(permanentUri, { UTI: '.pdf', mimeType: 'application/pdf' });
-    } catch (error) {
-        console.log('Error lors de la generation du PDF', error);
-
-    }
-
+  try {
+    // On iOS/android prints the given html. On web prints the HTML from the current page.
+    const { uri } = await printToFileAsync({ html: generateHtml(invoice, subtotal, total) });
+    const permanentUri =
+      FileSystem.documentDirectory + `facture-${invoice.invoiceInfo.invoiceNumber}.pdf`;
+    // move to document directory
+    const file = await FileSystem.moveAsync({
+      from: uri,
+      to: permanentUri,
+    });
+    console.log('Fichier transféré à ', permanentUri);
+    console.log('File has been saved to:', permanentUri);
+    return permanentUri;
+    // await shareAsync(permanentUri, { UTI: '.pdf', mimeType: 'application/pdf' });
+  } catch (error) {
+    console.log('Error lors de la generation du PDF', error);
+  }
 };

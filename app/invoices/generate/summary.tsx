@@ -1,15 +1,11 @@
 import { Link } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
-import * as Print from 'expo-print';
-import { shareAsync } from 'expo-sharing';
-import { generateInvoicePdf } from '../../utils/pdf';
 
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView'; // Utilisation du composant personnalisé
 
 import { useStore } from '~/store';
-import { Invoice } from '~/app/schema/invoice';
 
 export default function InvoiceSummary() {
   const invoice = useStore((data) => data.newInvoice);

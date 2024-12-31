@@ -34,7 +34,7 @@ const styles = {
     text: 'text-white text-lg font-semibold text-center',
   },
   secondary: {
-    button: 'border-2 border-indigo-500 bg-white',
+    button: 'border-2 border-indigo-500 bg-white shadow-md p-4 rounded-[28px]',
     text: 'text-indigo-500 text-lg font-semibold text-center',
   },
   link: {

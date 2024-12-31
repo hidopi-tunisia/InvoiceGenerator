@@ -13,12 +13,13 @@ import { useStore } from '~/store';
 
 export default function GenerateInvoice() {
   const addSenderInfo = useStore((data) => data.addSenderInfo);
+  const sender = useStore((data) => data.newInvoice.sender);
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
     defaultValues: {
-      name: 'Hidopi',
-      address: '105 Rue de Verdun',
-      tva: 'HI-55607-AD',
+      name: sender?.name,
+      address: sender?.address,
+      tva: sender?.tva,
     },
   });
   const onSubmit = (data: BusinessEntity) => {

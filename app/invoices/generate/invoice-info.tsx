@@ -13,12 +13,14 @@ import { useStore } from '~/store';
 
 export default function GenerateInvoice() {
   const addInvoiceInfo = useStore((state) => state.addInvoiceInfo);
+  const invoice = useStore((data) => data.newInvoice);
   const methods = useForm<InvoiceInfo>({
     resolver: zodResolver(InvoiceInfoSchema),
     defaultValues: {
-      invoiceNumber: 'INV-1408-2024',
-      invoiceDate: new Date().toLocaleDateString(),
-      invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toLocaleDateString(),
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: invoice.invoiceDate,
+      invoiceDueDate: invoice.invoiceDueDate,
+      // new Date(new Date().setDate(new Date().getDate() + 30)).toLocaleDateString()
     },
   });
   const onSubmit = (data: InvoiceInfo) => {
