@@ -99,7 +99,7 @@ export default function SuccessScreen() {
       {/* Bouton pour revenir à l'accueil */}
       <Button
         title="Revenir à laccueil"
-        variant="secondary"
+        variant="link"
         className="mt-6 rounded-full px-6 py-3"
         onPress={() => {
           resetNewInvoice();

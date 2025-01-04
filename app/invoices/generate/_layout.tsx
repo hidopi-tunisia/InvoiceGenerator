@@ -24,6 +24,7 @@ export default function GenerateInvoiceLayout() {
       <Stack.Screen name="invoice-info" options={{ title: 'Invoice' }} />
       <Stack.Screen name="items" options={{ title: 'Designations' }} />
       <Stack.Screen name="summary" options={{ title: 'Recap' }} />
+      <Stack.Screen name="success" options={{ title: 'Success', headerShown: false }} />
     </Stack>
   );
 }

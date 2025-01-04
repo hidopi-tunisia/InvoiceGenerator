@@ -28,7 +28,7 @@ export default function InvoiceSummary() {
     <KeyboardAwareScrollView>
       <View className="flex-1 gap-1">
         {/* Header avec Invoice Info */}
-        <View className="mb-6 rounded-b-lg bg-indigo-500 p-4 shadow-lg">
+        <View className="mb-6 rounded-b-lg bg-blue-600 p-4 shadow-lg">
           <Text className="mb-2 text-2xl font-bold text-white">
             # {invoiceInfo.invoiceNumber || 'N/A'}
           </Text>

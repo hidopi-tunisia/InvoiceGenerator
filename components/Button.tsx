@@ -30,7 +30,7 @@ export const Button = forwardRef<View, ButtonProps>(
 
 const styles = {
   primary: {
-    button: 'items-center bg-indigo-500 rounded-[28px] shadow-md p-4',
+    button: 'items-center bg-blue-700 rounded-[28px] shadow-md p-4',
     text: 'text-white text-lg font-semibold text-center',
   },
   secondary: {
@@ -39,6 +39,6 @@ const styles = {
   },
   link: {
     button: 'items-center p-4',
-    text: 'text-indigo-500 text-lg font-bold',
+    text: 'text-blue-600 text-lg font-bold',
   },
 };
