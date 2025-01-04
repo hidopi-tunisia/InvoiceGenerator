@@ -20,10 +20,8 @@ export const useStore = create<InvoiceState>((set, get) => ({
     set(() => ({
       newInvoice: {
         items: [{ name: 'Prestation 1', quantity: 1, price: 100 }],
-        invoiceDate: new Date(new Date().setDate(new Date().getDate())).toLocaleDateString(),
-        invoiceDueDate: new Date(
-          new Date().setDate(new Date().getDate() + 14)
-        ).toLocaleDateString(),
+        invoiceDate: new Date(),
+        invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
       },
     })), // Objet pour stocker les données
   resetNewInvoice: () => set(() => ({ newInvoice: null })),

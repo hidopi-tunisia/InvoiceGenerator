@@ -18,12 +18,15 @@ export const InvoiceInfoSchema = z.object({
   invoiceNumber: z
     .string({ required_error: 'Le numéro de facture est obligatoire' })
     .min(1, 'Le numéro de facture est obligatoire'),
-  invoiceDate: z
-    .string({ required_error: 'La date de facture est obligatoire' })
-    .min(1, 'La date de facture est obligatoire'),
+  invoiceDate: z.date({
+    required_error: 'La date de facture est obligatoire',
+    invalid_type_error: 'La date de facture doit être une date valide',
+  }),
   invoiceDueDate: z
-    .string({ required_error: "La date d'échéance de facture est obligatoire" })
-    .min(1, "La date d'échéance de facture est obligatoire"),
+    .date({
+      invalid_type_error: "La date d'échéance doit être une date valide",
+    })
+    .optional(),
 });
 export type InvoiceInfo = z.infer<typeof InvoiceInfoSchema>;
 
@@ -43,7 +46,7 @@ export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 //type Items = z.infer<typeof itemsSchema>
 
 export type Invoice = InvoiceInfo & {
-  invoiceInfo: InvoiceInfo; // Ajout explicite
+  //invoiceInfo: InvoiceInfo; // Ajout explicite
   sender: BusinessEntity;
   recipient: BusinessEntity;
   items: InvoiceItem[];

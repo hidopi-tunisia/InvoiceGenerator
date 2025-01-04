@@ -129,10 +129,18 @@ const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
           <img src="https://hidopi.com/wp-content/uploads/2019/10/logo_hidopi_black_site.png" alt="Logo" class="logo" />
           <div class="invoice-title">
             <h1>Facture</h1>
-            <p><strong>Numéro :</strong> #${invoice.invoiceInfo.invoiceNumber}</p>
-            <p><strong>Date :</strong> ${invoice.invoiceInfo.invoiceDate}</p>
-            ${invoice.invoiceInfo.invoiceDueDate && `<p><strong>Date d'échéance :</strong> ${invoice.invoiceInfo.invoiceDueDate}</p>`}
-          </div>
+<p><strong>Numéro :</strong> #${invoice.invoiceNumber || 'N/A'}</p>
+<p><strong>Date :</strong> ${
+    invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'
+  }</p>
+${
+  invoice.invoiceDueDate
+    ? `<p><strong>Date d'échéance :</strong> ${new Date(
+        invoice.invoiceDueDate
+      ).toLocaleDateString()}</p>`
+    : ''
+}
+ </div>
         </div>
     
         <!-- Details -->

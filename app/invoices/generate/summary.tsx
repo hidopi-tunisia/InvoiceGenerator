@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -10,15 +10,13 @@ import { useStore } from '~/store';
 export default function InvoiceSummary() {
   const invoice = useStore((data) => data.newInvoice);
   const invoiceInfo = invoice?.invoiceInfo || {};
-  const items = invoice.items || []; // Récupère les items depuis le store
+  const items = invoice?.items || []; // Récupère les items depuis le store
   const subtotal = useStore((data) => data.getSubtotal());
   const total = useStore((data) => data.getTotal());
 
-  // const handleGeneratePdf = () =>
-  // {
-  //   //TODO do better than this :(
-  //   generateInvoicePdf( invoice as Invoice, subtotal,total);
-  // };
+  if (!invoice) {
+    return <Redirect href="/" />;
+  }
 
   // Calculs financiers
   // const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
@@ -38,15 +36,21 @@ export default function InvoiceSummary() {
             <View>
               <Text className="text-sm text-gray-100">Date :</Text>
               <Text className="text-lg font-semibold text-white">
-                {invoiceInfo.invoiceDate || 'N/A'}
+                {invoiceInfo.invoiceDate
+                  ? new Date(invoiceInfo.invoiceDate).toLocaleDateString()
+                  : 'N/A'}
               </Text>
             </View>
-            <View>
-              <Text className="text-sm text-gray-100">Due Date :</Text>
-              <Text className="text-lg font-semibold text-white">
-                {invoiceInfo.invoiceDueDate || 'N/A'}
-              </Text>
-            </View>
+            {invoiceInfo.invoiceDueDate && (
+              <View>
+                <Text className="text-sm text-gray-100">Due Date :</Text>
+                <Text className="text-lg font-semibold text-white">
+                  {invoiceInfo.invoiceDueDate
+                    ? new Date(invoiceInfo.invoiceDueDate).toLocaleDateString()
+                    : 'N/A'}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
         {/* Invoice Info */}
