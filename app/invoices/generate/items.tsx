@@ -26,7 +26,7 @@ type FormValues = {
 export default function GenerateInvoice() {
   // Configuration du formulaire avec React Hook Form et Zod
   const addItems = useStore((data) => data.addItems);
-  const items = useStore((data) => data.newInvoice.items);
+  const items = useStore((data) => data.newInvoice?.items);
   const methods = useForm<FormValues>({
     resolver: zodResolver(itemsSchema),
     defaultValues: {
