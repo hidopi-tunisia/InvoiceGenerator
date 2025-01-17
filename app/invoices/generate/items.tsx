@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
-import tw from 'twrnc';
+//import * as ContextMenu from 'zeego/context-menu';
 import { z } from 'zod';
 
 import { Button } from '../../../components/Button';
@@ -51,7 +51,7 @@ export default function GenerateInvoice() {
         {/* Champs dynamiques */}
         <View className="mb-5 gap-1 shadow">
           {fields.map((item, index) => (
-            <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-50 p-4 shadow-md">
+            <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-500 p-4 shadow-md">
               {/* Ajout de la marge inférieure pour séparer les items */}
               <Text className="mb-2 text-lg font-semibold">Item {index + 1}</Text>
               <CustomInputText
@@ -72,7 +72,7 @@ export default function GenerateInvoice() {
                     }}
                   />
                 </View>
-                <View style={tw`flex-1`}>
+                <View className="flex-1">
                   <CustomInputText
                     name={`items.${index}.price`}
                     label="Prix"
@@ -83,10 +83,10 @@ export default function GenerateInvoice() {
                     }}
                   />
                 </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-lg text-right font-semibold text-gray-600 mb-1`}>Total</Text>
-                  <View style={tw`h-12 bg-gray-100 rounded-md justify-center px-3`}>
-                    <Text style={tw`text-right text-gray-700 font-bold`}>
+                <View className="flex-1">
+                  <Text className="mb-1 text-right text-lg font-semibold text-gray-600">Total</Text>
+                  <View className="h-12 justify-center rounded-md bg-gray-100 px-3">
+                    <Text className="text-right font-bold text-gray-700">
                       {(methods.watch(`items.${index}.quantity`) || 0) *
                         (methods.watch(`items.${index}.price`) || 0)}{' '}
                       {/* € */}
@@ -97,8 +97,8 @@ export default function GenerateInvoice() {
               </View>
               {/* Bouton pour supprimer un item */}
               {fields.length > 1 && (
-                <TouchableOpacity onPress={() => remove(index)} style={tw`mt-2`}>
-                  <Text style={tw`text-red-500 text-sm`}>Supprimer cet item</Text>
+                <TouchableOpacity onPress={() => remove(index)} className="mt-2">
+                  <Text className="text-sm text-red-500">Supprimer cet item</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -106,7 +106,7 @@ export default function GenerateInvoice() {
           {/* Bouton pour ajouter un nouvel item (link) */}
           <Button
             variant="link"
-            title="Add item"
+            title="+ Ajouter un item"
             onPress={() => append({ name: '', quantity: 1, price: 0.0 })}
           />
         </View>

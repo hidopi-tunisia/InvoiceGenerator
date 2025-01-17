@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "start": "expo start",
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
@@ -26,7 +26,7 @@
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.5",
     "expo-web-browser": "~14.0.1",
-    "lottie-react-native": "7.1.0",
+    "lottie-react-native": "5.1.4",
     "nativewind": "latest",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -40,8 +40,13 @@
     "react-native-screens": "~4.1.0",
     "react-native-web": "~0.19.10",
     "twrnc": "^4.6.0",
+    "vexo-analytics": "^1.4.4",
+    "zeego": "^2.0.4",
     "zod": "^3.23.8",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "expo-dev-client": "~5.0.8",
+    "hermes-engine": "0.11.0",
+    "expo-build-properties": "~0.13.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

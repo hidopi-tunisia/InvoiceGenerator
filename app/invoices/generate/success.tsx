@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, Alert, StyleSheet } from 'react-native';
+import { customEvent } from 'vexo-analytics';
 
 import { Button } from '../../../components/Button';
 import { generateInvoicePdf } from '../../utils/pdf';
@@ -34,6 +35,9 @@ export default function SuccessScreen() {
         if (uri) {
           setPdfUri(uri);
           animation.current?.play(); //une fois le pdf est généré, HOP, l'animation se déclanche.
+          customEvent('Facture_PDF_Generee', {
+            invoiceNumber: invoice?.invoiceNumber,
+          });
         } else {
           console.error('Erreur : Impossible de générer le fichier PDF.');
         }
@@ -60,6 +64,8 @@ export default function SuccessScreen() {
         mimeType: 'application/pdf',
         dialogTitle: 'Partager la facture',
       });
+      customEvent('Facture_Partagee', {});
+      console.log(customEvent,"Facture_Partagee");
     } catch (error) {
       console.error('Erreur lors du partage :', error);
       Alert.alert('Erreur', 'Impossible de partager la facture.');

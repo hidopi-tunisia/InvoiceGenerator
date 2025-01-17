@@ -1,12 +1,20 @@
-import { Stack, Link } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { View, Text } from 'react-native';
+import { customEvent } from 'vexo-analytics';
 
 import { Button } from '~/components/Button';
 
 export default function Home() {
+  const onNewInvoice = () => {
+    customEvent('Start_Fatoura_Jdida', {});
+    router.push('/invoices/generate');
+  };
+
+  const year = new Date;
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Accueil' }} />
+      <Stack.Screen options={{ title: 'Accueil', headerShown: false }} />
       <View className="flex-1 items-center justify-center bg-indigo-50 p-6">
         {/* Message de bienvenue */}
         <View className="mb-8">
@@ -19,17 +27,17 @@ export default function Home() {
         </View>
 
         {/* Bouton mis en avant */}
-        <Link href={{ pathname: '/invoices/generate' }} asChild>
-          <Button
-            title="Nouvelle Facture"
-            className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"
-          />
-        </Link>
+
+        <Button
+          title="Nouvelle Facture"
+          className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"
+          onPress={onNewInvoice}
+        />
 
         {/* Footer minimal */}
         <View className="absolute bottom-8">
           <Text className="text-center text-sm text-gray-500">
-            © 2024 Hidopi. Tous droits réservés.
+            © 2025 Hidopi. Tous droits réservés.
           </Text>
         </View>
       </View>
