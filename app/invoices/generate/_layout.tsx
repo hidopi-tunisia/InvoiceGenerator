@@ -1,19 +1,8 @@
-import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
-import { vexo } from 'vexo-analytics';
 
 import { useStore } from '~/store';
-
-const vexoApiKey = "4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40";
-
-console.log(vexoApiKey, '1');
-vexo(vexoApiKey as string);
-
-if (!__DEV__ && vexoApiKey) {
-  vexo(vexoApiKey);
-}
 
 //console.log(process.env.VEXO_API_KEY);
 //if (!__DEV__) {

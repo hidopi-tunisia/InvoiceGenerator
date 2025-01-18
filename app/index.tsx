@@ -6,6 +6,7 @@ import { Button } from '~/components/Button';
 
 export default function Home() {
   const onNewInvoice = () => {
+    //throw new Error('testing');
     customEvent('Start_Fatoura_Jdida', {});
     router.push('/invoices/generate');
   };

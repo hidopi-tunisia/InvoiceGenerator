@@ -65,7 +65,6 @@ export default function SuccessScreen() {
         dialogTitle: 'Partager la facture',
       });
       customEvent('Facture_Partagee', {});
-      console.log(customEvent,"Facture_Partagee");
     } catch (error) {
       console.error('Erreur lors du partage :', error);
       Alert.alert('Erreur', 'Impossible de partager la facture.');
