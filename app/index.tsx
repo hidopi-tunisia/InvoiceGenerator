@@ -11,8 +11,6 @@ export default function Home() {
     router.push('/invoices/generate');
   };
 
-  const year = new Date;
-
   return (
     <>
       <Stack.Screen options={{ title: 'Accueil', headerShown: false }} />

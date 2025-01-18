@@ -1,8 +1,9 @@
 import '../global.css';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { ErrorBoundaryProps, Stack, useNavigationContainerRef } from 'expo-router';
 import { useEffect } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { vexo } from 'vexo-analytics';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
@@ -46,3 +47,30 @@ function Layout() {
   );
 }
 export default Sentry.wrap(Layout);
+
+//cette fonction va capter n'importe quelle erreur dans l'application
+type ErrorBoundaryProps = {
+  error: Error;
+  retry: () => void;
+};
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View className="flex-1 items-center justify-center bg-red-50 p-6">
+      {/* Icône ou Emoji pour l'erreur */}
+      <Text className="mb-4 text-6xl">⚠️</Text>
+
+      {/* Titre d'erreur */}
+      <Text className="mb-2 text-2xl font-bold text-red-600">Une erreur est survenue</Text>
+
+      {/* Message d'erreur */}
+      <Text className="mb-6 text-center text-base text-gray-700">
+        {error.message || "Quelque chose s'est mal passé."}
+      </Text>
+
+      {/* Bouton pour réessayer */}
+      <TouchableOpacity onPress={retry} className="rounded-lg bg-red-500 px-6 py-3 shadow-md">
+        <Text className="text-lg font-semibold text-white">Réessayer</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
