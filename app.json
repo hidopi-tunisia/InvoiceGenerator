@@ -28,7 +28,8 @@
           "project": "fatourty",
           "url": "https://sentry.io/"
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

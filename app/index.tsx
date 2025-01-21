@@ -1,10 +1,14 @@
 import { Stack, router } from 'expo-router';
 import { View, Text } from 'react-native';
 import { customEvent } from 'vexo-analytics';
+import { useStore } from '~/store';
 
 import { Button } from '~/components/Button';
 
 export default function Home() {
+  // Reprendre les facture aprés fermeture de l'application
+  const existingNewInvoice = useStore((data) => data.newInvoice);
+
   const onNewInvoice = () => {
     //throw new Error('testing');
     customEvent('Start_Fatoura_Jdida', {});
@@ -28,7 +32,7 @@ export default function Home() {
         {/* Bouton mis en avant */}
 
         <Button
-          title="Nouvelle Facture"
+          title={existingNewInvoice ? 'Reprendre la facture' : 'Nouvelle Facture'}
           className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"
           onPress={onNewInvoice}
         />
