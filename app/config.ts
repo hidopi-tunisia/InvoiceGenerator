@@ -1,0 +1,1 @@
+export const VEXO_API_KEY= process.env.EXPO_PUBLIC_VEXO_API_KEY || '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40'

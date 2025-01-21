@@ -49,10 +49,6 @@ function Layout() {
 export default Sentry.wrap(Layout);
 
 //cette fonction va capter n'importe quelle erreur dans l'application
-type ErrorBoundaryProps = {
-  error: Error;
-  retry: () => void;
-};
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <View className="flex-1 items-center justify-center bg-red-50 p-6">

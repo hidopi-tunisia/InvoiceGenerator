@@ -3,16 +3,6 @@ import { useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import { useStore } from '~/store';
-
-//console.log(process.env.VEXO_API_KEY);
-//if (!__DEV__) {
-//console.log('====================================');
-//console.log(process.env.VEXO_API_KEY, '2');
-//console.log('====================================');
-//vexo(process.env.VEXO_API_KEY || ''); // Remplacer 'YOUR_VEXO_ANALYTICS_API_KEY' par votre clé d'API Vexo Analytics
-//vexo(process.env.VEXO_API_KEY as string);
-//}
-
 export default function GenerateInvoiceLayout() {
   const startNewInvoice = useStore((data) => data.startNewInvoice);
   const newInvoice = useStore((data) => data.newInvoice);

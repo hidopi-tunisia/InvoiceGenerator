@@ -5,7 +5,13 @@
     "version": "1.0.0",
     "scheme": "InvoiceGenerator",
     "extra": {
-      "VEXO_API_KEY": "process.env.VEXO_API_KEY"
+      "VEXO_API_KEY": "process.env.VEXO_API_KEY",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "34ae0b64-b059-4907-96bb-4aa4adc6ae1f"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -36,7 +42,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.InvoiceGenerator"
