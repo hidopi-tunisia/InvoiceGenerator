@@ -1,8 +1,16 @@
-import Storage from 'expo-sqlite/kv-store';
+//import Storage from 'expo-sqlite/kv-store';
+//import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
+
+// Création de l'instance MMKV
+// const storage = new MMKV({
+//   id: 'facture-store', // Identifiant unique pour cette instance
+//   //encryptionKey: 'secure-key', // Facultatif : clé pour chiffrer les données
+// });
 
 export type InvoiceState = {
   newInvoice: Partial<Invoice> | null;
@@ -44,6 +52,10 @@ export const useStore = create<InvoiceState>()(
         return subtotal;
       },
     }),
-    { name: 'facture-store', getStorage: () => Storage }
+    {
+      name: 'facture-store',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+    // { name: 'facture-store', getStorage: () => Storage }
   )
 );
