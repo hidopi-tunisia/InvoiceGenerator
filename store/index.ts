@@ -1,22 +1,16 @@
-//import Storage from 'expo-sqlite/kv-store';
-//import { MMKV } from 'react-native-mmkv';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
 
-// Création de l'instance MMKV
-// const storage = new MMKV({
-//   id: 'facture-store', // Identifiant unique pour cette instance
-//   //encryptionKey: 'secure-key', // Facultatif : clé pour chiffrer les données
-// });
-
 export type InvoiceState = {
+  profile: BusinessEntity; //BusinessEntity fort possible je vais la modifier avec un nouveau Entity qui contiendra Logo, Currency etc ...
   newInvoice: Partial<Invoice> | null;
+  setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
-  addSenderInfo: (sender: BusinessEntity) => void;
+  //addSenderInfo: (sender: BusinessEntity) => void;
   addRecipientInfo: (recipient: BusinessEntity) => void;
   addInvoiceInfo: (invoiceInfo: InvoiceInfo) => void;
   addItems: (items: InvoiceItem[]) => void;
@@ -27,17 +21,27 @@ export type InvoiceState = {
 export const useStore = create<InvoiceState>()(
   persist(
     (set, get) => ({
+      profile: {
+        name: '',
+        address: '',
+        tva: '',
+      },
       newInvoice: null,
+      // PROFILE
+      setProfile: (profile) => set(() => ({ profile })),
+
+      // FACTURE
       startNewInvoice: () =>
         set(() => ({
           newInvoice: {
+            sender: get().profile,
             items: [{ name: 'Prestation 1', quantity: 1, price: 100 }],
             invoiceDate: new Date(),
             invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
           },
         })), // Objet pour stocker les données
       resetNewInvoice: () => set(() => ({ newInvoice: null })),
-      addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"
+      //addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"
       addRecipientInfo: (recipient) =>
         set((state) => ({ newInvoice: { ...state.newInvoice, recipient } })), // Clé "recipientInfo"
       addInvoiceInfo: (invoiceInfo) =>
@@ -56,6 +60,5 @@ export const useStore = create<InvoiceState>()(
       name: 'facture-store',
       storage: createJSONStorage(() => AsyncStorage),
     }
-    // { name: 'facture-store', getStorage: () => Storage }
   )
 );

@@ -14,7 +14,6 @@ vexo(vexoApiKey as string);
 if (!__DEV__ && vexoApiKey) {
   vexo(vexoApiKey);
 }
-
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
@@ -41,6 +40,7 @@ function Layout() {
   }, [ref]);
   return (
     <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {/* hide header for generate invoice screen */}
       <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
     </Stack>
