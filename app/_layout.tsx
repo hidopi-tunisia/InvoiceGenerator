@@ -20,7 +20,7 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
 
 Sentry.init({
   dsn: 'https://2cacf18cbc1431eb07b8b3bdad5edbe7@o4508658689572864.ingest.de.sentry.io/4508658744361040',
-  debug: __DEV__, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  debug: false, // __DEV__, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
   tracesSampleRate: 1.0, // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing. Adjusting this value in production.
   integrations: [
     // Pass integration
@@ -40,9 +40,11 @@ function Layout() {
   }, [ref]);
   return (
     <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
       {/* hide header for generate invoice screen */}
       <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
+      <Stack.Screen name="onbording" options={{ headerShown: false, animation: 'fade' }} />
     </Stack>
   );
 }

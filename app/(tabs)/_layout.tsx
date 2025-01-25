@@ -14,6 +14,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Factures',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesome6 name="file-invoice" color={color} size={size} />
           ),
