@@ -1,6 +1,7 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { router } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
+//import * as StoreReview from 'expo-store-review';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
@@ -13,6 +14,20 @@ import { Invoice } from '~/app/schema/invoice';
 import { useStore } from '~/store';
 
 export default function SuccessScreen() {
+  // Affichage Modal de Review
+
+  // const askForReview = async () => {
+  //   if (!(await StoreReview.isAvailableAsync())) {
+  //     console.log('StoreReview pas Disponible...');
+  //     return;
+  //   }
+  //   if (!(await StoreReview.hasAction())) {
+  //     console.log('StoreReview non disponible');
+  //     return;
+  //   }
+  //   await StoreReview.requestReview();
+  // };
+
   // Récupération des données depuis le store
   const subtotal = useStore((state) => state.getSubtotal());
   const total = useStore((state) => state.getTotal());
@@ -65,6 +80,7 @@ export default function SuccessScreen() {
         dialogTitle: 'Partager la facture',
       });
       customEvent('Facture_Partagee', {});
+      //await askForReview();
     } catch (error) {
       console.error('Erreur lors du partage :', error);
       Alert.alert('Erreur', 'Impossible de partager la facture.');
