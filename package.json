@@ -33,6 +33,7 @@
     "expo-system-ui": "~4.0.7",
     "expo-web-browser": "~14.0.2",
     "hermes-engine": "0.11.0",
+    "lottie-react-native": "^5.1.4",
     "nativewind": "latest",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -50,8 +51,7 @@
     "vexo-analytics": "^1.4.4",
     "zeego": "^2.0.4",
     "zod": "^3.23.8",
-    "zustand": "^4.5.1",
-    "lottie-react-native": "7.1.0"
+    "zustand": "^4.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
