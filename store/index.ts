@@ -8,6 +8,10 @@ export type InvoiceState = {
   profile: BusinessEntity; //BusinessEntity --> fort possible je vais la modifier avec un nouveau Entity qui contiendra Logo, Currency etc ...
   newInvoice: Partial<Invoice> | null;
   onboardingCompleted: boolean;
+  //Review
+
+  lastReviewRequestAt: Date | null;
+
   setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
@@ -18,6 +22,7 @@ export type InvoiceState = {
   addItems: (items: InvoiceItem[]) => void;
   getSubtotal: () => number;
   getTotal: () => number;
+  setLastReviewRequestAt: (date: Date) => void;
 };
 
 export const useStore = create<InvoiceState>()(
@@ -29,6 +34,7 @@ export const useStore = create<InvoiceState>()(
         tva: '',
       },
       onboardingCompleted: false,
+      lastReviewRequestAt: null,
       newInvoice: null,
       // PROFILE
       setProfile: (profile) => set(() => ({ profile })), // pour tomber sur la page de profile de onbording il faut mettre "onboardingCompleted: true" et cliquer sur "Enregistrer" puis la supprimer puis Reloader l'app
@@ -59,6 +65,7 @@ export const useStore = create<InvoiceState>()(
         const subtotal = get().getSubtotal();
         return subtotal;
       },
+      setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
     }),
     {
       name: 'facture-store',
