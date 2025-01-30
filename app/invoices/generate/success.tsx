@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Alert, StyleSheet, Linking } from 'react-native';
+import { View, Text, Alert, StyleSheet } from 'react-native';
 import { customEvent } from 'vexo-analytics';
 
 import { Button } from '../../../components/Button';
@@ -12,7 +12,6 @@ import { generateInvoicePdf } from '../../utils/pdf';
 import { Invoice } from '~/app/schema/invoice';
 import { useReviews } from '~/app/utils/review';
 import { useStore } from '~/store';
-
 
 export default function SuccessScreen() {
   // Récupération des données depuis le store
@@ -28,7 +27,7 @@ export default function SuccessScreen() {
   // Référence pour l'animation Lottie
   const animation = useRef<LottieView>(null);
 
-  const { requestReviewOrFeedback } = useReviews();
+  const { requestFeedbackOrReview } = useReviews();
 
   // Génération du PDF au chargement de la page
   useEffect(() => {
@@ -69,7 +68,7 @@ export default function SuccessScreen() {
         dialogTitle: 'Partager la facture',
       });
       customEvent('Facture_Partagee', {});
-      await requestReviewOrFeedback();
+      await requestFeedbackOrReview();
     } catch (error) {
       console.error('Erreur lors du partage :', error);
       Alert.alert('Erreur', 'Impossible de partager la facture.');
