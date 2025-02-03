@@ -5,12 +5,16 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
 
 export type InvoiceState = {
+  //Profile
   profile: BusinessEntity; //BusinessEntity --> fort possible je vais la modifier avec un nouveau Entity qui contiendra Logo, Currency etc ...
   newInvoice: Partial<Invoice> | null;
   onboardingCompleted: boolean;
   //Review
-
   lastReviewRequestAt: Date | null;
+
+  //Contacts :
+  contacts: BusinessEntity[];
+  addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact
 
   setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
@@ -36,6 +40,7 @@ export const useStore = create<InvoiceState>()(
       onboardingCompleted: false,
       lastReviewRequestAt: null,
       newInvoice: null,
+      contacts: [], //Initialisation du contacts
       // PROFILE
       setProfile: (profile) => set(() => ({ profile })), // pour tomber sur la page de profile de onbording il faut mettre "onboardingCompleted: true" et cliquer sur "Enregistrer" puis la supprimer puis Reloader l'app
       setOnboardingCompleted: () => set(() => ({ onboardingCompleted: true })), // Objet pour stocker les données
@@ -66,6 +71,8 @@ export const useStore = create<InvoiceState>()(
         return subtotal;
       },
       setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
+      // CONTACTS
+      addContact: (contact) => set((state) => ({ contacts: [...state.contacts, contact] })), // Fonction d'ajout de contact
     }),
     {
       name: 'facture-store',

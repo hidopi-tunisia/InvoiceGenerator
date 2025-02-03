@@ -4,7 +4,7 @@ import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
 
-import { Button } from '../../components/Button'
+import { Button } from '../../components/Button';
 import CustomInputText from '../../components/CustomInputText';
 import KeyboardAwareScrollView from '../../components/KeyboardAwareScrollView';
 import { BusinessEntity, businessEntitySchema } from '../schema/invoice';
@@ -30,8 +30,11 @@ export default function ProfileScreen() {
   return (
     <FormProvider {...methods}>
       <KeyboardAwareScrollView>
-        <Text className="mb-4 text-2xl font-bold">My profile</Text>
-
+        <Text className="mb-4 text-2xl font-bold">Mon Entreprise</Text>
+        <Text className="mb-4 text-gray-600">
+          Ces informations seront affichées sur toutes vos factures.
+        </Text>
+        <Text className="mb-4 text-gray-600">Assurez-vous qu'elles sont exactes.</Text>
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
         <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />
         <CustomInputText name="tva" label="Numéro de TVA" placeholder="Entrez le numéro de TVA" />

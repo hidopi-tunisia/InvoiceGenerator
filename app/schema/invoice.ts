@@ -1,6 +1,8 @@
+import * as Crypto from 'expo-crypto';
 import { z } from 'zod';
 
 export const businessEntitySchema = z.object({
+  id: z.string().uuid().default(Crypto.randomUUID()),
   name: z.string({ required_error: 'Le nom est obligatoire' }).min(1, 'Le nom est obligatoire'),
   address: z
     .string({ required_error: "L'adresse postale est obligatoire" })

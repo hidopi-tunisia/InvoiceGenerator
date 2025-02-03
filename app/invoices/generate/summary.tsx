@@ -1,4 +1,4 @@
-import { Link, Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -13,6 +13,17 @@ export default function InvoiceSummary() {
   const items = invoice?.items || []; // Récupère les items depuis le store
   const subtotal = useStore((data) => data.getSubtotal());
   const total = useStore((data) => data.getTotal());
+  //const saveInvoice = useStore((data) => data.saveInvoice); // Récupération de la fonction de sauvegarde de facture
+  const addContact = useStore((data) => data.addContact); // Récupération Sauvegarde du contact du Store
+
+  const handleGenerateInvoice = () => {
+    // Sauvegarder les contacts dans la BDD du téléphone
+    if (invoice?.recipient) {
+      addContact(invoice.recipient);
+    }
+    console.log('Sauvegarde reussi', invoice?.recipient);
+    router.push('/invoices/generate/success');
+  };
 
   if (!invoice) {
     return <Redirect href="/" />;
@@ -123,14 +134,16 @@ export default function InvoiceSummary() {
           </View>
         </View>
 
+        <Button title="Confirmer et genérer" className="mt-auto" onPress={handleGenerateInvoice} />
+
         {/* Action Buttons */}
-        <Link href="/invoices/generate/success" asChild>
+        {/* <Link href="/invoices/generate/success" asChild>
           <Button
             title="Confirmer et genérer"
             className="mt-auto"
             // onPress={handleGeneratePdf}
           />
-        </Link>
+        </Link> */}
       </View>
     </KeyboardAwareScrollView>
   );
