@@ -15,6 +15,7 @@ import { useStore } from '~/store';
 export default function GenerateInvoice() {
   const addInvoiceInfo = useStore((state) => state.addInvoiceInfo);
   const invoice = useStore((data) => data.newInvoice);
+  const numberOfContacts = useStore((data) => data.contacts.length);
   const methods = useForm<InvoiceInfo>({
     resolver: zodResolver(InvoiceInfoSchema),
     defaultValues: {
@@ -27,7 +28,11 @@ export default function GenerateInvoice() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const onSubmit = (data: InvoiceInfo) => {
     addInvoiceInfo(data);
-    router.push('/invoices/generate/recipient');
+    if (numberOfContacts > 0) {
+      router.push('/invoices/generate/contact');
+    } else {
+      router.push('/invoices/generate/new-contact');
+    }
   };
 
   return (

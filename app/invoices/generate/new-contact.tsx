@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -17,6 +18,7 @@ export default function GenerateInvoice() {
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
     defaultValues: {
+      id: recipient?.id || Crypto.randomUUID(),
       name: recipient?.name,
       address: recipient?.address,
       tva: recipient?.tva,
@@ -31,7 +33,7 @@ export default function GenerateInvoice() {
   return (
     <FormProvider {...methods}>
       <KeyboardAwareScrollView>
-        <Text className="mb-4 text-2xl font-bold">Recipient info</Text>
+        <Text className="mb-4 text-2xl font-bold">Nouveau Contact</Text>
 
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
         <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />

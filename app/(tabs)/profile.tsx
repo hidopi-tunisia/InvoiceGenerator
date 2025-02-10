@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';

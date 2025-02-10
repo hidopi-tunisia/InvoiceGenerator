@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Crypto from 'expo-crypto';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -21,7 +22,7 @@ export type InvoiceState = {
   resetNewInvoice: () => void;
   setOnboardingCompleted: () => void;
   //addSenderInfo: (sender: BusinessEntity) => void;
-  addRecipientInfo: (recipient: BusinessEntity) => void;
+  addRecipientInfo: (recipient: BusinessEntity | null) => void;
   addInvoiceInfo: (invoiceInfo: InvoiceInfo) => void;
   addItems: (items: InvoiceItem[]) => void;
   getSubtotal: () => number;
@@ -33,6 +34,7 @@ export const useStore = create<InvoiceState>()(
   persist(
     (set, get) => ({
       profile: {
+        id: Crypto.randomUUID(),
         name: '',
         address: '',
         tva: '',
@@ -58,7 +60,9 @@ export const useStore = create<InvoiceState>()(
       resetNewInvoice: () => set(() => ({ newInvoice: null })),
       //addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"
       addRecipientInfo: (recipient) =>
-        set((state) => ({ newInvoice: { ...state.newInvoice, recipient } })), // Clé "recipientInfo"
+        set((state) => ({
+          newInvoice: { ...state.newInvoice, recipient: recipient || undefined },
+        })), // Clé "recipientInfo"
       addInvoiceInfo: (invoiceInfo) =>
         set((state) => ({ newInvoice: { ...state.newInvoice, invoiceInfo } })), // Clé "invoiceInfo"
       addItems: (items) => set((state) => ({ newInvoice: { ...state.newInvoice, items } })), // Clé "tableau des items"
@@ -72,7 +76,14 @@ export const useStore = create<InvoiceState>()(
       },
       setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
       // CONTACTS
-      addContact: (contact) => set((state) => ({ contacts: [...state.contacts, contact] })), // Fonction d'ajout de contact
+      addContact: (contact) => {
+        // Vérifiez si l'ID existe déjà dans les contacts
+        if (!get().contacts.some((c) => c.id === contact.id)) {
+          set((state) => ({
+            contacts: [contact, ...state.contacts],
+          }));
+        }
+      },
     }),
     {
       name: 'facture-store',

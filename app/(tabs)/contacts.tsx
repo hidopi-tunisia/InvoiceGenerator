@@ -22,7 +22,6 @@ export default function ContactsScreen() {
         <LegendList
           data={contacts}
           estimatedItemSize={50} // Taille estimée pour meilleure fluidité
-          keyExtractor={(contact, index) => contact.name + index} // Clé unique pour chaque contact
           renderItem={({ item: contact }) => (
             <View className="mb-4 rounded-lg bg-gray-100 p-4 shadow-sm">
               <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
