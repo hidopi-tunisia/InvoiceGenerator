@@ -1,33 +1,47 @@
 {
-    "accessibility.signals.positionHasWarning": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.lineHasInlineSuggestion": {
-        "sound": "off"
-    },
-    "accessibility.signals.lineHasWarning": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.noInlayHints": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.notebookCellCompleted": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.notebookCellFailed": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.onDebugBreak": {
-        "sound": "off",
-        "announcement": "off"
-    },
-    "accessibility.signals.positionHasError": {
-        "sound": "off",
-        "announcement": "off"
+  "accessibility.signals.positionHasWarning": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.lineHasInlineSuggestion": {
+    "sound": "off"
+  },
+  "accessibility.signals.lineHasWarning": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.noInlayHints": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.notebookCellCompleted": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.notebookCellFailed": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.onDebugBreak": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.positionHasError": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "continue.models": {
+    "default": {
+      "title": "Perplexity",
+      "provider": "openai",
+      "model": "pplx-7b-chat",
+      "apiKey": "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",
+      "apiBase": "https://api.perplexity.ai",
+      "completionOptions": {
+        "temperature": 0.3,
+        "maxTokens": 2000
+      }
     }
+  },
+  "continue.showWelcomeMessage": false
 }

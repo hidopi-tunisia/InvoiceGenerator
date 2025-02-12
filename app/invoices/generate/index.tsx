@@ -28,6 +28,10 @@ export default function GenerateInvoice() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const onSubmit = (data: InvoiceInfo) => {
     addInvoiceInfo(data);
+    if (invoice?.recipient) {
+      router.push('/invoices/generate/items');
+      return;
+    }
     if (numberOfContacts > 0) {
       router.push('/invoices/generate/contact');
     } else {
