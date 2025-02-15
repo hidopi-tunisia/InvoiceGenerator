@@ -1,8 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, FontAwesome6 } from '@expo/vector-icons';
 import { LegendList } from '@legendapp/list';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, Pressable, TextInput } from 'react-native';
+import { View, Text, TextInput, Alert } from 'react-native';
+import ContextMenu from 'react-native-context-menu-view';
 
 import { BusinessEntity } from '../schema/invoice';
 
@@ -11,39 +12,71 @@ import { useStore } from '~/store';
 function ContactListItem({ contact }: { contact: BusinessEntity }) {
   const startNewInvoice = useStore((state) => state.startNewInvoice);
   const addRecipientInfo = useStore((state) => state.addRecipientInfo);
+  const deleteContact = useStore((state) => state.deleteContact);
   const router = useRouter();
 
-  const OnNewInvoicePressesd = () => {
+  const handleNewInvoice = () => {
     startNewInvoice();
     addRecipientInfo(contact);
     router.push('/invoices/generate');
   };
 
   const getInitials = (name: string) => {
-    const names = name.split(' ');
-    const initials = names.map((n) => n[0]).join('');
-    return initials.toUpperCase();
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
   };
 
+  const menuActions = [
+    {
+      title: 'Modifier',
+      systemIcon: 'pencil',
+      destructive: false,
+    },
+    {
+      title: 'Supprimer',
+      systemIcon: 'trash',
+      destructive: true,
+    },
+  ];
+
   return (
-    <View className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
-      {/* Avatar avec initiales */}
-      <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
-        <Text className="text-lg font-semibold text-indigo-600">{getInitials(contact.name)}</Text>
+    <ContextMenu
+      actions={menuActions}
+      onPress={(e) => {
+        const index = e.nativeEvent.index;
+        if (index === 0) {
+          console.log('Modifier', contact);
+          //router.push(`/contacts/edit/${contact.id}`);
+        } else if (index === 1) {
+          Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Confirmer', onPress: () => deleteContact(contact) },
+          ]);
+        }
+      }}
+      previewBackgroundColor="transparent"
+      dropdownMenuMode={false}>
+      <View className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
+        {/* Avatar avec initiales */}
+        <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
+          <Text className="text-lg font-semibold text-indigo-600">{getInitials(contact.name)}</Text>
+        </View>
+
+        {/* Informations du contact */}
+        <View className="flex-1">
+          <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
+          <Text className="text-sm text-gray-600">{contact.address}</Text>
+        </View>
+
+        {/* Bouton "Nouvelle facture" */}
+        <View className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
+          <FontAwesome6 name="file-invoice" size={18} color="#fff" onPress={handleNewInvoice} />
+        </View>
       </View>
-      {/* Informations du contact */}
-      <View className="flex-1">
-        <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
-        <Text className="text-sm text-gray-600">{contact.address}</Text>
-      </View>
-      {/* Bouton "Nouvelle facture" */}
-      <Pressable
-        onPress={OnNewInvoicePressesd}
-        className="flex-row items-center rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
-        <Feather name="file-plus" size={16} color="#fff" />
-        <Text className="ml-2 text-sm font-medium text-white">Nouvelle facture</Text>
-      </Pressable>
-    </View>
+    </ContextMenu>
   );
 }
 
@@ -52,7 +85,6 @@ export default function ContactsScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filtre les contacts en fonction de la recherche
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -70,13 +102,13 @@ export default function ContactsScreen() {
           placeholderTextColor="#9ca3af"
         />
         {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')} className="p-2">
-            <Feather name="x" size={20} color="#6b7280" />
-          </Pressable>
+          <View className="p-2">
+            <Feather name="x" size={20} color="#6b7280" onPress={() => setSearchQuery('')} />
+          </View>
         )}
       </View>
 
-      {filteredContacts.length === 0 ? ( // Vérifie si la liste est vide
+      {filteredContacts.length === 0 ? (
         <View className="items-center p-8">
           <Feather name="user-plus" size={48} color="#6b7280" />
           <Text className="mt-4 text-2xl font-bold text-gray-700">
@@ -88,17 +120,19 @@ export default function ContactsScreen() {
               : 'Les contacts vont apparaître lorsque vous créerez des factures.'}
           </Text>
           {!searchQuery && (
-            <Pressable
-              onPress={() => router.push('/invoices/generate/new-contact')}
-              className="mt-6 rounded-lg bg-indigo-500 px-6 py-3">
-              <Text className="text-sm font-semibold text-white">Créer un contact</Text>
-            </Pressable>
+            <View className="mt-6 rounded-lg bg-indigo-500 px-6 py-3">
+              <Text
+                className="text-sm font-semibold text-white"
+                onPress={() => router.push('/invoices/generate/new-contact')}>
+                Créer un contact
+              </Text>
+            </View>
           )}
         </View>
       ) : (
         <LegendList
           data={filteredContacts}
-          estimatedItemSize={50} // Taille estimée pour meilleure fluidité
+          estimatedItemSize={86}
           renderItem={({ item }) => <ContactListItem contact={item} />}
         />
       )}

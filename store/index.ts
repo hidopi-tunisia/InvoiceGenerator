@@ -16,7 +16,7 @@ export type InvoiceState = {
   //Contacts :
   contacts: BusinessEntity[];
   addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact
-
+  deleteContact: (id: BusinessEntity) => void; // Fonction de suppression de contact
   setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
@@ -76,6 +76,11 @@ export const useStore = create<InvoiceState>()(
       },
       setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
       // CONTACTS
+      deleteContact: (contact) => {
+        set((state) => ({
+          contacts: state.contacts.filter((c) => c.id !== contact.id),
+        }));
+      },
       addContact: (contact) => {
         // Vérifiez si l'ID existe déjà dans les contacts
         if (!get().contacts.some((c) => c.id === contact.id)) {
