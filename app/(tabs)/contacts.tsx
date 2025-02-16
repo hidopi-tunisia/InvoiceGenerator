@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, Alert } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { BusinessEntity } from '../schema/invoice';
 
@@ -130,9 +131,10 @@ export default function ContactsScreen() {
           )}
         </View>
       ) : (
-        <LegendList
+        <Animated.FlatList
           data={filteredContacts}
-          estimatedItemSize={86}
+          keyExtractor={(item) => item.id}
+          itemLayoutAnimation={LinearTransition}
           renderItem={({ item }) => <ContactListItem contact={item} />}
         />
       )}
