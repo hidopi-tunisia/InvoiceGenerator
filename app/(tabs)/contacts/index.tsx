@@ -6,7 +6,7 @@ import { View, Text, TextInput, Alert } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
-import { BusinessEntity } from '../schema/invoice';
+import { BusinessEntity } from '../../schema/invoice';
 
 import { useStore } from '~/store';
 
@@ -50,7 +50,7 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
         const index = e.nativeEvent.index;
         if (index === 0) {
           console.log('Modifier', contact);
-          //router.push(`/contacts/edit/${contact.id}`);
+          router.push(`/contacts/${contact.id}/edit`);
         } else if (index === 1) {
           Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
             { text: 'Annuler', style: 'cancel' },

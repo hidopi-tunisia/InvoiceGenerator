@@ -28,6 +28,7 @@ export default function TabsLayout() {
         name="contacts"
         options={{
           title: 'Contacts',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesome6 name="contact-book" color={color} size={size} />
           ),

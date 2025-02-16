@@ -17,6 +17,7 @@ export type InvoiceState = {
   contacts: BusinessEntity[];
   addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact
   deleteContact: (id: BusinessEntity) => void; // Fonction de suppression de contact
+  updateContact: (contact: BusinessEntity) => void; // Fonction de mise à jour de contact
   setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
@@ -81,6 +82,11 @@ export const useStore = create<InvoiceState>()(
           contacts: state.contacts.filter((c) => c.id !== contact.id),
         }));
       },
+      updateContact: (contact) => {
+        set((state) => ({
+          contacts: state.contacts.map((c) => (c.id === contact.id ? contact : c)),
+        }));
+      }, // Fonction de mise à jour de contact
       addContact: (contact) => {
         // Vérifiez si l'ID existe déjà dans les contacts
         if (!get().contacts.some((c) => c.id === contact.id)) {
