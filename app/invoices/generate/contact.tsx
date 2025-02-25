@@ -50,7 +50,7 @@ export default function ContactsScreen() {
       <View className="mb-4 flex-row items-center rounded-lg bg-white px-4 py-2 shadow-sm shadow-black/10">
         <Feather name="search" size={20} color="#6b7280" />
         <TextInput
-          placeholder="Rechercher un contact..."
+          placeholder="Recherche un contact..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           className="ml-2 flex-1 text-base text-gray-900"
@@ -73,6 +73,7 @@ export default function ContactsScreen() {
       ) : (
         <Animated.FlatList
           data={filteredContacts}
+          contentInsetAdjustmentBehavior="automatic"
           itemLayoutAnimation={LinearTransition}
           renderItem={({ item: contact }) => (
             <Pressable

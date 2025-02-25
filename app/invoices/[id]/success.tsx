@@ -1,5 +1,5 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -10,15 +10,21 @@ import { Button } from '../../../components/Button';
 import { generateInvoicePdf } from '../../utils/pdf';
 
 import { Invoice } from '~/app/schema/invoice';
+import { getTotals } from '~/app/utils/invoice';
 import { useReviews } from '~/app/utils/review';
 import { useStore } from '~/store';
 
+export const unstable_settings = {
+  headerShown: false, // Désactive le header pour cette page
+};
+
 export default function SuccessScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   // Récupération des données depuis le store
-  const subtotal = useStore((state) => state.getSubtotal());
-  const total = useStore((state) => state.getTotal());
-  const invoice = useStore((state) => state.newInvoice);
-  const resetNewInvoice = useStore((state) => state.resetNewInvoice);
+  const invoice = useStore((data) => data.invoices.find((invoice) => invoice.id === id));
+  const { subtotal, total } = getTotals(invoice || {});
+
+  const resetNewInvoice = useStore((data) => data.resetNewInvoice);
 
   // Gestion de l'état local
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +39,8 @@ export default function SuccessScreen() {
   useEffect(() => {
     const handleGeneratePdf = async () => {
       setIsLoading(true);
+      console.log('invoice', invoice);
+
       try {
         const uri = await generateInvoicePdf(invoice as Invoice, subtotal, total);
         if (uri) {
@@ -81,14 +89,12 @@ export default function SuccessScreen() {
       <LottieView
         ref={animation}
         source={require('../../../assets/nice.lottie')}
-        autoPlay
-        loop={false}
         style={{
           ...StyleSheet.absoluteFillObject,
+          //zIndex: 1, // Met au premier plan
           backgroundColor: '#eee',
         }}
       />
-
       {/* Texte de succès */}
       <AntDesign name="checkcircle" size={60} color="green" />
       <Text className="mb-4 text-center text-2xl font-bold text-gray-800">Félicitations !</Text>

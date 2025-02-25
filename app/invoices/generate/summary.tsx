@@ -5,24 +5,25 @@ import { Text, View } from 'react-native';
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView'; // Utilisation du composant personnalisé
 
+import { getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 export default function InvoiceSummary() {
   const invoice = useStore((data) => data.newInvoice);
   const invoiceInfo = invoice?.invoiceInfo || {};
   const items = invoice?.items || []; // Récupère les items depuis le store
-  const subtotal = useStore((data) => data.getSubtotal());
-  const total = useStore((data) => data.getTotal());
+
+  const { subtotal, total } = getTotals(invoice || {}); // Calcul du total et du sous-total
+
+  // const tva = subtotal * 0.2; // 20% de TVA
+  // const droitDeTimbre = 0.99; // Montant fixe
   //const saveInvoice = useStore((data) => data.saveInvoice); // Récupération de la fonction de sauvegarde de facture
-  const addContact = useStore((data) => data.addContact); // Récupération Sauvegarde du contact du Store
+
+  const saveInvoice = useStore((data) => data.saveInvoice); // Récupération Sauvegarde du contact du Store
 
   const handleGenerateInvoice = () => {
-    // Sauvegarder les contacts dans la BDD du téléphone
-    if (invoice?.recipient) {
-      addContact(invoice.recipient);
-    }
-    console.log('Sauvegarde reussi', invoice?.recipient);
-    router.push('/invoices/generate/success');
+    saveInvoice(); // Appel de la fonction de sauvegarde de facture
+    router.push(`/invoices/${invoice?.id}/success`); // Redirection vers la page de succès
   };
 
   if (!invoice) {

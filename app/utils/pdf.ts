@@ -129,7 +129,7 @@ const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
           <img src="https://hidopi.com/wp-content/uploads/2019/10/logo_hidopi_black_site.png" alt="Logo" class="logo" />
           <div class="invoice-title">
             <h1>Facture</h1>
-<p><strong>Numéro :</strong> #${invoice.invoiceNumber || 'N/A'}</p>
+<p><strong>Numéro :</strong> #${invoice.invoiceInfo?.invoiceNumber || 'N/A'}</p>
 <p><strong>Date :</strong> ${
     invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'
   }</p>
@@ -195,7 +195,7 @@ ${
         <div class="total">
           <div>Sous-total : ${subtotal.toFixed(2)} TND</div>
           <div>TVA (20%) : 40.00 TND</div>
-          <div>Droit de Timbre : 1.00 TND</div>
+          <div>Droit de Timbre : 0.99 TND</div>
           <div style="font-size: 18px;">Total : ${total.toFixed(2)} TND</div>
         </div>
     
