@@ -106,6 +106,13 @@ export const useStore = create<InvoiceState>()(
           }));
         }
       },
+      updateInvoice: (updatedInvoice: Invoice) => {
+        set((state) => ({
+          invoices: state.invoices.map((inv) =>
+            inv.id === updatedInvoice.id ? updatedInvoice : inv
+          ),
+        }));
+      },
     }),
     {
       name: 'facture-store',

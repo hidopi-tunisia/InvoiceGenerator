@@ -16,7 +16,6 @@ export type BusinessEntity = z.infer<typeof businessEntitySchema>;
 
 // Les informations d'une facture (numero, date de la facture et date de fin de paiement)
 export const InvoiceInfoSchema = z.object({
-  
   invoiceNumber: z
     .string({ required_error: 'Le numéro de facture est obligatoire' })
     .min(1, 'Le numéro de facture est obligatoire'),
@@ -48,9 +47,10 @@ export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 //type Items = z.infer<typeof itemsSchema>
 
 export type Invoice = InvoiceInfo & {
-  //invoiceInfo: InvoiceInfo; // Ajout explicite
+  invoiceInfo: InvoiceInfo; // Ajout explicite
   id: string;
   sender: BusinessEntity;
   recipient: BusinessEntity;
   items: InvoiceItem[];
+  status?: 'payée' | 'en attente' | 'en retard';
 };

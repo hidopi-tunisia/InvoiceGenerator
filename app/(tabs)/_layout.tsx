@@ -17,8 +17,16 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Factures',
+          title: 'Accueil',
           headerShown: false,
+          tabBarIcon: ({ color, size }) => <FontAwesome6 name="house" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="invoices"
+        options={{
+          title: 'Factures',
+          headerShown: true,
           tabBarIcon: ({ color, size }) => (
             <FontAwesome6 name="file-invoice" color={color} size={size} />
           ),
