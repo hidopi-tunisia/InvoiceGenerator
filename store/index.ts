@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
+import { generateInvoiceNumber } from '~/app/utils/invoice';
 
 export type InvoiceState = {
   //Profile
@@ -23,6 +24,7 @@ export type InvoiceState = {
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
   saveInvoice: () => void;
+  deleteInvoice: (invoice: Invoice) => void;
   setOnboardingCompleted: () => void;
   //addSenderInfo: (sender: BusinessEntity) => void;
   addRecipientInfo: (recipient: BusinessEntity | null) => void;
@@ -56,6 +58,7 @@ export const useStore = create<InvoiceState>()(
         set(() => ({
           newInvoice: {
             id: Crypto.randomUUID(),
+            invoiceNumber: generateInvoiceNumber(),
             sender: get().profile,
             items: [{ name: 'Prestation 1', quantity: 1, price: 100 }],
             invoiceDate: new Date(),
@@ -105,6 +108,11 @@ export const useStore = create<InvoiceState>()(
             contacts: [contact, ...state.contacts],
           }));
         }
+      },
+      deleteInvoice: (invoice) => {
+        set((state) => ({
+          invoices: state.invoices.filter((inv) => inv.id !== invoice.id),
+        }));
       },
       updateInvoice: (updatedInvoice: Invoice) => {
         set((state) => ({
