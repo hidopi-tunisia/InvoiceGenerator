@@ -36,7 +36,14 @@ export default function GenerateInvoice() {
         <Text className="mb-4 text-2xl font-bold">Nouveau Contact</Text>
 
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
-        <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />
+        <CustomInputText
+          name="address"
+          label="Adresse"
+          placeholder="Entrez l'adresse"
+          multiline
+          numberOfLines={3}
+          className="min-h-28"
+        />
         <CustomInputText name="tva" label="Numéro de TVA" placeholder="Entrez le numéro de TVA" />
         <CustomInputText name="email" label="E-mail" placeholder="E-mail Pro" />
 

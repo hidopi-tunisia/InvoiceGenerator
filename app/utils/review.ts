@@ -38,6 +38,20 @@ export const useReviews = () => {
     ]);
   }, []);
 
+  const requestFeedbackOrReviewInSettigns = async () => {
+    Alert.alert('Votre expérience', "Comment s'est passée la génération de votre facture ?", [
+      {
+        text: 'Pas terrible',
+        style: 'cancel',
+        onPress: askForFeedback, // Feedback Privé
+      },
+      {
+        text: "J'adore 😍",
+        onPress: askForReview,
+      },
+    ]);
+  };
+
   // ✅ Demander toujours un feedback après chaque génération de PDF
   const requestFeedbackOrReview = useCallback(() => {
     Alert.alert(
@@ -65,11 +79,12 @@ export const useReviews = () => {
       ],
       { cancelable: false }
     );
-  }, [lastReviewRequestAt, askForFeedback, askForReview]);
+  }, [lastReviewRequestAt, askForFeedback, askForReview, requestFeedbackOrReviewInSettigns]);
 
   return {
     requestFeedbackOrReview,
     askForReview,
     askForFeedback,
+    requestFeedbackOrReviewInSettigns
   };
 };

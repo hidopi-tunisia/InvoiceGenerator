@@ -29,7 +29,7 @@ const CustomInputText: React.FC<CustomInputTextProps> = ({ label, multiline, nam
               onBlur={onBlur}
               multiline={multiline}
               {...props}
-              style={tw`border ${error ? 'border-red-500' : 'border-gray-300'} bg-white rounded-md px-4 py-2 text-base ${multiline ? 'h-20' : 'h-12'}`}
+              style={tw`border ${error ? 'border-red-500' : 'border-gray-300'} bg-white rounded-md px-4 py-2 text-base ${multiline ? 'leading-relaxed' : 'h-12'}`}
             />
             {error && <Text style={tw`text-red-500 text-sm mt-1`}>{error.message}</Text>}
           </>

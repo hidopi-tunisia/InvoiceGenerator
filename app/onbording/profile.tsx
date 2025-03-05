@@ -42,8 +42,14 @@ export default function ProfileScreen() {
             label="Adresse"
             placeholder="Entrez l'adresse"
             multiline
+            numberOfLines={3}
+            className="min-h-28"
           />
-          <CustomInputText name="tva" label="Numéro de TVA" placeholder="Entrez le numéro de TVA" />
+          <CustomInputText
+            name="tva"
+            label="Numéro de TVA (optionnel) "
+            placeholder="Entrez le numéro de TVA"
+          />
           {/* ajouter le logo */}
 
           <Button

@@ -1,41 +1,39 @@
 import { Feather } from '@expo/vector-icons';
+import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { View, Text, ScrollView, Pressable, Linking } from 'react-native';
 
+import { useReviews } from '~/app/utils/review';
 import { useStore } from '~/store';
 
-export default function ProfileScreen() {
+export default function SettingScreen() {
   const router = useRouter();
   const profile = useStore((state) => state.profile);
   const resetNewInvoice = useStore((state) => state.resetNewInvoice);
+  const { requestFeedbackOrReview, askForFeedback } = useReviews();
 
   const settingsItems = [
     {
       title: 'Modifier le profil',
       icon: 'edit',
-      action: () => router.push('/profile/edit'),
-    },
-    {
-      title: 'À propos',
-      icon: 'info',
-      //action: () => router.push('/profile/about'),
-    },
-    {
-      title: "Évaluer l'application",
-      icon: 'star',
-      action: () => Linking.openURL('https://...'), // Lien vers votre store
-    },
-    {
-      title: 'Envoyer un feedback',
-      icon: 'mail',
-      action: () => Linking.openURL('mailto:h.chebbi@hidopi.com'),
+      action: () => router.push('/settings/edit'),
     },
     {
       title: 'Taxes & Devise',
       icon: 'dollar-sign',
-      action: () => router.push('/profile/tax-currency'),
+      action: () => router.push('/settings/tax-currency'),
+    },
+    {
+      title: "Évaluer l'application",
+      icon: 'star',
+      action: () => requestFeedbackOrReview(), // Lien vers votre store
+    },
+    {
+      title: 'Envoyer un feedback',
+      icon: 'mail',
+      action: () => askForFeedback(),
     },
   ];
   const handleLogout = () => {
@@ -71,10 +69,11 @@ export default function ProfileScreen() {
         ))}
       </View>
       {/* Section supplémentaire */}
+
       <View className="mt-6 bg-white px-4 py-4">
         <Pressable
           className="flex-row items-center justify-between py-4"
-          onPress={() => Linking.openURL('https://votreentreprise.com/help')}>
+          onPress={() => Linking.openURL('https://hidopi.com')}>
           <Text className="text-base text-gray-900">Centre d'aide</Text>
           <Feather name="external-link" size={20} color="#6b7280" />
         </Pressable>
