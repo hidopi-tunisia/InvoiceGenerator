@@ -56,7 +56,6 @@
     "zeego": "^2.0.4",
     "zod": "^3.23.8",
     "zustand": "^4.5.1",
-    "undefined": "react-native-picker/picker",
     "@react-native-picker/picker": "2.9.0"
   },
   "devDependencies": {

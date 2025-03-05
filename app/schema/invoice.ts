@@ -8,6 +8,8 @@ export const businessEntitySchema = z.object({
     .min(1, "L'adresse obligatoire"),
   tva: z.string().optional(),
   email: z.string().optional(),
+  currency: z.string().optional(),
+  taxRate: z.number().optional(),
 });
 
 //BusinessEntity : une entité autrement dit, c'est les info de l'entreprise qui va facturer à son client.

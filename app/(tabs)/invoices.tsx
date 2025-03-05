@@ -1,4 +1,3 @@
-// app/(tabs)/invoices/index.tsx
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -10,6 +9,16 @@ import { Invoice } from '../schema/invoice';
 import { getTotals } from '../utils/invoice';
 
 import { useStore } from '~/store';
+
+export const formatNumberWithSpaces = (number: number): string => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+    .format(number)
+    .replace(/ /g, ' '); // Remplace les espaces insécables par des espaces normaux
+};
 
 const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   const deleteInvoice = useStore((state) => state.deleteInvoice);
@@ -34,7 +43,9 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
         </View>
 
         <View className="items-end">
-          <Text className="text-lg font-semibold text-gray-900">{total.toFixed(2)} TND</Text>
+          <Text className="text-lg font-semibold text-gray-900">
+            {formatNumberWithSpaces(total)} TND
+          </Text>
           <Text className="mt-1 text-sm text-gray-500">
             {new Date(invoice.invoiceDate).toLocaleDateString()}
           </Text>
@@ -67,7 +78,7 @@ export default function InvoicesScreen() {
     if (filter === 'unpaid') return matchesYear && invoice.status === 'en attente';
     if (filter === 'overdue') {
       const dueDate = new Date(invoice.invoiceDueDate || '');
-      return matchesYear && invoice.status === 'impayée' && dueDate < new Date();
+      return matchesYear && invoice.status === 'en retard' && dueDate < new Date();
     }
     return matchesYear;
   });
