@@ -20,6 +20,10 @@ export type InvoiceState = {
   addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact
   deleteContact: (id: BusinessEntity) => void; // Fonction de suppression de contact
   updateContact: (contact: BusinessEntity) => void; // Fonction de mise à jour de contact
+  //getSingleInvoice: (invoice: Invoice) => Invoice | undefined;
+  updateInvoice: (invoice: Invoice) => void;
+  // Fonction de mise à jour de facture
+  //updateInvoiceStatus: (invoiceId: string, newStatus: 'payée' | 'en attente' | 'en retard') => void;
   setProfile: (profile: BusinessEntity) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
@@ -66,6 +70,7 @@ export const useStore = create<InvoiceState>()(
           },
         })), // Objet pour stocker les données
       resetNewInvoice: () => set(() => ({ newInvoice: null })),
+
       //addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"
       addRecipientInfo: (recipient) =>
         set((state) => ({
@@ -114,10 +119,10 @@ export const useStore = create<InvoiceState>()(
           invoices: state.invoices.filter((inv) => inv.id !== invoice.id),
         }));
       },
-      updateInvoice: (updatedInvoice: Invoice) => {
+      updateInvoice: (updatedInvoice) => {
         set((state) => ({
-          invoices: state.invoices.map((inv) =>
-            inv.id === updatedInvoice.id ? updatedInvoice : inv
+          invoices: state.invoices.map((invoice) =>
+            invoice.id === updatedInvoice.id ? updatedInvoice : invoice
           ),
         }));
       },

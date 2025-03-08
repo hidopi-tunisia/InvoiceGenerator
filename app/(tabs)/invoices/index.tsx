@@ -5,9 +5,8 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Alert } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
-import { Invoice } from '../schema/invoice';
-import { getTotals } from '../utils/invoice';
-
+import { Invoice } from '~/app/schema/invoice';
+import { getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 export const formatNumberWithSpaces = (number: number): string => {
@@ -33,8 +32,9 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   };
 
   return (
-    <Pressable
-      //onPress={() => router.push(`/invoices/${invoice.id}`)}
+    <Pressable 
+    //router.push(`/contacts/${contact.id}/edit`);
+    onPress={() => router.push(`/invoices/${invoice.id}/detail`)}
       className="mb-3 rounded-xl bg-white p-5 shadow-sm shadow-black/5">
       <View className="flex-row items-start justify-between">
         <View className="flex-1">

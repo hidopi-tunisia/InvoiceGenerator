@@ -38,11 +38,6 @@ export default function Home() {
 
         {/* Bouton mis en avant */}
 
-        {/* <Button
-          title={existingNewInvoice ? 'Reprendre la facture' : 'Nouvelle Facture'}
-          className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"
-          onPress={onNewInvoice}
-        /> */}
         <Button
           title="Nouvelle Facture"
           className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"

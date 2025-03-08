@@ -149,7 +149,6 @@ ${
             <h2>De :</h2>
             <p>${invoice.sender.name}</p>
             <p>${invoice.sender.address}</p>
-            <p>Salakta, Mahdia, Tunisie</p>
             
             <p>${invoice.sender.tva}</p>
           </div>
@@ -157,7 +156,6 @@ ${
             <h2>À :</h2>
             <p>${invoice.recipient.name}</p>
             <p>${invoice.recipient.address}</p>
-            <p>El Mourouj 3, Ben Arous, 2074, Tunisie</p>
             <p>${invoice.recipient.email}</p>
             <p>${invoice.sender.tva}</p>
           </div>

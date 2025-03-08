@@ -27,7 +27,7 @@ export default function TabsLayout() {
         name="invoices"
         options={{
           title: 'Factures',
-          headerShown: true,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesome6 name="file-invoice" color={color} size={size} />
           ),

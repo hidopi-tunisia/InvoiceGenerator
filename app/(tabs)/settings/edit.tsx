@@ -39,8 +39,16 @@ export default function ProfileScreen() {
         </Text>
         <Text className="mb-4 text-gray-600">Assurez-vous qu'elles sont exactes.</Text>
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
-        <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />
+        <CustomInputText
+          name="address"
+          label="Adresse"
+          placeholder="Entrez l'adresse complète"
+          multiline
+          numberOfLines={3}
+          className="min-h-28"
+        />
         <CustomInputText name="tva" label="Numéro de TVA" placeholder="Entrez le numéro de TVA" />
+        <CustomInputText name="siret" label="Siret" placeholder="Siret" />
         {/* ajouter le logo */}
 
         <Button title="Sauvegarder" className="mt-auto" onPress={methods.handleSubmit(onSubmit)} />
