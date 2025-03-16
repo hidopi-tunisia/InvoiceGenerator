@@ -42,7 +42,7 @@ export default function GenerateInvoice() {
   return (
     <FormProvider {...methods}>
       <KeyboardAwareScrollView>
-        <Text className="mb-4 text-2xl font-bold">Invoice info</Text>
+        <Text className="mb-4 text-2xl font-bold">Facture</Text>
 
         <CustomInputText
           name="invoiceNumber"

@@ -43,5 +43,6 @@
       }
     }
   },
-  "continue.showWelcomeMessage": false
+  "continue.showWelcomeMessage": false,
+  "postman.settings.dotenv-detection-notification-visibility": false
 }
