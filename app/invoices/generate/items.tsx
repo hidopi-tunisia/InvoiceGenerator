@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { Button } from '../../../components/Button';
 import CustomInputText from '../../../components/CustomInputText';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
+import NumericInputText from '../../../components/NumericInputText';
 import { InvoiceItem, invoiceItemSchema } from '../../schema/invoice';
 
 import { useStore } from '~/store';
@@ -51,13 +52,14 @@ export default function GenerateInvoice() {
         {/* Champs dynamiques */}
         <View className="mb-5 gap-1 shadow">
           {fields.map((item, index) => (
-            <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-500 p-4 shadow-md">
+            <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-100 p-4 shadow-md">
               {/* Ajout de la marge inférieure pour séparer les items */}
               <Text className="mb-2 text-lg font-semibold">Item {index + 1}</Text>
               <CustomInputText
                 name={`items.${index}.name`}
                 label="Désignation"
                 placeholder="Entrez la désignation"
+                multiline
               />
               {/* Champs Quantité et prix et Total */}
               <View className="flex-row gap-4">
@@ -73,15 +75,7 @@ export default function GenerateInvoice() {
                   />
                 </View>
                 <View className="flex-1">
-                  <CustomInputText
-                    name={`items.${index}.price`}
-                    label="Prix"
-                    placeholder="Prix"
-                    keyboardType="numeric"
-                    onChangeText={(value) => {
-                      methods.setValue(`items.${index}.price`, Number(value));
-                    }}
-                  />
+                  <NumericInputText name={`items.${index}.price`} label="Prix" placeholder="Prix" />
                 </View>
                 <View className="flex-1">
                   <Text className="mb-1 text-right text-lg font-semibold text-gray-600">Total</Text>
