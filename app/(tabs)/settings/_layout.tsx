@@ -11,7 +11,7 @@ export default function ProfileLayout() {
       <Stack.Screen
         name="edit"
         options={{
-          title: 'Modifier le profile',
+          title: 'Modifier le profil',
         }}
       />
       <Stack.Screen

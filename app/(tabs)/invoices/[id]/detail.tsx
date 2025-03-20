@@ -1,12 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
-import { Invoice } from '~/app/schema/invoice';
+import { customEvent } from 'vexo-analytics';
+
 import { getTotals } from '~/app/utils/invoice';
 import { generateInvoicePdf } from '~/app/utils/pdf';
-import { customEvent } from 'vexo-analytics';
 import { useStore } from '~/store';
 //import { formatNumberWithSpaces } from '~/app/utils/numbers';
 
@@ -19,7 +19,7 @@ export default function InvoiceDetailScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUri, setPdfUri] = useState<string | null>(null);
-  const animation = useRef(null);
+  //const animation = useRef(null);
 
   // Calcul des totaux avec la taxe du profil
   const { subtotal, total } = getTotals({
@@ -60,6 +60,7 @@ export default function InvoiceDetailScreen() {
       });
     } catch (error) {
       Alert.alert('Erreur', 'Échec du partage');
+      console.error('Erreur partage:', error);
     }
   };
 

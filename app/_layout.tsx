@@ -45,6 +45,13 @@ function Layout() {
       {/* hide header for generate invoice screen */}
       <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
       <Stack.Screen name="onbording" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen
+        name="invoices/[id]/success"
+        options={{
+          headerTitle: 'Yoopiii', // Titre par défaut pour les sous-routes
+          headerBackTitle: 'Accueil', // Texte du bouton retour
+        }}
+      />
     </Stack>
   );
 }

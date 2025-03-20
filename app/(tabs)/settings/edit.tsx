@@ -26,7 +26,6 @@ export default function ProfileScreen() {
   });
   const onSubmit = (data: any) => {
     setProfile(data); //TODO: integrer AutoSave ??
-    // Afficher Success Screen :)
     router.back();
   };
 

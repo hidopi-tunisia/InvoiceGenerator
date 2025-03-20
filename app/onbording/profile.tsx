@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -19,6 +20,7 @@ export default function ProfileScreen() {
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
     defaultValues: {
+      id: profile?.id || Crypto.randomUUID(),
       name: profile?.name,
       address: profile?.address,
       tva: profile?.tva,
@@ -27,7 +29,8 @@ export default function ProfileScreen() {
   const onSubmit = (data: any) => {
     setProfile(data);
     setOnboardingCompleted();
-    router.replace('/');
+    //router.replace('/');
+    router.push('/');
   };
 
   return (
