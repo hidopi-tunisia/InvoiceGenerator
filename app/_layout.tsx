@@ -1,10 +1,12 @@
 import '../global.css';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
-import { ErrorBoundaryProps, Stack, useNavigationContainerRef } from 'expo-router';
+import { ErrorBoundaryProps, Redirect, Stack, useNavigationContainerRef } from 'expo-router';
 import { useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { vexo } from 'vexo-analytics';
+
+import { useStore } from '~/store';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
 
@@ -30,6 +32,7 @@ Sentry.init({
 });
 
 function Layout() {
+  
   // Capture the NavigationContainer ref and register it with the integration.
   const ref = useNavigationContainerRef();
 
@@ -38,6 +41,11 @@ function Layout() {
       navigationIntegration.registerNavigationContainer(ref);
     }
   }, [ref]);
+  const onboardingCompleted = useStore((state) => state.onboardingCompleted);
+
+  if (!onboardingCompleted) {
+    return <Redirect href="/onbording" />;
+  }
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />

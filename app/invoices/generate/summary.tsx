@@ -1,8 +1,10 @@
 import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
+
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
+
 import { getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 

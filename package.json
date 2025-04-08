@@ -12,11 +12,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-native-community/cli": "latest",
     "@expo/vector-icons": "^14.0.0",
     "@hookform/resolvers": "^3.9.1",
     "@legendapp/list": "^1.0.0-beta.2",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/cli": "latest",
     "@react-native-community/datetimepicker": "8.2.0",
     "@react-native-picker/picker": "2.9.0",
     "@react-navigation/native": "^7.0.0",
@@ -44,6 +44,7 @@
     "react-hook-form": "^7.54.0",
     "react-native": "0.76.6",
     "react-native-context-menu-view": "^1.17.0",
+    "react-native-flags": "^1.0.0",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-modal-datetime-picker": "^18.0.0",
