@@ -1,7 +1,8 @@
-import { TOKEN } from '../constants/token';
+import { auth } from '../config'; // Import Firebase auth
 
 const getAuthorization = async () => {
-  return TOKEN;
+  const token = await auth.currentUser?.getIdToken();
+  return token;
 };
 
 export { getAuthorization };

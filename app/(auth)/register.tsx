@@ -1,32 +1,31 @@
-// app/(auth)/login.tsx
+// app/(auth)/register.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { auth } from '../../config'; // Importez votre instance auth depuis config.ts
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 // Import navigation
 import { useNavigation } from '@react-navigation/native';
 
-const LoginScreen = () => {
+const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   // Get navigation
   const navigation = useNavigation();
-
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // L'utilisateur est connecté, naviguez vers l'écran principal
-      navigation.navigate('(tabs)');
+      await createUserWithEmailAndPassword(auth, email, password);
+      // L'utilisateur est inscrit et connecté, naviguez vers l'écran principal
     } catch (error: any) {
       setError(error.message);
+      navigation.navigate('(tabs)');
     }
   };
 
   return (
     <View>
-      <Text>Login</Text>
+      <Text>Register</Text>
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
       <TextInput
         placeholder="Email"
@@ -39,14 +38,10 @@ const LoginScreen = () => {
         value={password}
         onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
-      {/* Link to registration */}
-      <Button
-        title="Go to Register"
-        onPress={() => navigation.navigate('/(auth)/register')}
-      />
+      <Button title="Register" onPress={handleRegister} />
+      {/* Lien vers la connexion si nécessaire */}
     </View>
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;
