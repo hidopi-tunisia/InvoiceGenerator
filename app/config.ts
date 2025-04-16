@@ -4,12 +4,12 @@ import { getAuth } from 'firebase/auth';
 // Importez d'autres services Firebase si nécessaire (Firestore, etc.)
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyAdbZ2AASmBINz-Qc7fEKf3z_yJHiyJMAU",
+  authDomain: "invoicesdev-1606d.firebaseapp.com",
+  projectId: "invoicesdev-1606d",
+  storageBucket: "invoicesdev-1606d.firebasestorage.app",
+  messagingSenderId: "433550247313",
+  appId: "1:433550247313:web:3e2d0c4421fe52a88ec630",
   // measurementId: "YOUR_MEASUREMENT_ID" // Facultatif
 };
 
