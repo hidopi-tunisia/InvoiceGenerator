@@ -1,4 +1,4 @@
-export const ENDPOINT = 'https://invoice-backend-pau9.onrender.com';
+export const ENDPOINT = 'https://invoice-backend-qq9j.onrender.com';
 export const HTTPMethod = {
   GET: 'GET',
   POST: 'POST',
