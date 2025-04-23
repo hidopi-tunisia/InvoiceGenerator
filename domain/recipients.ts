@@ -1,5 +1,5 @@
-import { ENDPOINT, HTTPMethod } from '../constants';
-import { getAuthorization } from './authorization';
+import { HTTPMethod } from '../constants'; // ENDPOINT et getAuthorization sont gérés par fetchApi
+import fetchApi from '~/app/utils/apiClient'; // Importer le nouveau client API
 
 type Filters = {
   page?: number;
@@ -8,13 +8,12 @@ type Filters = {
   email?: string;
 };
 const getRecipients = async (filters?: Filters) => {
-  const token = await getAuthorization();
-  const params = new URLSearchParams(filters);
-  const response = await fetch(`${ENDPOINT}/recipients?${params}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  // Convertir les filtres en chaîne de requête
+  // Attention: URLSearchParams attend Record<string, string> ou [string, string][]
+  // Il faudra peut-être ajuster la conversion en fonction du type réel de Filters
+  const params = new URLSearchParams(filters as Record<string, string>).toString();
+  const path = params ? `/recipients?${params}` : '/recipients';
+  return fetchApi(path, { method: HTTPMethod.GET });
 };
 
 type CreateRecipientPayload = {
@@ -24,26 +23,14 @@ type CreateRecipientPayload = {
   vat?: number;
 };
 const createRecipient = async (payload: CreateRecipientPayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients`, {
+  return fetchApi('/recipients', {
     method: HTTPMethod.POST,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(payload),
   });
-  return response.json();
 };
 
 const getRecipientById = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  return fetchApi(`/recipients/${id}`, { method: HTTPMethod.GET });
 };
 
 type UpdateRecipientPayload = {
@@ -53,26 +40,15 @@ type UpdateRecipientPayload = {
   vat?: number;
 };
 const updateRecipientById = async (id: string, payload: UpdateRecipientPayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
+  return fetchApi(`/recipients/${id}`, {
     method: HTTPMethod.PATCH,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(payload),
   });
-  return response.json();
 };
 
 const removeRecipient = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
-    method: HTTPMethod.DELETE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  // fetchApi gère la réponse 204 No Content et retourne null dans ce cas
+  return fetchApi(`/recipients/${id}`, { method: HTTPMethod.DELETE });
 };
 
 export {
