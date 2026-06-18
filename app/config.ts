@@ -1,7 +1,11 @@
 // app/config.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp } from 'firebase/app';
-import { Auth, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import { Auth, getAuth, initializeAuth } from 'firebase/auth';
+// `getReactNativePersistence` existe dans le build React Native de firebase/auth
+// mais n'est pas déclaré dans ses types (.d.ts) en v11 → import séparé toléré côté types.
+// @ts-expect-error -- absent des types firebase/auth v11, présent au runtime (build RN)
+import { getReactNativePersistence } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAdbZ2AASmBINz-Qc7fEKf3z_yJHiyJMAU',

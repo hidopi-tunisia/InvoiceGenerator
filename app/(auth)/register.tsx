@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import { Button, Text, TextInput, View } from 'react-native';
 
+import { useGoogleSignIn } from '~/hooks/useGoogleSignIn';
 import { auth } from '../config'; // Instance Firebase auth
 
 const RegisterScreen = () => {
@@ -11,6 +12,7 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { signInWithGoogle, signingIn, ready: googleReady } = useGoogleSignIn(setError);
 
   const handleRegister = async () => {
     setError('');
@@ -35,6 +37,12 @@ const RegisterScreen = () => {
       />
       <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
       <Button title="Register" onPress={handleRegister} />
+      {/* Inscription / connexion via Google */}
+      <Button
+        title={signingIn ? 'Inscription Google…' : "S'inscrire avec Google"}
+        disabled={!googleReady || signingIn}
+        onPress={signInWithGoogle}
+      />
       {/* Lien vers la connexion */}
       <Button title="Go to Login" onPress={() => router.push('/(auth)/login')} />
     </View>

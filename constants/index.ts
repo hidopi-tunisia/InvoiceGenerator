@@ -11,6 +11,19 @@ export const API_BASE = {
 
 // Surcharge possible via EXPO_PUBLIC_API_URL (.env). Défaut : staging.
 export const ENDPOINT = process.env.EXPO_PUBLIC_API_URL ?? API_BASE.STAGING;
+// OAuth Google (Firebase Auth via expo-auth-session).
+// À récupérer dans Google Cloud Console > "API et services" > "Identifiants" (OAuth 2.0),
+// après avoir activé Google dans Firebase Console > Authentication > Sign-in method.
+// Renseigner via .env (préfixe EXPO_PUBLIC_ obligatoire pour être exposé au client) :
+//   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com   (type "Web")
+//   EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=xxxx.apps.googleusercontent.com (type "Android")
+//   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=xxxx.apps.googleusercontent.com    (type "iOS")
+export const GOOGLE_AUTH = {
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+};
+
 export const HTTPMethod = {
   GET: 'GET',
   POST: 'POST',

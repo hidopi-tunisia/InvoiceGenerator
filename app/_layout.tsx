@@ -2,6 +2,7 @@ import '../global.css';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
 import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 'expo-router';
+import { User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity} from 'react-native';
 import { vexo } from 'vexo-analytics';
@@ -33,7 +34,7 @@ Sentry.init({
 });
 
 function Layout() {
-  const [user, setUser] = useState(null); // Track user authentication state
+  const [user, setUser] = useState<User | null>(null); // Track user authentication state
   const [authReady, setAuthReady] = useState(false); // onAuthStateChanged a répondu au moins une fois
   // Capture the NavigationContainer ref and register it with the integration.
   const ref = useNavigationContainerRef();
