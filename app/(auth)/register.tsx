@@ -1,7 +1,7 @@
 // app/(auth)/register.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
-import { auth } from '../../config'; // Importez votre instance auth depuis config.ts
+import { auth } from '../config'; // Importez votre instance auth depuis config.ts
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 // Import navigation
 import { useNavigation } from '@react-navigation/native';

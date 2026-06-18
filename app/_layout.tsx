@@ -1,8 +1,8 @@
 import '../global.css';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
-import { ErrorBoundaryProps, Redirect, Stack, useNavigationContainerRef } from 'expo-router';
-import { useEffect } from 'react';
+import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity} from 'react-native';
 import { vexo } from 'vexo-analytics';
 
@@ -34,8 +34,11 @@ Sentry.init({
 
 function Layout() {
   const [user, setUser] = useState(null); // Track user authentication state
+  const [authReady, setAuthReady] = useState(false); // onAuthStateChanged a répondu au moins une fois
   // Capture the NavigationContainer ref and register it with the integration.
   const ref = useNavigationContainerRef();
+  const router = useRouter();
+  const onboardingCompleted = useStore((state) => state.onboardingCompleted);
 
   useEffect(() => {
     if (ref?.current) {
@@ -45,39 +48,26 @@ function Layout() {
     // Subscribe to authentication state changes
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       setUser(authUser);
+      setAuthReady(true);
     });
 
     // Unsubscribe on component unmount
     return () => unsubscribe();
-    }
   }, [ref]);
-  const onboardingCompleted = useStore((state) => state.onboardingCompleted);
 
-  // Conditional redirection based on auth and onboarding
-  if (!user) {
-    return <Redirect href="/(auth)/login" />;
-  } else if (!onboardingCompleted) {
-    return <Redirect href="/onbording" />;
-  } else {
-    return (
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
-        {/* hide header for generate invoice screen */}
-        <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
-        <Stack.Screen name="onbording" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen
-          name="invoices/[id]/success"
-          options={{
-            headerTitle: 'Yoopiii', // Titre par défaut pour les sous-routes
-            headerBackTitle: 'Accueil', // Texte du bouton retour
-          }}
-        />
-        {/* Add auth screens */}
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-    );
-  }
+  // Redirection conditionnelle — faite APRÈS le montage du navigateur (impératif),
+  // sinon expo-router lève « Attempted to navigate before mounting the Root Layout ».
+  useEffect(() => {
+    if (!authReady) return;
+    if (!user) {
+      router.replace('/(auth)/login');
+    } else if (!onboardingCompleted) {
+      router.replace('/onbording');
+    } else {
+      router.replace('/(tabs)');
+    }
+  }, [authReady, user, onboardingCompleted]);
+
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
@@ -92,6 +82,8 @@ function Layout() {
           headerBackTitle: 'Accueil', // Texte du bouton retour
         }}
       />
+      {/* Add auth screens */}
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
     </Stack>
   );
 }
