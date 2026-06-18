@@ -1,26 +1,25 @@
 // app/(auth)/login.tsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
-import { auth } from '../config'; // Importez votre instance auth depuis config.ts
+import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-// Import navigation
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { Button, Text, TextInput, View } from 'react-native';
+
+import { auth } from '../config'; // Instance Firebase auth
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  // Get navigation
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const handleLogin = async () => {
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // L'utilisateur est connecté, naviguez vers l'écran principal
-      navigation.navigate('(tabs)');
-    } catch (error: any) {
-      setError(error.message);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      // La redirection est gérée par l'auth-gate dans app/_layout.tsx
+      // (onAuthStateChanged → /onbording ou /(tabs)).
+    } catch (e: any) {
+      setError(e?.message ?? 'Échec de la connexion');
     }
   };
 
@@ -30,21 +29,15 @@ const LoginScreen = () => {
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
       <TextInput
         placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
       <Button title="Login" onPress={handleLogin} />
-      {/* Link to registration */}
-      <Button
-        title="Go to Register"
-        onPress={() => navigation.navigate('/(auth)/register')}
-      />
+      {/* Lien vers l'inscription */}
+      <Button title="Go to Register" onPress={() => router.push('/(auth)/register')} />
     </View>
   );
 };
