@@ -26,3 +26,9 @@ android/
 # Logs de build/dev temporaires
 build.log
 metro.log
+
+# Signature / credentials EAS (NE PAS committer)
+credentials.json
+credentials/
+*.jks
+*.keystore
