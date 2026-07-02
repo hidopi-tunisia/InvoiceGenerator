@@ -91,7 +91,10 @@
 ## 12. Push Notifications
 
 - 🔵 **Hors MVP.** Aucune infra n'existe et ce n'est pas bloquant store.
-- 🔵 Le jour venu : `expo-notifications` + token Expo Push enregistré au backend (`domain/notifications.ts`, hook `hooks/usePushNotifications.ts`) ; demander la permission **en contexte** (après la première facture, pas au premier lancement) ; gérer le refus sans nag.
+- 🔵 Le jour venu (règles vérifiées sur la doc Expo actuelle) : `expo-notifications` + `getExpoPushTokenAsync({ projectId })` (projectId EAS via `Constants.expoConfig.extra.eas.projectId`), token enregistré au backend (`domain/notifications.ts`, hook `hooks/usePushNotifications.ts`).
+- 🔵 Sur Android : créer un **notification channel avant** de demander la permission (sans canal, le prompt Android 13+ n'apparaît pas) ; les listeners (`addNotificationReceivedListener`/`addNotificationResponseReceivedListener`) se nettoient avec `.remove()` dans le cleanup du `useEffect`.
+- 🔵 Le push distant est **indisponible dans Expo Go depuis SDK 53** : tester uniquement sur development build EAS (le projet en a déjà).
+- 🔵 Demander la permission **en contexte** (après la première facture, pas au premier lancement) ; gérer le refus sans nag.
 
 ## 13. Deep Links
 
@@ -162,6 +165,7 @@
 ## 24. Dark Mode
 
 - 🟢 **MVP : light-only assumé.** Verrouiller `"userInterfaceStyle": "light"` dans `app.json` 🟡 — une app qui suit le thème système sans styles sombres affiche des écrans illisibles, motif de mauvaises reviews.
+- 🟢 Prérequis technique déjà rempli : sur Android, `userInterfaceStyle` est **ignoré** si `expo-system-ui` n'est pas installé — le projet l'a (`expo-system-ui ~4.0.7`), ne pas le retirer du `package.json`.
 - 🔵 Post-MVP : variantes `dark:` NativeWind sur la palette centralisée (§23), puis passer `userInterfaceStyle` à `"automatic"`. Ne jamais faire l'un sans l'autre.
 
 ## 25. Accessibilité
@@ -198,16 +202,52 @@ Ordonnée par blocage. Tout 🟡 ci-dessus doit être traité ; en synthèse :
 4. `npx tsc --noEmit` et `npm run lint` passent sans erreur.
 
 **Bloquant review store**
-5. Permissions déclarées = permissions utilisées (audit `app.json` post-prebuild).
-6. `userInterfaceStyle: "light"` verrouillé ; icône, splash, nom « Myfakto » cohérents.
-7. Politique de confidentialité (URL) + formulaires App Privacy (Apple) / Data Safety (Google) reflétant : Firebase Auth, Sentry, Vexo.
-8. Flux mot de passe oublié : `forgot_psx.tsx` a été supprimé — soit le réimplémenter (`sendPasswordResetEmail`), soit retirer tout lien vers lui. Un lien mort en review = rejet.
-9. Suppression de compte accessible dans l'app (exigence Apple/Google pour toute app avec création de compte).
+5. **Target API level Android** : le projet est en Expo SDK 52 (`targetSdkVersion` 34 par défaut) alors que Google Play exige un target API level récent pour toute nouvelle soumission (35 depuis fin 2025, l'exigence monte chaque année — l'écosystème Expo est au SDK 56 / target 36). Vérifier l'exigence en vigueur sur la Play Console au moment de soumettre, puis : soit relever `targetSdkVersion`/`compileSdkVersion` via `expo-build-properties` (déjà utilisé dans le projet) et tester sur device Android 14+, soit — préférable mais plus long — upgrader le SDK Expo. **Sans ça, la soumission Play Store est refusée d'office.**
+6. Permissions déclarées = permissions utilisées (audit `app.json` post-prebuild).
+7. `userInterfaceStyle: "light"` verrouillé ; icône, splash, nom « Myfakto » cohérents.
+8. Politique de confidentialité (URL) + formulaires App Privacy (Apple) / Data Safety (Google) reflétant : Firebase Auth, Sentry, Vexo.
+9. Flux mot de passe oublié : `forgot_psx.tsx` a été supprimé — soit le réimplémenter (`sendPasswordResetEmail`), soit retirer tout lien vers lui. Un lien mort en review = rejet.
+10. Suppression de compte accessible dans l'app (exigence Apple/Google pour toute app avec création de compte).
 
 **Qualité de lancement**
-10. Timeouts sur tout appel réseau ; messages d'erreur français partout.
-11. Accessibilité minimale : labels sur les contrôles à icône, touch targets 44 pt.
-12. Test manuel du parcours complet en **mode avion** : onboarding → facture → PDF → partage.
-13. Build `eas build --profile production` testé sur device réel iOS + Android milieu de gamme.
+11. Timeouts sur tout appel réseau ; messages d'erreur français partout.
+12. Accessibilité minimale : labels sur les contrôles à icône, touch targets 44 pt.
+13. Test manuel du parcours complet en **mode avion** : onboarding → facture → PDF → partage.
+14. Build `eas build --profile production` testé sur device réel iOS + Android milieu de gamme.
 
 **Explicitement hors MVP** (ne pas s'y disperser) : sync backend, push notifications, i18n/RTL, dark mode, pull-to-refresh, skeletons, pagination.
+
+---
+
+# 📦 Annexe — Procédure d'upgrade Expo SDK (item n°5)
+
+> Référence pour résorber la dette SDK 52 → 56. Source : skill officiel Expo `upgrading-expo` (juillet 2026).
+
+## Procédure
+
+```bash
+npx expo install expo@latest    # monter le SDK
+npx expo install --fix          # aligner toutes les dépendances Expo/RN
+npx expo-doctor                 # diagnostics
+npx expo prebuild --clean       # android/ et ios/ sont générés → les régénérer
+rm -rf node_modules .expo && npm install   # purge des caches si comportement étrange
+```
+
+Relire le changelog de chaque SDK traversé : https://expo.dev/changelog. Monter **un SDK majeur à la fois** est plus sûr que 52 → 56 d'un coup.
+
+## Breaking changes sur le chemin 52 → 56, spécifiques à ce projet
+
+| SDK | Changement | Impact Myfakto |
+|---|---|---|
+| 53 | **New Architecture activée par défaut** (Expo Go ne supporte plus l'ancienne archi) | Auditer les libs natives : `lottie-react-native` 5.x (support new arch à partir de v6 — upgrade obligatoire), `react-native-keyboard-aware-scroll-view` (non maintenue, prévoir remplacement), `react-native-context-menu-view`, `react-native-flags` |
+| 53 | Push distant indisponible dans Expo Go | Déjà documenté §12 — dev builds EAS uniquement |
+| 54 | **React 19** : `Context.Provider` → `Context`, `forwardRef` supprimé, `useContext` → `use` | Vérifier les composants custom de `components/` qui utilisent `forwardRef` |
+| 54 | `react-native-worklets` **requis** pour `react-native-reanimated` | À installer, sinon les animations de listes cassent |
+| 54 | React Compiler stable et recommandé | Opt-in : `"experiments": { "reactCompiler": true }` dans `app.json` |
+| 56 | Imports `@react-navigation/*` → `expo-router` (codemod fourni) | Converge avec le 🟡 du §2 (purge de `useNavigation`) — le faire avant l'upgrade simplifie |
+
+## Housekeeping post-upgrade
+
+- Retirer de `package.json` les paquets implicites : `@babel/core`, `expo-constants` (fournis par Expo), et l'entrée suspecte `hermes-engine` (Hermes est embarqué dans RN).
+- `@react-native-async-storage/async-storage` est déprécié côté Expo au profit de `expo-sqlite/localStorage` — **ne pas migrer à chaud** (le store Zustand persiste dessus, clé `facture-store`, cf. §10) ; planifier la migration avec `migrate()` le jour venu.
+- Re-dérouler l'audit permissions (§14) et le test mode avion (checklist n°13) après chaque `prebuild --clean`.

@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > ✅ **Avant de conclure toute tâche de code, dérouler [QUALITY_GATE.md](./QUALITY_GATE.md) sur le périmètre modifié et produire le rapport PASS/WARNING/FAIL.**
 >
 > 📋 **Avant toute tâche** : consulter les flux utilisateur dans [workflow/](./workflow/) (diagrammes de référence de chaque parcours) et le contrat d'interface backend [API.md](./API.md) (routes, auth, formats de réponse). Tout changement de parcours met à jour `workflow/` ; tout changement d'appel backend respecte `API.md`.
+>
+> 🔁 **Tout développement suit le processus en 12 étapes de [WORKFLOW.md](./WORKFLOW.md)** (comprendre → lire les référentiels → planifier → développer → tester → quality gate → documenter → résumer). Toute modification qui casse une convention documentée exige une confirmation explicite avant de continuer.
 
 ## Commands
 
@@ -28,6 +30,17 @@ eas build --profile development --platform android   # debug APK
 eas build --profile preview                          # internal distribution
 eas build --profile production                       # store release
 eas build --profile simulator --platform ios         # iOS simulator build
+
+# Store submission (production)
+eas build -p ios --profile production --submit       # build + App Store Connect
+eas build -p android --profile production --submit   # build + Play Store
+
+# Versioning (appVersionSource: "remote" — EAS owns build numbers)
+eas build:version:get                                # current remote versions
+
+# Diagnostics
+npx expo-doctor                                      # project health check
+npx expo install --fix                               # align dependency versions with the SDK
 ```
 
 There is no test suite; there are no test commands.

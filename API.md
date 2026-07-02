@@ -174,6 +174,18 @@ Le champ `errors` est un tableau d'objets `{ field, message }` permettant d'iden
 | GET | `/audit/timeline` | ✅ | `page` `limit` `resourceType` | paginé `AuditTrail[]` |
 | GET | `/audit/export` | ✅ | — | `text/csv` |
 
+### Senders — ⚠️ legacy, ne pas consommer depuis l'app
+
+> ⚠️ Routes historiques **non conformes** : réponses brutes (`res.send`) hors `ResponseFormatter`, erreurs 400 pour des erreurs serveur, aucun validator. L'émetteur d'une facture = le **Profile** ; l'app mobile ne doit consommer que `/profile`. Conservées uniquement pour compatibilité, à déprécier.
+
+| M | Route | Auth | Réponse (brute, non enveloppée) |
+|---|---|---|---|
+| GET | `/senders` | ✅ Firebase | `{ senders: Sender[] }` |
+| GET | `/senders/:id` | ✅ Firebase | `Sender` — 404 texte brut si absent |
+| POST | `/senders` | ✅ Firebase | `Sender` (201) |
+| PATCH | `/senders/:id` | ✅ Firebase | `Sender` |
+| DELETE | `/senders/:id` | ✅ Firebase | `Sender` supprimé |
+
 ### API Keys
 > ℹ️ Firebase-only — les API keys ne peuvent pas créer d'autres API keys.
 > ℹ️ La clé brute (`key`) n'est retournée qu'au `POST` (création). Stockée en hash SHA-256.
@@ -431,7 +443,7 @@ Les champs calculés ou système sont refusés dans le body :
 | Unitaires | Mocha + Chai | 36 tests : `calculateInvoiceTotal`, `numberToWords`, `sanitizeInput`, `ResponseFormatter`, `config` | `NODE_ENV=development npm test` |
 | API / intégration | Bruno CLI | 68 scénarios couvrant toutes les routes | `npx @usebruno/cli run --env local bruno/` |
 
-## 11. Bugs corrigés
+## 12. Bugs corrigés
 
 | Route | Était | Corrigé |
 |---|---|---|
@@ -451,3 +463,164 @@ Les champs calculés ou système sont refusés dans le body :
 | Toutes les routes profile | `handleError` custom avec format `{ error }` | `ResponseFormatter` uniforme |
 | `devis.js` — catch blocks | Status 400 pour erreurs serveur | Status 500 |
 | `CompanyName` (virtual) dans devis/invoices | Accès au virtual au lieu de `companyName` | `companyName` |
+
+## 13. Conventions de requête
+
+### Headers standard
+
+| Header | Direction | Usage |
+|---|---|---|
+| `Authorization: Bearer <token>` | → | Auth Firebase (toutes routes protégées) |
+| `X-API-Key: ink_...` | → | Auth alternative (routes data uniquement, cf. matrice §2) |
+| `Content-Type: application/json` | → | Toutes les mutations (sauf multipart : `/profile/logo`, `/profile/documents`) |
+| `Accept-Encoding: gzip` | → | Compression (automatique avec fetch/axios) |
+| `RateLimit-Limit / -Remaining / -Reset` | ← | Quotas de rate limiting (draft-6) |
+
+### Pagination
+
+Toutes les routes de liste (`GET /invoices`, `/devis`, `/recipients`, `/audit/timeline`) :
+
+- Query : `page` (défaut `1`) · `limit` (défaut `10`, **max 100** — toute valeur supérieure est plafonnée).
+- Réponse : `{ success, data: [], pagination: { total, page, limit, totalPages }, timestamp }`.
+- Fin de liste atteinte quand `page >= totalPages`.
+
+### Tri
+
+- Query : `sortBy` (champ whitelisté : `date`, `dueDate`, `total`, `createdAt`, `tag`) + `sortOrder` (`asc` | `desc`).
+- Défaut : `createdAt desc` (plus récent en premier).
+- Champ non whitelisté → ignoré silencieusement (retombe sur le défaut), jamais d'erreur.
+
+### Filtrage
+
+- Filtres par query params **whitelistés uniquement** (statut, dates, tag, recipient…) — un paramètre inconnu est ignoré, jamais passé brut à MongoDB.
+- Dates : format ISO 8601 (`2026-07-01` ou `2026-07-01T00:00:00.000Z`), bornes `startDate`/`endDate` inclusives.
+- Recherche plein-texte : `GET /recipients/search?q=` (min 2 caractères) — index texte MongoDB, insensible à la casse.
+- Combinables : `GET /invoices?status=Paid&startDate=2026-01-01&sortBy=total&sortOrder=desc&page=1&limit=20`.
+
+### Versionnement
+
+- Version actuelle : **v1** — toutes les routes data sous `/api/v1`. Endpoints hors version : `/info`, `/ready`, `/docs` (opérationnels, contrat non garanti).
+- Changement **rétrocompatible** (champ ajouté, filtre ajouté) → reste en v1. Changement **cassant** (champ renommé/supprimé, format modifié) → nouvelle racine `/api/v2`, v1 maintenue le temps de la migration des clients mobiles (les apps installées ne se mettent pas à jour instantanément — règle absolue pour une app store).
+- Le client mobile envoie sa version d'app (`expo-application`) dans un header `X-App-Version` (à brancher) pour permettre les stats d'adoption avant tout retrait de v1.
+
+## 14. Exemples JSON
+
+### Créer une facture — `POST /api/v1/invoices`
+
+Requête (seuls `recipientId` et `items` sont requis ; ne **jamais** envoyer `total`/`totalInWords`/`sender`) :
+
+```json
+{
+  "recipientId": "6650f2a9c1e4a12b34567890",
+  "date": "2026-07-02",
+  "dueDate": "2026-07-16",
+  "items": [
+    { "label": "Développement site vitrine", "quantity": 1, "unitPrice": 1200 },
+    { "label": "Maintenance mensuelle", "quantity": 3, "unitPrice": 80 }
+  ],
+  "discount": 10,
+  "paymentMethod": "Bank Transfer",
+  "notes": "Merci pour votre confiance."
+}
+```
+
+Réponse `201` :
+
+```json
+{
+  "success": true,
+  "message": "Facture créée avec succès",
+  "data": {
+    "_id": "6684a1b2c3d4e5f678901234",
+    "tag": "INV-2026-0042",
+    "userId": "fWq8...uid",
+    "sender": "fWq8...uid",
+    "recipient": { "_id": "6650f2a9c1e4a12b34567890", "companyName": "ACME SARL", "contactPerson": "Sami Ben Ali", "email": "sami@acme.tn" },
+    "items": [
+      { "label": "Développement site vitrine", "quantity": 1, "unitPrice": 1200 },
+      { "label": "Maintenance mensuelle", "quantity": 3, "unitPrice": 80 }
+    ],
+    "discount": 10,
+    "status": "Draft",
+    "total": 1545.55,
+    "totalInWords": "mille cinq cent quarante-cinq dinars et cinq cent cinquante millimes",
+    "date": "2026-07-02T00:00:00.000Z",
+    "dueDate": "2026-07-16T00:00:00.000Z",
+    "createdAt": "2026-07-02T09:14:00.000Z",
+    "updatedAt": "2026-07-02T09:14:00.000Z"
+  },
+  "timestamp": "2026-07-02T09:14:00.000Z"
+}
+```
+
+### Liste paginée — `GET /api/v1/invoices?status=Unpaid&page=1&limit=20`
+
+```json
+{
+  "success": true,
+  "data": [
+    { "_id": "…", "tag": "INV-2026-0041", "status": "Unpaid", "isLate": true, "total": 890, "recipient": { "companyName": "ACME SARL" }, "dueDate": "2026-06-15T00:00:00.000Z" }
+  ],
+  "pagination": { "total": 37, "page": 1, "limit": 20, "totalPages": 2 },
+  "timestamp": "2026-07-02T09:15:00.000Z"
+}
+```
+
+### Erreur de validation — `400`
+
+```json
+{
+  "success": false,
+  "message": "Données invalides",
+  "errors": [
+    { "field": "items", "message": "Au moins un article est requis" },
+    { "field": "recipientId", "message": "Format invalide pour 'recipientId'" }
+  ],
+  "timestamp": "2026-07-02T09:16:00.000Z"
+}
+```
+
+### Quota atteint — `403`
+
+```json
+{
+  "success": false,
+  "message": "Limite mensuelle de factures atteinte pour le plan trial (10/10). Passez à un plan supérieur.",
+  "errors": null,
+  "timestamp": "2026-07-02T09:17:00.000Z"
+}
+```
+
+## 15. Intégration mobile React Native (Myfakto)
+
+> **Règles à respecter le jour où les endpoints sont branchés à l'app** (`domain/` → UI). L'app reste local-first : le backend synchronise, il ne remplace pas AsyncStorage.
+
+### Résilience réseau (Render = cold starts)
+
+1. **Timeout obligatoire** sur chaque appel : `AbortController` à 15 s (le cold start Render peut prendre 30 s+ — au-delà de 15 s, considérer le backend indisponible et continuer en local).
+2. **Warm-up** : au lancement de l'app (utilisateur connecté), un `GET /info` fire-and-forget réchauffe l'instance avant la première vraie requête.
+3. **Retry** : 1 retry avec backoff (2 s) **uniquement sur les GET** (idempotents). Jamais de retry automatique sur POST/PATCH/DELETE — risque de doublon (le double-tap mobile s'ajoute au problème : désactiver le bouton dès le premier press).
+4. Toute erreur réseau est **non bloquante** : l'app continue sur les données locales, bannière discrète « Synchronisation impossible », jamais d'écran d'erreur plein page.
+
+### Consommation efficace (batterie / data)
+
+5. **Toujours paginer** : `limit=20` par défaut dans `domain/`, jamais de fetch de liste complète.
+6. **Dashboard = 1 appel** : utiliser `GET /invoices/stats` pour l'accueil (résumé, CA, clients) au lieu de rapatrier toutes les factures et calculer côté client.
+7. **PATCH minimal** : n'envoyer que les champs modifiés (diff), jamais l'objet entier — et jamais les champs protégés (§10 : `total`, `totalInWords`, `sender`…) qui provoquent un 400.
+8. **Sync différentielle** : filtrer par `startDate` = date de dernière sync plutôt que tout re-télécharger (`updatedAt` est présent sur toutes les entités).
+9. La compression gzip est active côté serveur — utiliser `fetch` standard (la supporte nativement), pas d'upload base64 (multipart pour logo/documents).
+
+### Auth & erreurs
+
+10. **Token** : `auth.currentUser.getIdToken()` (le SDK gère le cache/refresh) via `domain/authorization.ts` — jamais de token stocké manuellement. Sur `401 TOKEN_EXPIRED` : `getIdToken(true)` (force refresh) puis **un seul** retry ; si échec → re-login.
+11. **Parser unique** : un helper `domain/http.ts` qui gère timeout, enveloppe `{ success, data, pagination, errors }`, et mappe les codes → erreurs typées (`ValidationError[400]`, `AuthError[401]`, `QuotaError[403]`, `ConflictError[409]`, `RateLimitError[429]`). Les écrans ne voient jamais un `Response` brut.
+12. **403 = upsell, pas erreur** : `QuotaError` déclenche l'écran d'abonnement (plans via `GET /subscription/plans`, checkout Stripe via `expo-web-browser`), pas un toast d'erreur.
+13. **400 `errors[]` → formulaires** : mapper `{ field, message }` vers `setError(field)` de React Hook Form (la notation pointée `address.zip` correspond aux noms de champs RHF).
+
+### Mapping local ↔ backend (pièges connus)
+
+14. **Statuts** : backend en anglais (`Paid`, `Unpaid`, `Overdue`…), store local en français (`'payée'`, `'en attente'`, `'en retard'`). Table de conversion **unique** dans `domain/` — jamais de mapping inline dans un écran.
+15. **Identifiants** : local = UUID (expo-crypto), backend = ObjectId. Conserver les deux (`id` local + `remoteId`) dans le store pour la réconciliation ; résoudre les contacts par **email** (même clé que l'import backend).
+16. **Émetteur** : ne jamais envoyer `sender` — le backend le déduit du token (= Profile). Le profil local se synchronise via `/profile` (auto-créé + trial 14 j au premier GET).
+17. **PDF** : si `pdfEnabled` du plan → utiliser `downloadUrl` (PDF serveur Cloudinary, source de vérité) ; sinon fallback génération locale expo-print. Ne pas maintenir deux PDFs divergents pour la même facture.
+18. **Champs calculés** (`total`, `isLate`, `totalTTC`…) : toujours faire confiance au backend une fois synchronisé ; le calcul local n'est que l'aperçu offline.

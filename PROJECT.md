@@ -80,7 +80,8 @@ Myfakto (nom historique : Fatourty) est une application mobile de **facturation 
 
 ## CI/CD
 
-- **Mobile** : EAS Build (profils `development`, `preview`, `production`, `simulator`) ; `autoIncrement` des versions en production.
+- **Mobile** : EAS Build (profils `development`, `preview`, `production`, `simulator`) ; `autoIncrement` des versions en production. Les numéros de version sont gérés côté EAS (`appVersionSource: "remote"` dans `eas.json`) — consulter/forcer via `eas build:version:get` / `eas build:version:set`.
+- ⚠️ **Dette de version** : le projet est en Expo SDK 52 / RN 0.76 alors que l'écosystème Expo est au SDK 56 (RN 0.85). Impact store immédiat : Google Play exige un target API level que SDK 52 (API 34) ne satisfait plus — voir l'item n°5 de la checklist « Prêt pour le store » dans [MOBILE_GUIDELINES.md](./MOBILE_GUIDELINES.md) et la procédure d'upgrade en annexe du même document.
 - **Backend** : déploiement sur **Render** (`https://invoice-backend-qq9j.onrender.com`, script `render-build.sh`).
 - Pas de pipeline de tests automatisé en CI ; les tests Bruno se lancent manuellement (`npx @usebruno/cli run`).
 
