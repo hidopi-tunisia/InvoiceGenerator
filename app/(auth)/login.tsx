@@ -26,8 +26,8 @@ const LoginScreen = () => {
   };
 
   return (
-    <View>
-      <Text>Login</Text>
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 12 }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>Connexion</Text>
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
       <TextInput
         placeholder="Email"
@@ -35,17 +35,22 @@ const LoginScreen = () => {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+        style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 }}
       />
-      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
-      <Button title="Login" onPress={handleLogin} />
-      {/* Connexion / inscription via Google */}
+      <TextInput
+        placeholder="Mot de passe"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 }}
+      />
+      <Button title="Se connecter" onPress={handleLogin} />
       <Button
         title={signingIn ? 'Connexion Google…' : 'Continuer avec Google'}
         disabled={!googleReady || signingIn}
         onPress={signInWithGoogle}
       />
-      {/* Lien vers l'inscription */}
-      <Button title="Go to Register" onPress={() => router.push('/(auth)/register')} />
+      <Button title="Créer un compte" onPress={() => router.push('/(auth)/register')} />
     </View>
   );
 };

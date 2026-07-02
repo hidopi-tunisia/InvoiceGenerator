@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> 📐 Architecture & onboarding → [PROJECT.md](./PROJECT.md) · 📁 Carte des dossiers → [FILES.md](./FILES.md) · 🧠 Règles durables → [MEMORY.md](./MEMORY.md) · 📱 Conventions mobile & sortie MVP → [MOBILE_GUIDELINES.md](./MOBILE_GUIDELINES.md)
+>
+> ✅ **Avant de conclure toute tâche de code, dérouler [QUALITY_GATE.md](./QUALITY_GATE.md) sur le périmètre modifié et produire le rapport PASS/WARNING/FAIL.**
+>
+> 📋 **Avant toute tâche** : consulter les flux utilisateur dans [workflow/](./workflow/) (diagrammes de référence de chaque parcours) et le contrat d'interface backend [API.md](./API.md) (routes, auth, formats de réponse). Tout changement de parcours met à jour `workflow/` ; tout changement d'appel backend respecte `API.md`.
+
 ## Commands
 
 ```bash
