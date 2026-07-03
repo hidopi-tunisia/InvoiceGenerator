@@ -126,7 +126,7 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 - **`push` après commit** — `router.replace` : récap → succès, et onboarding profil → accueil.
 - **Facture sans articles possible** — `.min(1)` sur le schéma items, ligne vierge par défaut, garde NaN sur la quantité, item fantôme « Prestation 1 » retiré de `startNewInvoice`.
 - **Bouton de test « Recipients »** — supprimé de l'accueil avec ses fonctions, états morts et imports `domain/`.
-- **Sentry désactivé** — init + `navigationIntegration` + `Sentry.wrap` restaurés depuis l'historique git (⚠️ à re-tester sur device : il avait été coupé pour diagnostiquer un `require(undefined)`).
+- **Sentry désactivé** — init + `navigationIntegration` + `Sentry.wrap` restaurés depuis l'historique git. **Cause racine du `require(undefined)` identifiée le 2026-07-03** : `@sentry/react-native` 8.16 incompatible avec le SDK 52 (version attendue ~6.10) — désactiver Sentry masquait le symptôme sans traiter la cause. Corrigé par `npx expo install --fix` (Sentry ~6.10, RN 0.76.9, expo-router ~4.0.22, lottie 7.1.0…) ; nécessite un rebuild du dev client.
 - **Devise TND en dur** — helper `getInvoiceCurrency` utilisé dans items, récap, liste, détail et PDF.
 - **Échec PDF silencieux** — succès : message + bouton « Réessayer » ; détail : alerte + relance via Partager.
 - **Chaînes anglaises / typos** — récap en français, titres du wizard accentués, onglet « Paramètres », header « Facture générée » (ex-« Yoopiii »), « Revenir à l'accueil ».
