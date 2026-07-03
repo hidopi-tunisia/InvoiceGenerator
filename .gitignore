@@ -23,3 +23,12 @@ android/
 # Temporary files created by Metro to check the health of the file watcher
 .metro-health-check*
 .codegpt
+# Logs de build/dev temporaires
+build.log
+metro.log
+
+# Signature / credentials EAS (NE PAS committer)
+credentials.json
+credentials/
+*.jks
+*.keystore

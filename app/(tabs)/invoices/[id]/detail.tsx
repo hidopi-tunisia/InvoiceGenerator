@@ -1,14 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
 import { customEvent } from 'vexo-analytics';
 
-import { getTotals } from '~/app/utils/invoice';
+import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { generateInvoicePdf } from '~/app/utils/pdf';
 import { useStore } from '~/store';
-//import { formatNumberWithSpaces } from '~/app/utils/numbers';
 
 export default function InvoiceDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -19,36 +18,38 @@ export default function InvoiceDetailScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUri, setPdfUri] = useState<string | null>(null);
-  //const animation = useRef(null);
 
-  // Calcul des totaux avec la taxe du profil
-  const { subtotal, total } = getTotals({
-    items: invoice ? invoice.items : [],
-    //taxRate: useStore.getState().profile.taxRate || 0
-  });
+  // Totaux avec la TVA de la facture (fallback : taux du profil)
+  const { subtotal, taxRate, tax, total } = getTotals(invoice ?? {});
+  const currency = getInvoiceCurrency(invoice);
+
+  const generatePdf = useCallback(async () => {
+    if (!invoice) return;
+
+    setIsLoading(true);
+    try {
+      const uri = await generateInvoicePdf(invoice);
+      setPdfUri(uri);
+      customEvent('Facture_PDF_Generee', { invoiceNumber: invoice.invoiceNumber });
+    } catch {
+      setPdfUri(null);
+      Alert.alert('Erreur', 'Impossible de générer le PDF. Touchez Partager pour réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [invoice]);
 
   useEffect(() => {
-    const generatePdf = async () => {
-      if (!invoice) return;
-
-      setIsLoading(true);
-      try {
-        const uri = await generateInvoicePdf(invoice, subtotal, total);
-        if (uri) setPdfUri(uri);
-        customEvent('Facture_PDF_Generee', { invoiceNumber: invoice.invoiceNumber });
-      } catch (error) {
-        console.error('Erreur génération PDF:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     generatePdf();
-  }, [invoice]);
+  }, [generatePdf]);
 
   const handleShare = async () => {
     if (!pdfUri) {
-      Alert.alert('Info', 'Génération du PDF en cours...');
+      if (isLoading) {
+        Alert.alert('Info', 'Génération du PDF en cours...');
+      } else {
+        generatePdf(); // échec précédent : on retente
+      }
       return;
     }
 
@@ -167,18 +168,34 @@ export default function InvoiceDetailScreen() {
               <View key={index} className="flex-row justify-between">
                 <Text className="flex-1">{item.name}</Text>
                 <Text className="font-medium">
-                  {item.quantity} x {item.price} TND
+                  {item.quantity} x {item.price.toFixed(2)} {currency}
                 </Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Total */}
+        {/* Totaux */}
         <View className="rounded-lg bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
+            <Text className="text-gray-600">Sous-total :</Text>
+            <Text className="text-gray-600">
+              {subtotal.toFixed(2)} {currency}
+            </Text>
+          </View>
+          {taxRate > 0 && (
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-600">TVA ({taxRate}%) :</Text>
+              <Text className="text-gray-600">
+                {tax.toFixed(2)} {currency}
+              </Text>
+            </View>
+          )}
+          <View className="mt-2 flex-row items-center justify-between border-t border-gray-100 pt-2">
             <Text className="text-lg font-bold">Total :</Text>
-            <Text className="text-lg font-bold text-indigo-600">{total} TND</Text>
+            <Text className="text-lg font-bold text-indigo-600">
+              {total.toFixed(2)} {currency}
+            </Text>
           </View>
         </View>
 

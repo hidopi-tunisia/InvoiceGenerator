@@ -1,5 +1,4 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
-import { LegendList } from '@legendapp/list';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, Alert } from 'react-native';

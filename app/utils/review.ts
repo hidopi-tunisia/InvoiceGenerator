@@ -85,6 +85,6 @@ export const useReviews = () => {
     requestFeedbackOrReview,
     askForReview,
     askForFeedback,
-    requestFeedbackOrReviewInSettigns
+    requestFeedbackOrReviewInSettigns,
   };
 };

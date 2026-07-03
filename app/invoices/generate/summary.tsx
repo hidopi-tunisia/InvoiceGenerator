@@ -5,22 +5,24 @@ import { Text, View } from 'react-native';
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
 
-import { getTotals } from '~/app/utils/invoice';
+import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 export default function InvoiceSummary() {
   // Récupération de la facture en cours
   const invoice = useStore((data) => data.newInvoice);
   const items = invoice?.items || [];
-  // Calcul du sous-total et du total à l'aide d'une fonction utilitaire
-  const { subtotal, total } = getTotals(invoice || {});
+  // Calcul des totaux (TVA incluse) à l'aide d'une fonction utilitaire
+  const { subtotal, taxRate, tax, total } = getTotals(invoice || {});
+  const currency = getInvoiceCurrency(invoice || undefined);
   // Récupération de la fonction de sauvegarde de la facture
   const saveInvoice = useStore((data) => data.saveInvoice);
 
   // Fonction appelée lors de la confirmation de la facture
   const handleGenerateInvoice = () => {
     saveInvoice();
-    router.push(`/invoices/${invoice?.id}/success`);
+    // replace : la facture est sauvegardée, le retour arrière ne doit pas revenir au récap
+    router.replace(`/invoices/${invoice?.id}/success`);
   };
 
   // Si aucune facture n'est trouvée, on redirige vers l'accueil
@@ -47,7 +49,7 @@ export default function InvoiceSummary() {
             </View>
             {invoice.invoiceDueDate && (
               <View>
-                <Text className="text-sm text-gray-100">Due Date :</Text>
+                <Text className="text-sm text-gray-100">Échéance :</Text>
                 <Text className="text-lg font-semibold text-white">
                   {new Date(invoice.invoiceDueDate).toLocaleDateString('fr-FR')}
                 </Text>
@@ -59,11 +61,11 @@ export default function InvoiceSummary() {
         {/* Informations de l'expéditeur */}
         {invoice.sender && (
           <View>
-            <Text className="mb-2 text-lg font-semibold text-slate-500">Sender</Text>
+            <Text className="mb-2 text-lg font-semibold text-slate-500">Émetteur</Text>
             <View className="mb-4 gap-1 rounded-lg bg-white p-4">
-              <Text className="text-gray-700">Name: {invoice.sender.name}</Text>
-              <Text className="text-gray-700">Address: {invoice.sender.address}</Text>
-              <Text className="text-gray-700">N° TVA: {invoice.sender.tva}</Text>
+              <Text className="text-gray-700">Nom : {invoice.sender.name}</Text>
+              <Text className="text-gray-700">Adresse : {invoice.sender.address}</Text>
+              <Text className="text-gray-700">N° TVA : {invoice.sender.tva}</Text>
             </View>
           </View>
         )}
@@ -71,19 +73,19 @@ export default function InvoiceSummary() {
         {/* Informations du destinataire */}
         {invoice.recipient && (
           <View>
-            <Text className="mb-2 text-lg font-semibold text-slate-500">Recipient</Text>
+            <Text className="mb-2 text-lg font-semibold text-slate-500">Destinataire</Text>
             <View className="mb-4 gap-1 rounded-lg bg-white p-4">
-              <Text className="text-gray-700">Name: {invoice.recipient.name}</Text>
-              <Text className="text-gray-700">Address: {invoice.recipient.address}</Text>
-              <Text className="text-gray-700">N° TVA: {invoice.recipient.tva}</Text>
-              <Text className="text-gray-700">Email: {invoice.recipient.email}</Text>
+              <Text className="text-gray-700">Nom : {invoice.recipient.name}</Text>
+              <Text className="text-gray-700">Adresse : {invoice.recipient.address}</Text>
+              <Text className="text-gray-700">N° TVA : {invoice.recipient.tva}</Text>
+              <Text className="text-gray-700">Email : {invoice.recipient.email}</Text>
             </View>
           </View>
         )}
 
         {/* Liste des articles (désignations) */}
         <View>
-          <Text className="mb-2 text-lg font-semibold text-slate-500">Designations</Text>
+          <Text className="mb-2 text-lg font-semibold text-slate-500">Désignations</Text>
           <View className="mb-4 gap-1 rounded-lg bg-white p-4">
             {items.map((item, index) => (
               <View
@@ -92,11 +94,11 @@ export default function InvoiceSummary() {
                 <View>
                   <Text className="font-medium text-gray-700">{item.name}</Text>
                   <Text className="text-gray-500">
-                    {item.quantity} x {item.price.toFixed(2)} TND
+                    {item.quantity} x {item.price.toFixed(2)} {currency}
                   </Text>
                 </View>
                 <Text className="font-semibold text-gray-700">
-                  {(item.quantity * item.price).toFixed(2)} TND
+                  {(item.quantity * item.price).toFixed(2)} {currency}
                 </Text>
               </View>
             ))}
@@ -107,21 +109,24 @@ export default function InvoiceSummary() {
         <View>
           <View className="mb-4 gap-1 rounded-lg bg-white p-4">
             <View className="flex-row justify-between">
-              <Text className="text-gray-700">Subtotal</Text>
-              <Text className="font-semibold text-gray-700">{subtotal.toFixed(2)} TND</Text>
+              <Text className="text-gray-700">Sous-total</Text>
+              <Text className="font-semibold text-gray-700">
+                {subtotal.toFixed(2)} {currency}
+              </Text>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-700">TVA (20%)</Text>
-              {/* Si tu souhaites afficher la TVA calculée, tu peux décommenter la ligne ci-dessous */}
-              {/* <Text className="font-semibold text-gray-700">{tva.toFixed(2)} TND</Text> */}
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-700">Droit de Timbre</Text>
-              {/* Ajoute ici le montant fixe de droit de timbre si nécessaire */}
-            </View>
+            {taxRate > 0 && (
+              <View className="flex-row justify-between">
+                <Text className="text-gray-700">TVA ({taxRate}%)</Text>
+                <Text className="font-semibold text-gray-700">
+                  {tax.toFixed(2)} {currency}
+                </Text>
+              </View>
+            )}
             <View className="mt-2 flex-row justify-between border-t border-gray-300 pt-2">
               <Text className="text-lg font-bold">Total</Text>
-              <Text className="text-lg font-bold text-gray-800">{total.toFixed(2)} TND</Text>
+              <Text className="text-lg font-bold text-gray-800">
+                {total.toFixed(2)} {currency}
+              </Text>
             </View>
           </View>
         </View>

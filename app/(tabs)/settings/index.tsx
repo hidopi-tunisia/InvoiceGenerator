@@ -2,8 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, Linking, Alert } from 'react-native';
 
+import { auth } from '~/app/config';
 import { useReviews } from '~/app/utils/review';
 import { useStore } from '~/store';
 
@@ -36,9 +37,25 @@ export default function SettingScreen() {
     },
   ];
   const handleLogout = () => {
-    // Ajoutez ici votre logique de déconnexion
-    resetNewInvoice(); // Exemple de réinitialisation du store
-    router.replace('/onbording'); // Redirection vers l'écran de connexion
+    // Confirmation : l'app est offline-first, une déconnexion accidentelle
+    // hors ligne bloque l'utilisateur jusqu'au retour du réseau.
+    Alert.alert('Se déconnecter', 'Vous devrez vous reconnecter pour accéder à vos factures.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Se déconnecter',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            resetNewInvoice(); // abandonne le brouillon de facture en cours
+            await auth.signOut();
+            // Pas de navigation manuelle : l'auth-gate (app/_layout.tsx) détecte
+            // user = null via onAuthStateChanged et redirige vers /(auth)/login.
+          } catch {
+            Alert.alert('Erreur', 'Impossible de se déconnecter. Réessayez.');
+          }
+        },
+      },
+    ]);
   };
 
   return (

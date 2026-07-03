@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
 
@@ -25,7 +25,6 @@ export default function GenerateInvoice() {
       // new Date(new Date().setDate(new Date().getDate() + 30)).toLocaleDateString()
     },
   });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const onSubmit = (data: InvoiceInfo) => {
     addInvoiceInfo(data);
     if (invoice?.recipient) {

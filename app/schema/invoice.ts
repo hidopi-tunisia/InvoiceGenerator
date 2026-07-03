@@ -10,6 +10,8 @@ export const businessEntitySchema = z.object({
   email: z.string().optional(),
   currency: z.string().optional(),
   taxRate: z.number().optional(),
+  country: z.string().optional(),
+  language: z.string().optional(),
 });
 
 //BusinessEntity : une entité autrement dit, c'est les info de l'entreprise qui va facturer à son client.
@@ -49,10 +51,12 @@ export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 //type Items = z.infer<typeof itemsSchema>
 
 export type Invoice = InvoiceInfo & {
-  invoiceInfo: InvoiceInfo; // Ajout explicite
   id: string;
   sender: BusinessEntity;
   recipient: BusinessEntity;
   items: InvoiceItem[];
   status?: 'payée' | 'en attente' | 'en retard';
+  // Figés à la création depuis le profil (une facture émise ne change pas de taux/devise)
+  taxRate?: number;
+  currency?: string;
 };

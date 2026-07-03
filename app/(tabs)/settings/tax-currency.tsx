@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Linking, TextInput } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 
 import { useStore } from '~/store';
 export default function TaxCurrencyScreen() {

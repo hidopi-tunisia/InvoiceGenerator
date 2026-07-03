@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import { Button } from '~/components/Button';
-import NumericInputText from '~/components/NumericInputText';
+import { useStore } from '~/store';
 
 const countries = [
   { code: 'TN', name: 'Tunisie' },
@@ -33,13 +33,38 @@ const currencies = [
 
 export default function OnbordingScreen() {
   const router = useRouter();
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
-  const [vatRate, setVatRate] = useState<string>('20');
+  const profile = useStore((state) => state.profile);
+  const setCountry = useStore((state) => state.setCountry);
+  const setLanguage = useStore((state) => state.setLanguage);
+  const setCurrency = useStore((state) => state.setCurrency);
+  const setTaxRate = useStore((state) => state.setTaxRate);
+
+  // Sélections locales (codes), initialisées depuis le profil pour un utilisateur qui revient
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(profile.country || null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(profile.language || null);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(profile.currency || 'TND');
+  const [vatRate, setVatRate] = useState<string>(String(profile.taxRate ?? 20));
+  const [vatError, setVatError] = useState('');
 
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const countryName = countries.find((c) => c.code === selectedCountry)?.name;
+  const languageName = languages.find((l) => l.code === selectedLanguage)?.name;
+
+  const onNext = () => {
+    const parsedRate = Number(vatRate.replace(',', '.'));
+    if (Number.isNaN(parsedRate) || parsedRate < 0 || parsedRate > 100) {
+      setVatError('Entrez un taux de TVA valide entre 0 et 100.');
+      return;
+    }
+    setVatError('');
+    if (selectedCountry) setCountry(selectedCountry);
+    if (selectedLanguage) setLanguage(selectedLanguage);
+    setCurrency(selectedCurrency);
+    setTaxRate(parsedRate);
+    router.push('/onbording/profile');
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -71,9 +96,7 @@ export default function OnbordingScreen() {
                 <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
                   <Feather name="globe" size={20} color="#4285F4" />
                 </View>
-                <Text className="text-base">
-                  {selectedCountry ? selectedCountry : 'Sélectionner'}
-                </Text>
+                <Text className="text-base">{countryName ?? 'Sélectionner'}</Text>
               </View>
               <Feather name="chevron-right" size={22} color="#9ca3af" />
             </Pressable>
@@ -89,9 +112,7 @@ export default function OnbordingScreen() {
                 <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
                   <Feather name="type" size={20} color="#A855F7" />
                 </View>
-                <Text className="text-base">
-                  {selectedLanguage ? selectedLanguage : 'Sélectionner'}
-                </Text>
+                <Text className="text-base">{languageName ?? 'Sélectionner'}</Text>
               </View>
               <Feather name="chevron-right" size={22} color="#9ca3af" />
             </Pressable>
@@ -104,13 +125,13 @@ export default function OnbordingScreen() {
               {currencies.map((currency) => (
                 <Pressable
                   key={currency.code}
-                  onPress={() => setSelectedCurrency(currency.name)}
+                  onPress={() => setSelectedCurrency(currency.code)}
                   className={`rounded-full border px-4 py-3 ${
-                    selectedCurrency === currency.name
+                    selectedCurrency === currency.code
                       ? 'border-black bg-gray-100'
                       : 'border-gray-300 bg-white'
                   }`}>
-                  <Text className={`${selectedCurrency === currency.name ? 'font-medium' : ''}`}>
+                  <Text className={`${selectedCurrency === currency.code ? 'font-medium' : ''}`}>
                     {currency.symbol} {currency.name}
                   </Text>
                 </Pressable>
@@ -125,13 +146,14 @@ export default function OnbordingScreen() {
               value={vatRate}
               onChangeText={setVatRate}
               keyboardType="numeric"
-              className="rounded-lg border border-gray-300 p-4"
+              className={`rounded-lg border p-4 ${vatError ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="Ex: 20"
             />
+            {vatError ? <Text className="mt-1 text-sm text-red-500">{vatError}</Text> : null}
           </View>
 
           <View className="px-5 py-4">
-            <Button onPress={() => router.push('/onbording/profile')} title="Suivant" />
+            <Button onPress={onNext} title="Suivant" />
           </View>
         </View>
       </ScrollView>
@@ -151,7 +173,7 @@ export default function OnbordingScreen() {
               <Pressable
                 key={country.code}
                 onPress={() => {
-                  setSelectedCountry(country.name);
+                  setSelectedCountry(country.code);
                   setShowCountryModal(false);
                 }}
                 className="mb-2 rounded-lg border border-gray-300 p-4">
@@ -180,7 +202,7 @@ export default function OnbordingScreen() {
               <Pressable
                 key={lang.code}
                 onPress={() => {
-                  setSelectedLanguage(lang.name);
+                  setSelectedLanguage(lang.code);
                   setShowLanguageModal(false);
                 }}
                 className="mb-2 rounded-lg border border-gray-300 p-4">

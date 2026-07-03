@@ -58,9 +58,4 @@ const removeProfile = async () => {
   return response.json();
 };
 
-export {
-  createProfile,
-  getProfile,
-  updateProfile,
-  removeProfile,
-};
+export { createProfile, getProfile, updateProfile, removeProfile };

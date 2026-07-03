@@ -26,11 +26,11 @@ export default function ProfileScreen() {
       tva: profile?.tva,
     },
   });
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: BusinessEntity) => {
     setProfile(data);
     setOnboardingCompleted();
-    //router.replace('/');
-    router.push('/');
+    // replace : l'onboarding est terminé, le retour arrière ne doit pas y revenir
+    router.replace('/');
   };
 
   return (

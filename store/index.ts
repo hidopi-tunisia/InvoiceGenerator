@@ -28,6 +28,7 @@ export type InvoiceState = {
   setProfile: (profile: BusinessEntity) => void;
   setCountry: (country: string) => void;
   setLanguage: (language: string) => void;
+  setCurrency: (currency: string) => void;
   setTaxRate: (rate: number) => void;
   startNewInvoice: () => void;
   resetNewInvoice: () => void;
@@ -65,7 +66,9 @@ export const useStore = create<InvoiceState>()(
       newInvoice: null,
       contacts: [], // Initialisation du contacts
       // PROFILE
-      setProfile: (profile) => set(() => ({ profile })), // pour tomber sur la page de profile de onbording il faut mettre "onboardingCompleted: true" et cliquer sur "Enregistrer" puis la supprimer puis Reloader l'app
+      // Fusion (pas remplacement) : l'étape profil de l'onboarding et settings/edit
+      // n'envoient que name/address/tva — ne pas écraser country/language/currency/taxRate.
+      setProfile: (profile) => set((state) => ({ profile: { ...state.profile, ...profile } })),
       completeOnboarding: () =>
         set({
           onboardingCompleted: true,
@@ -82,7 +85,7 @@ export const useStore = create<InvoiceState>()(
             id: Crypto.randomUUID(),
             invoiceNumber: generateInvoiceNumber(),
             sender: get().profile,
-            items: [{ name: 'Prestation 1', quantity: 1, price: 100 }],
+            items: [],
             invoiceDate: new Date(),
             invoiceDueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
             status: 'en attente',
@@ -98,7 +101,7 @@ export const useStore = create<InvoiceState>()(
           newInvoice: { ...state.newInvoice, recipient: recipient || undefined },
         })), // Clé "recipientInfo"
       addInvoiceInfo: (invoiceInfo) =>
-        set((state) => ({ newInvoice: { ...state.newInvoice, invoiceInfo } })), // Clé "invoiceInfo"
+        set((state) => ({ newInvoice: { ...state.newInvoice, ...invoiceInfo } })), // À plat : le récap et le PDF lisent invoiceNumber/dates à la racine
       addItems: (items) => set((state) => ({ newInvoice: { ...state.newInvoice, items } })), // Clé "tableau des items"
       saveInvoice: () => {
         const newInvoice = get().newInvoice as Invoice;
@@ -149,6 +152,7 @@ export const useStore = create<InvoiceState>()(
       },
       setCountry: (country) => set((state) => ({ profile: { ...state.profile, country } })),
       setLanguage: (language) => set((state) => ({ profile: { ...state.profile, language } })),
+      setCurrency: (currency) => set((state) => ({ profile: { ...state.profile, currency } })),
       setTaxRate: (taxRate) => set((state) => ({ profile: { ...state.profile, taxRate } })),
       nextOnboardingStep: () => {
         const steps: InvoiceState['onboardingStep'][] = ['index', 'profile', 'tax', 'completed'];
@@ -168,22 +172,29 @@ export const useStore = create<InvoiceState>()(
     {
       name: 'facture-store',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1, // sans version explicite, zustand n'appelle jamais migrate()
       migrate: (persistedState: any) => {
         // Migration pour les utilisateurs existants
         if (persistedState?.profile && !persistedState.profile.currency) {
           persistedState.profile.currency = 'TND';
+        }
+        // v1 : les champs édités à l'étape 1 du wizard vivaient sous invoice.invoiceInfo ;
+        // on les fusionne à la racine (ce sont les valeurs réellement saisies par l'utilisateur).
+        const flattenInvoiceInfo = (invoice: any) => {
+          if (invoice?.invoiceInfo) {
+            const { invoiceInfo, ...rest } = invoice;
+            return { ...rest, ...invoiceInfo };
+          }
+          return invoice;
+        };
+        if (Array.isArray(persistedState?.invoices)) {
+          persistedState.invoices = persistedState.invoices.map(flattenInvoiceInfo);
+        }
+        if (persistedState?.newInvoice) {
+          persistedState.newInvoice = flattenInvoiceInfo(persistedState.newInvoice);
         }
         return persistedState as InvoiceState;
       },
     }
   )
 );
-// Fonction utilitaire pour générer les totaux
-const getTotals = (items: InvoiceItem[], taxRate: number) => {
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const tax = subtotal * (taxRate / 100);
-  return {
-    subtotal: Number(subtotal.toFixed(2)),
-    total: Number((subtotal + tax).toFixed(2)),
-  };
-};

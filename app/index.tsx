@@ -1,14 +1,13 @@
-import { Redirect } from 'expo-router';
-
-import { useStore } from '~/store';
+import { View, Text, ActivityIndicator } from 'react-native';
 
 export default function Index() {
-  const onboardingCompleted = useStore((data) => data.onboardingCompleted);
-  console.log('====================================');
-  console.log('onboardingCompleted', onboardingCompleted);
-  console.log('====================================');
-  if (!onboardingCompleted) {
-    return <Redirect href="/onbording" />;
-  }
-  return <Redirect href="/(tabs)" />;
+  // Écran neutre de chargement. La redirection (login / onbording / tabs) est
+  // centralisée dans app/_layout.tsx selon l'état d'authentification + onboarding,
+  // afin d'éviter des redirections concurrentes.
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="large" />
+      <Text style={{ marginTop: 12 }}>Chargement…</Text>
+    </View>
+  );
 }
