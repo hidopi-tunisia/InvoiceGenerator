@@ -27,7 +27,7 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   const handleDelete = () => {
     Alert.alert('Confirmer suppression', `Supprimer la facture ${invoice.invoiceNumber} ?`, [
       { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', onPress: () => deleteInvoice(invoice) },
+      { text: 'Supprimer', style: 'destructive', onPress: () => deleteInvoice(invoice) },
     ]);
   };
 
@@ -57,7 +57,13 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
           <View className={`h-2 w-2 rounded-full ${getStatusColor(invoice.status)}`} />
           <Text className="text-sm capitalize text-gray-600">{invoice.status || 'en attente'}</Text>
         </View>
-        <Feather name="trash-2" size={20} color="red" onPress={handleDelete} />
+        <Pressable
+          onPress={handleDelete}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={`Supprimer la facture ${invoice.invoiceNumber}`}>
+          <Feather name="trash-2" size={20} color="red" />
+        </Pressable>
       </View>
     </Pressable>
   );
@@ -87,12 +93,13 @@ export default function InvoicesScreen() {
     <View className="flex-1 bg-gray-50 p-4">
       <View className="mb-6 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-gray-900">Factures</Text>
-        <Feather
-          name="plus-circle"
-          size={28}
-          color="#4f46e5"
+        <Pressable
           onPress={() => router.push('/invoices/generate')}
-        />
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Nouvelle facture">
+          <Feather name="plus-circle" size={28} color="#4f46e5" />
+        </Pressable>
       </View>
 
       <View className="mb-4 flex-row flex-wrap gap-2">

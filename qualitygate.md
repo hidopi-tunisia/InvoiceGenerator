@@ -17,9 +17,6 @@ Aucun défaut critique ouvert ✅ (le n°1 — écrans d'auth hors conventions �
 **2. Filtre « En retard » mort et statuts incohérents**
 `(tabs)/invoices/index.tsx` : le filtre exige `status === 'en retard'` mais rien ne positionne jamais ce statut (il devrait être dérivé de `dueDate < now`) → filtre toujours vide. La pastille de couleur teste `'impayée'` alors que le statut réel est `'en attente'` → pastille grise en liste, badge jaune en détail pour le même statut.
 
-**3. Accessibilité absente des contrôles à icône**
-Aucun `accessibilityLabel`/`accessibilityRole` dans l'app (poubelle, partage, FAB, plus-circle, croix de recherche). `onPress` posé directement sur des icônes Feather 20 px sans `hitSlop` (cible tactile < 44 pt, ex. `invoices/index.tsx`). Tab bar en icônes seules (`tabBarShowLabel: false`).
-
 **4. Wizard sans indicateur d'étapes**
 4 écrans de création de facture sans « étape X/4 » ni barre de progression.
 
@@ -33,9 +30,6 @@ Choisir l'année de filtre ouvre un `DateTimePicker` jour/mois/année complet en
 Deux bleus primaires concurrents (`Button` en `bg-blue-700`, écrans en `indigo-500`) ; tint actif de tab bar `#052e16` (vert foncé hors palette) ; formats de montants : liste en `formatNumberWithSpaces`, détail/récap en `toFixed(2)` — unifier ; emoji ⚠️ comme icône dans l'ErrorBoundary.
 
 ### Mineurs
-
-**8. `console.log` de débogage restants**
-Présents dans : `(tabs)/contacts/index.tsx`, `app/index.tsx`, `utils/review.ts`, `(modals)/country.tsx`, `(modals)/language.tsx`. (Purgés de `_layout.tsx`, `(tabs)/index.tsx`, `success.tsx`, `pdf.ts` le 2026-07-03.)
 
 **9. `app/(modals)/country.tsx` et `language.tsx` non connectés**
 Inaccessibles depuis tout flux — dupliqués par les modales locales de `onbording/index.tsx`. Les brancher ou les supprimer.
@@ -96,8 +90,6 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 
 | Priorité | Sujet | Action |
 |----------|-------|--------|
-| P1 | Accessibilité (n°3) | `accessibilityLabel`/`Role` + `hitSlop` ≥ 44 pt sur les icônes tactiles, labels de tab bar |
-| P1 | `console.log` restants (n°8) | Purger ou conditionner à `__DEV__` |
 | P2 | Statuts factures (n°2) | Dériver « en retard » de la date d'échéance, unifier les couleurs liste/détail |
 | P2 | Indicateur d'étapes wizard (n°4) | « Étape X/4 » dans les headers du wizard |
 | P2 | Formats montants + palette (n°7) | Un seul format, un seul bleu primaire dans `tailwind.config.js` |
@@ -112,6 +104,11 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 ---
 
 ## ✅ Résolus
+
+### 2026-07-03 — P1 accessibilité (n°3) et console.log (n°8)
+
+- **Accessibilité des contrôles à icône** — `accessibilityRole`/`accessibilityLabel` + `hitSlop` sur : poubelle et plus-circle (liste factures), partage/poubelle (détail), bouton facture par contact et croix de recherche (contacts), FAB et croix (wizard contact), CTA « Créer un contact ». Tab bar avec labels visibles (`tabBarShowLabel: false` retiré). Alertes de suppression passées en `style: 'destructive'` (avance le n°5). Reste hors périmètre : audit VoiceOver/TalkBack complet écran par écran (post-MVP, MOBILE_GUIDELINES §25).
+- **Zéro `console.log` dans les sources** — purge finale de `(tabs)/contacts`, `utils/review.ts` (abandon silencieux commenté), modales orphelines. Vérifié par grep sur app/, store/, components/, hooks/, domain/.
 
 ### 2026-07-03 — déconnexion réelle (découvert en test simulateur)
 

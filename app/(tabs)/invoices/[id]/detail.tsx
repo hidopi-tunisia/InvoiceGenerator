@@ -81,6 +81,7 @@ export default function InvoiceDetailScreen() {
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
+        style: 'destructive',
         onPress: () => {
           if (invoice) {
             deleteInvoice(invoice);
@@ -104,12 +105,22 @@ export default function InvoiceDetailScreen() {
       <View className="flex-1 bg-gray-50 p-4">
         {/* Header */}
         <View className="mb-6 flex-row items-center justify-between">
-          <View className="flex-row gap-4">
-            <Pressable onPress={handleShare} disabled={isLoading}>
+          <View className="flex-row gap-6">
+            <Pressable
+              onPress={handleShare}
+              disabled={isLoading}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Partager la facture en PDF"
+              accessibilityState={{ disabled: isLoading }}>
               <Feather name="share-2" size={24} color={isLoading ? '#9ca3af' : '#4f46e5'} />
             </Pressable>
 
-            <Pressable onPress={handleDelete}>
+            <Pressable
+              onPress={handleDelete}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Supprimer la facture">
               <Feather name="trash-2" size={24} color="#ef4444" />
             </Pressable>
           </View>

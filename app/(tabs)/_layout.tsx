@@ -10,10 +10,9 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarShowLabel: false, // Non affichage du titre de la tab
-        tabBarStyle: { paddingTop: 10 }, // Tab position
-        tabBarActiveTintColor: '#052e16', //Tint color
-        // tabBarInactiveTintColor: '#16a34a',
+        // Labels visibles : une nav à icônes seules nuit à la découvrabilité
+        // et aux lecteurs d'écran (règle nav-label-icon).
+        tabBarActiveTintColor: '#052e16',
       }}>
       <Tabs.Screen
         name="index"

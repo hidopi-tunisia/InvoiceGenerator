@@ -1,7 +1,7 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Alert } from 'react-native';
+import { View, Text, TextInput, Alert, Pressable } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
@@ -48,12 +48,11 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
       onPress={(e) => {
         const index = e.nativeEvent.index;
         if (index === 0) {
-          console.log('Modifier', contact);
           router.push(`/contacts/${contact.id}/edit`);
         } else if (index === 1) {
           Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
             { text: 'Annuler', style: 'cancel' },
-            { text: 'Confirmer', onPress: () => deleteContact(contact) },
+            { text: 'Supprimer', style: 'destructive', onPress: () => deleteContact(contact) },
           ]);
         }
       }}
@@ -72,9 +71,14 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
         </View>
 
         {/* Bouton "Nouvelle facture" */}
-        <View className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
-          <FontAwesome6 name="file-invoice" size={18} color="#fff" onPress={handleNewInvoice} />
-        </View>
+        <Pressable
+          onPress={handleNewInvoice}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={`Créer une facture pour ${contact.name}`}
+          className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
+          <FontAwesome6 name="file-invoice" size={18} color="#fff" />
+        </Pressable>
       </View>
     </ContextMenu>
   );
@@ -102,9 +106,14 @@ export default function ContactsScreen() {
           placeholderTextColor="#9ca3af"
         />
         {searchQuery.length > 0 && (
-          <View className="p-2">
-            <Feather name="x" size={20} color="#6b7280" onPress={() => setSearchQuery('')} />
-          </View>
+          <Pressable
+            onPress={() => setSearchQuery('')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Effacer la recherche"
+            className="p-2">
+            <Feather name="x" size={20} color="#6b7280" />
+          </Pressable>
         )}
       </View>
 
@@ -120,13 +129,12 @@ export default function ContactsScreen() {
               : 'Les contacts vont apparaître lorsque vous créerez des factures.'}
           </Text>
           {!searchQuery && (
-            <View className="mt-6 rounded-lg bg-indigo-500 px-6 py-3">
-              <Text
-                className="text-sm font-semibold text-white"
-                onPress={() => router.push('/invoices/generate/new-contact')}>
-                Créer un contact
-              </Text>
-            </View>
+            <Pressable
+              onPress={() => router.push('/invoices/generate/new-contact')}
+              accessibilityRole="button"
+              className="mt-6 rounded-lg bg-indigo-500 px-6 py-3">
+              <Text className="text-sm font-semibold text-white">Créer un contact</Text>
+            </Pressable>
           )}
         </View>
       ) : (

@@ -12,12 +12,12 @@ export const useReviews = () => {
 
   // ✅ Demander un avis sur l'App Store / Google Play
   const askForReview = useCallback(async () => {
+    // StoreReview indisponible (simulateur, Expo Go…) : on abandonne silencieusement,
+    // la demande d'avis est un bonus, jamais un parcours bloquant.
     if (!(await StoreReview.isAvailableAsync())) {
-      console.log('StoreReview pas disponible...');
       return;
     }
     if (!(await StoreReview.hasAction())) {
-      console.log('StoreReview non disponible');
       return;
     }
     await StoreReview.requestReview();

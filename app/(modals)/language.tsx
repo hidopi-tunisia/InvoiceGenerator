@@ -12,10 +12,9 @@ const languages = [
 export default function LanguageModal() {
   const router = useRouter();
 
-  const handleSelect = (code: string) => {
-    // Mettez à jour le store ou passez l'information via des params de route si nécessaire
-    console.log('Language selected:', code);
-    // Fermez le modal en revenant en arrière
+  const handleSelect = (_code: string) => {
+    // Écran orphelin (défaut n°9 du quality gate) : non branché à un flux,
+    // la sélection réelle vit dans les modales locales de onbording/index.tsx.
     router.back();
   };
 

@@ -57,7 +57,12 @@ export default function ContactsScreen() {
           placeholderTextColor="#9ca3af"
         />
         {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')} className="p-2">
+          <Pressable
+            onPress={() => setSearchQuery('')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Effacer la recherche"
+            className="p-2">
             <Feather name="x" size={20} color="#6b7280" />
           </Pressable>
         )}
@@ -97,6 +102,8 @@ export default function ContactsScreen() {
       {/* Bouton flottant */}
       <Pressable
         onPress={() => router.push('/invoices/generate/new-contact')}
+        accessibilityRole="button"
+        accessibilityLabel="Créer un nouveau contact"
         className="absolute bottom-6 right-6 h-16 w-16 items-center justify-center rounded-full bg-indigo-500 shadow-lg shadow-black/30">
         <AntDesign name="plus" size={24} color="#fff" />
       </Pressable>
