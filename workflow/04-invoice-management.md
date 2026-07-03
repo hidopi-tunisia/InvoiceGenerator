@@ -53,21 +53,24 @@ flowchart TD
 
 ### Filtres Statut
 
-| Filtre | Statut correspondant |
+Les filtres et l'affichage utilisent le **statut dérivé** (`getDisplayStatus` de `app/utils/invoice.ts`) : « en retard » est calculé à l'affichage (`invoiceDueDate < maintenant` et non payée) — le champ `status` stocké ne contient que `'payée' | 'en attente'`.
+
+| Filtre | Statut dérivé correspondant |
 |---|---|
 | Toutes | Tous |
 | Payées | `'payée'` |
-| Impayées | `'en attente'` |
-| En retard | `'en retard'` |
+| Impayées | `'en attente'` (échéance non dépassée) |
+| En retard | `'en retard'` (échéance dépassée, non payée) |
 
 ### Indicateur Visuel de Statut
 
-| Statut | Couleur |
+Couleurs partagées liste/détail (`getStatusColor`) :
+
+| Statut dérivé | Couleur |
 |---|---|
 | `payée` | Vert |
 | `en attente` | Jaune |
 | `en retard` | Rouge |
-| Autre | Gris |
 
 ### Item Facture
 

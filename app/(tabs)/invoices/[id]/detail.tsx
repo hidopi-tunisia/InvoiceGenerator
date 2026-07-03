@@ -5,7 +5,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
 import { customEvent } from 'vexo-analytics';
 
-import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import {
+  formatAmount,
+  getDisplayStatus,
+  getInvoiceCurrency,
+  getStatusColor,
+  getTotals,
+} from '~/app/utils/invoice';
 import { generateInvoicePdf } from '~/app/utils/pdf';
 import { useStore } from '~/store';
 
@@ -22,6 +28,7 @@ export default function InvoiceDetailScreen() {
   // Totaux avec la TVA de la facture (fallback : taux du profil)
   const { subtotal, taxRate, tax, total } = getTotals(invoice ?? {});
   const currency = getInvoiceCurrency(invoice);
+  const displayStatus = getDisplayStatus(invoice ?? {});
 
   const generatePdf = useCallback(async () => {
     if (!invoice) return;
@@ -130,10 +137,8 @@ export default function InvoiceDetailScreen() {
         <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-semibold">Statut :</Text>
-            <View className={`rounded-full px-3 py-1 ${getStatusColor(invoice.status)}`}>
-              <Text className="text-sm font-medium capitalize text-white">
-                {invoice.status || 'en attente'}
-              </Text>
+            <View className={`rounded-full px-3 py-1 ${getStatusColor(displayStatus)}`}>
+              <Text className="text-sm font-medium capitalize text-white">{displayStatus}</Text>
             </View>
           </View>
         </View>
@@ -179,7 +184,7 @@ export default function InvoiceDetailScreen() {
               <View key={index} className="flex-row justify-between">
                 <Text className="flex-1">{item.name}</Text>
                 <Text className="font-medium">
-                  {item.quantity} x {item.price.toFixed(2)} {currency}
+                  {item.quantity} x {formatAmount(item.price)} {currency}
                 </Text>
               </View>
             ))}
@@ -191,21 +196,21 @@ export default function InvoiceDetailScreen() {
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600">Sous-total :</Text>
             <Text className="text-gray-600">
-              {subtotal.toFixed(2)} {currency}
+              {formatAmount(subtotal)} {currency}
             </Text>
           </View>
           {taxRate > 0 && (
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-600">TVA ({taxRate}%) :</Text>
               <Text className="text-gray-600">
-                {tax.toFixed(2)} {currency}
+                {formatAmount(tax)} {currency}
               </Text>
             </View>
           )}
           <View className="mt-2 flex-row items-center justify-between border-t border-gray-100 pt-2">
             <Text className="text-lg font-bold">Total :</Text>
             <Text className="text-lg font-bold text-indigo-600">
-              {total.toFixed(2)} {currency}
+              {formatAmount(total)} {currency}
             </Text>
           </View>
         </View>
@@ -225,15 +230,3 @@ export default function InvoiceDetailScreen() {
     </ScrollView>
   );
 }
-
-// Helpers
-const getStatusColor = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case 'payée':
-      return 'bg-green-500';
-    case 'en retard':
-      return 'bg-red-500';
-    default:
-      return 'bg-yellow-500';
-  }
-};

@@ -12,7 +12,7 @@ export default function TabsLayout() {
       screenOptions={{
         // Labels visibles : une nav à icônes seules nuit à la découvrabilité
         // et aux lecteurs d'écran (règle nav-label-icon).
-        tabBarActiveTintColor: '#052e16',
+        tabBarActiveTintColor: '#4f46e5', // = colors.primary (tailwind.config.js)
       }}>
       <Tabs.Screen
         name="index"

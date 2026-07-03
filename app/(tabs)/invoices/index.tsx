@@ -6,23 +6,20 @@ import { View, Text, Pressable, Alert } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { Invoice } from '~/app/schema/invoice';
-import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import {
+  formatAmount,
+  getDisplayStatus,
+  getInvoiceCurrency,
+  getStatusColor,
+  getTotals,
+} from '~/app/utils/invoice';
 import { useStore } from '~/store';
-
-export const formatNumberWithSpaces = (number: number): string => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'decimal',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-    .format(number)
-    .replace(/[\u00a0\u202f]/g, ' '); // Remplace les espaces insécables par des espaces normaux
-};
 
 const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   const deleteInvoice = useStore((state) => state.deleteInvoice);
   const router = useRouter();
   const { total } = getTotals(invoice);
+  const displayStatus = getDisplayStatus(invoice);
 
   const handleDelete = () => {
     Alert.alert('Confirmer suppression', `Supprimer la facture ${invoice.invoiceNumber} ?`, [
@@ -44,7 +41,7 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
 
         <View className="items-end">
           <Text className="text-lg font-semibold text-gray-900">
-            {formatNumberWithSpaces(total)} {getInvoiceCurrency(invoice)}
+            {formatAmount(total)} {getInvoiceCurrency(invoice)}
           </Text>
           <Text className="mt-1 text-sm text-gray-500">
             {new Date(invoice.invoiceDate).toLocaleDateString()}
@@ -54,8 +51,8 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
 
       <View className="mt-4 flex-row items-center justify-between border-t border-gray-100 pt-3">
         <View className="flex-row items-center gap-2">
-          <View className={`h-2 w-2 rounded-full ${getStatusColor(invoice.status)}`} />
-          <Text className="text-sm capitalize text-gray-600">{invoice.status || 'en attente'}</Text>
+          <View className={`h-2 w-2 rounded-full ${getStatusColor(displayStatus)}`} />
+          <Text className="text-sm capitalize text-gray-600">{displayStatus}</Text>
         </View>
         <Pressable
           onPress={handleDelete}
@@ -79,14 +76,13 @@ export default function InvoicesScreen() {
   const filteredInvoices = invoices.filter((invoice) => {
     const year = new Date(invoice.invoiceDate).getFullYear();
     const matchesYear = year === selectedYear;
+    if (filter === 'all') return matchesYear;
 
-    if (filter === 'paid') return matchesYear && invoice.status === 'payée';
-    if (filter === 'unpaid') return matchesYear && invoice.status === 'en attente';
-    if (filter === 'overdue') {
-      const dueDate = new Date(invoice.invoiceDueDate || '');
-      return matchesYear && invoice.status === 'en retard' && dueDate < new Date();
-    }
-    return matchesYear;
+    // Statut dérivé : « en retard » vient de la date d'échéance, pas du champ stocké
+    const displayStatus = getDisplayStatus(invoice);
+    if (filter === 'paid') return matchesYear && displayStatus === 'payée';
+    if (filter === 'unpaid') return matchesYear && displayStatus === 'en attente';
+    return matchesYear && displayStatus === 'en retard';
   });
 
   return (
@@ -164,16 +160,3 @@ export default function InvoicesScreen() {
     </View>
   );
 }
-
-const getStatusColor = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case 'payée':
-      return 'bg-green-500';
-    case 'impayée':
-      return 'bg-yellow-500';
-    case 'en retard':
-      return 'bg-red-500';
-    default:
-      return 'bg-gray-400';
-  }
-};

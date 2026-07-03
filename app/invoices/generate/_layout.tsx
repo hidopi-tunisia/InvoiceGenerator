@@ -18,11 +18,12 @@ export default function GenerateInvoiceLayout() {
   return (
     <Stack>
       {/* Rennommer les titres des pages */}
-      <Stack.Screen name="index" options={{ title: 'Facture' }} />
-      <Stack.Screen name="contact" options={{ title: 'Sélectionnez un client' }} />
-      <Stack.Screen name="new-contact" options={{ title: 'Nouveau contact' }} />
-      <Stack.Screen name="items" options={{ title: 'Désignations' }} />
-      <Stack.Screen name="summary" options={{ title: 'Récapitulatif' }} />
+      {/* Indicateur de progression : l'utilisateur sait où il en est (règle multi-step-progress) */}
+      <Stack.Screen name="index" options={{ title: 'Facture · Étape 1/4' }} />
+      <Stack.Screen name="contact" options={{ title: 'Client · Étape 2/4' }} />
+      <Stack.Screen name="new-contact" options={{ title: 'Nouveau client · Étape 2/4' }} />
+      <Stack.Screen name="items" options={{ title: 'Désignations · Étape 3/4' }} />
+      <Stack.Screen name="summary" options={{ title: 'Récapitulatif · Étape 4/4' }} />
     </Stack>
   );
 }

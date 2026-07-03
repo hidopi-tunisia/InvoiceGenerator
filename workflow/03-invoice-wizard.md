@@ -54,6 +54,8 @@ flowchart TD
 
 ## Étapes Détaillées
 
+> Chaque écran du wizard affiche sa progression dans le header (`generate/_layout.tsx`) : « Facture · Étape 1/4 », « Client · Étape 2/4 » (sélection ou création), « Désignations · Étape 3/4 », « Récapitulatif · Étape 4/4 ».
+
 ### Étape 1 — Infos Facture (`/invoices/generate/index`)
 
 | Champ | Type | Détail |

@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import { printToFileAsync } from 'expo-print';
 
-import { getInvoiceCurrency, getTotals } from './invoice';
+import { formatAmount, getInvoiceCurrency, getTotals } from './invoice';
 import { Invoice } from '../schema/invoice';
 
 const generateHtml = (invoice: Invoice) => {
@@ -183,8 +183,8 @@ ${
             <tr>
                 <td>${item.name}</td>
                 <td>${item.quantity}</td>
-                <td>${item.price.toFixed(2)} ${currency}</td>
-                <td>${(item.quantity * item.price).toFixed(2)} ${currency}</td>
+                <td>${formatAmount(item.price)} ${currency}</td>
+                <td>${formatAmount(item.quantity * item.price)} ${currency}</td>
               </tr>
               `
               )
@@ -195,9 +195,9 @@ ${
     
         <!-- Total -->
         <div class="total">
-          <div>Sous-total : ${subtotal.toFixed(2)} ${currency}</div>
-          ${taxRate > 0 ? `<div>TVA (${taxRate}%) : ${tax.toFixed(2)} ${currency}</div>` : ''}
-          <div style="font-size: 18px;">Total : ${total.toFixed(2)} ${currency}</div>
+          <div>Sous-total : ${formatAmount(subtotal)} ${currency}</div>
+          ${taxRate > 0 ? `<div>TVA (${taxRate}%) : ${formatAmount(tax)} ${currency}</div>` : ''}
+          <div style="font-size: 18px;">Total : ${formatAmount(total)} ${currency}</div>
         </div>
     
         <!-- Payment Terms -->

@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import { Button } from '../../../components/Button';
 import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
 
-import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 export default function InvoiceSummary() {
@@ -94,11 +94,11 @@ export default function InvoiceSummary() {
                 <View>
                   <Text className="font-medium text-gray-700">{item.name}</Text>
                   <Text className="text-gray-500">
-                    {item.quantity} x {item.price.toFixed(2)} {currency}
+                    {item.quantity} x {formatAmount(item.price)} {currency}
                   </Text>
                 </View>
                 <Text className="font-semibold text-gray-700">
-                  {(item.quantity * item.price).toFixed(2)} {currency}
+                  {formatAmount(item.quantity * item.price)} {currency}
                 </Text>
               </View>
             ))}
@@ -111,21 +111,21 @@ export default function InvoiceSummary() {
             <View className="flex-row justify-between">
               <Text className="text-gray-700">Sous-total</Text>
               <Text className="font-semibold text-gray-700">
-                {subtotal.toFixed(2)} {currency}
+                {formatAmount(subtotal)} {currency}
               </Text>
             </View>
             {taxRate > 0 && (
               <View className="flex-row justify-between">
                 <Text className="text-gray-700">TVA ({taxRate}%)</Text>
                 <Text className="font-semibold text-gray-700">
-                  {tax.toFixed(2)} {currency}
+                  {formatAmount(tax)} {currency}
                 </Text>
               </View>
             )}
             <View className="mt-2 flex-row justify-between border-t border-gray-300 pt-2">
               <Text className="text-lg font-bold">Total</Text>
               <Text className="text-lg font-bold text-gray-800">
-                {total.toFixed(2)} {currency}
+                {formatAmount(total)} {currency}
               </Text>
             </View>
           </View>

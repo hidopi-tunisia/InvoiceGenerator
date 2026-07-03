@@ -11,7 +11,7 @@ import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView
 import NumericInputText from '../../../components/NumericInputText';
 import { InvoiceItem, invoiceItemSchema } from '../../schema/invoice';
 
-import { getInvoiceCurrency } from '~/app/utils/invoice';
+import { formatAmount, getInvoiceCurrency } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 const itemsSchema = z.object({
@@ -87,10 +87,10 @@ export default function GenerateInvoice() {
                   <Text className="mb-1 text-right text-lg font-semibold text-gray-600">Total</Text>
                   <View className="h-12 justify-center rounded-md bg-gray-100 px-3">
                     <Text className="text-right font-bold text-gray-700">
-                      {(
+                      {formatAmount(
                         (methods.watch(`items.${index}.quantity`) || 0) *
-                        (methods.watch(`items.${index}.price`) || 0)
-                      ).toFixed(2)}{' '}
+                          (methods.watch(`items.${index}.price`) || 0)
+                      )}{' '}
                       {currency}
                     </Text>
                   </View>

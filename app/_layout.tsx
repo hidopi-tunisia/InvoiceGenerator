@@ -1,4 +1,5 @@
 import '../global.css';
+import { Feather } from '@expo/vector-icons';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
 import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 'expo-router';
@@ -91,8 +92,7 @@ export default Sentry.wrap(Layout);
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <View className="flex-1 items-center justify-center bg-red-50 p-6">
-      {/* Icône ou Emoji pour l'erreur */}
-      <Text className="mb-4 text-6xl">⚠️</Text>
+      <Feather name="alert-triangle" size={56} color="#dc2626" style={{ marginBottom: 16 }} />
 
       {/* Titre d'erreur */}
       <Text className="mb-2 text-2xl font-bold text-red-600">Une erreur est survenue</Text>

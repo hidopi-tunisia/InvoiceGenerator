@@ -15,19 +15,19 @@ type ButtonProps = {
 
 const variantStyles = {
   primary: {
-    button: 'items-center bg-blue-700 rounded-[28px] shadow-md p-4',
+    button: 'items-center bg-primary rounded-[28px] shadow-md p-4',
     text: 'text-white text-lg font-semibold text-center',
     spinner: '#ffffff',
   },
   secondary: {
-    button: 'border-2 border-indigo-500 bg-white shadow-md p-4 rounded-[28px]',
-    text: 'text-indigo-500 text-lg font-semibold text-center',
-    spinner: '#6366f1',
+    button: 'border-2 border-primary bg-white shadow-md p-4 rounded-[28px]',
+    text: 'text-primary text-lg font-semibold text-center',
+    spinner: '#4f46e5',
   },
   link: {
     button: 'items-center p-4',
-    text: 'text-blue-600 text-lg font-bold',
-    spinner: '#2563eb',
+    text: 'text-primary text-lg font-bold',
+    spinner: '#4f46e5',
   },
 };
 

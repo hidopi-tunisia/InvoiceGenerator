@@ -7,6 +7,7 @@ export const businessEntitySchema = z.object({
     .string({ required_error: "L'adresse postale est obligatoire" })
     .min(1, "L'adresse obligatoire"),
   tva: z.string().optional(),
+  siret: z.string().optional(),
   email: z.string().optional(),
   currency: z.string().optional(),
   taxRate: z.number().optional(),

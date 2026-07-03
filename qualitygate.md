@@ -14,20 +14,14 @@ Aucun défaut critique ouvert ✅ (le n°1 — écrans d'auth hors conventions �
 
 ### Majeurs (UX / parcours)
 
-**2. Filtre « En retard » mort et statuts incohérents**
-`(tabs)/invoices/index.tsx` : le filtre exige `status === 'en retard'` mais rien ne positionne jamais ce statut (il devrait être dérivé de `dueDate < now`) → filtre toujours vide. La pastille de couleur teste `'impayée'` alors que le statut réel est `'en attente'` → pastille grise en liste, badge jaune en détail pour le même statut.
-
-**4. Wizard sans indicateur d'étapes**
-4 écrans de création de facture sans « étape X/4 » ni barre de progression.
-
-**5. Suppressions sans garde-fou complet**
-Alertes de confirmation sans `style: 'destructive'` sur le bouton « Supprimer » (liste + détail), et aucun undo après suppression.
+**5. Pas d'undo après suppression**
+La confirmation destructive est en place (liste, détail, contacts) ; il manque un undo léger (« Annuler » en toast/snackbar) pour les suppressions accidentelles. Nécessite une infra de toast inexistante — post-MVP raisonnable.
 
 **6. Sélecteur d'année déroutant**
 Choisir l'année de filtre ouvre un `DateTimePicker` jour/mois/année complet en spinner (`invoices/index.tsx`).
 
-**7. Incohérences visuelles**
-Deux bleus primaires concurrents (`Button` en `bg-blue-700`, écrans en `indigo-500`) ; tint actif de tab bar `#052e16` (vert foncé hors palette) ; formats de montants : liste en `formatNumberWithSpaces`, détail/récap en `toFixed(2)` — unifier ; emoji ⚠️ comme icône dans l'ErrorBoundary.
+**7. Balayage palette incomplet**
+Le token `colors.primary` (#4f46e5) est en place (`tailwind.config.js`) et appliqué au `Button` et à la tab bar, mais les écrans utilisent encore des `indigo-500`/`indigo-600` en dur — balayage `bg-primary`/`text-primary` à finir (préalable dark mode, MOBILE_GUIDELINES §23).
 
 ### Mineurs
 
@@ -39,9 +33,6 @@ Déclaré dans le `Stack` de `onbording/_layout.tsx` mais aucun code ne navigue 
 
 **20. Store local non cloisonné par utilisateur**
 Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une vraie déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur), mais à cloisonner par `uid` au moment du chantier sync — décision à documenter.
-
-**12. Champ `siret` hors schéma dans `settings/edit.tsx`**
-Un `CustomInputText name="siret"` est affiché mais `siret` n'existe pas dans `businessEntitySchema` : la valeur saisie est validée par la règle inline générique puis perdue au typage. L'ajouter au schéma ou retirer le champ.
 
 ---
 
@@ -90,11 +81,8 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 
 | Priorité | Sujet | Action |
 |----------|-------|--------|
-| P2 | Statuts factures (n°2) | Dériver « en retard » de la date d'échéance, unifier les couleurs liste/détail |
-| P2 | Indicateur d'étapes wizard (n°4) | « Étape X/4 » dans les headers du wizard |
-| P2 | Formats montants + palette (n°7) | Un seul format, un seul bleu primaire dans `tailwind.config.js` |
-| P2 | Suppressions (n°5) | `style: 'destructive'` + undo léger |
-| P2 | Champ siret (n°12) | Ajouter au schéma ou retirer |
+| P3 | Balayage palette (n°7) | Remplacer les `indigo-*` en dur par `primary` dans les écrans |
+| P3 | Undo suppression (n°5) | Snackbar « Annuler » (nécessite une infra toast) |
 | P3 | Sélecteur d'année (n°6) | Remplacer par une liste d'années simple |
 | P3 | Deps mortes (n°16-18) | Retirer `expo-sqlite`, `react-native-flags`, `twrnc` |
 | P3 | Listes (n°19) | Standardiser LegendList ou FlatList |
@@ -104,6 +92,14 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 ---
 
 ## ✅ Résolus
+
+### 2026-07-03 — P2 (statuts, wizard, palette/formats, siret)
+
+- **Statut « en retard » dérivé (n°2)** — `getDisplayStatus` dans `utils/invoice.ts` : dérivé de `invoiceDueDate < maintenant` à l'affichage (jamais persisté) ; filtres de la liste branchés dessus (le filtre « En retard » fonctionne enfin) ; couleurs unifiées liste/détail via `getStatusColor` partagé.
+- **Indicateur d'étapes du wizard (n°4)** — headers « Facture · Étape 1/4 » → « Récapitulatif · Étape 4/4 ».
+- **Palette et formats (n°7, partiel)** — token `colors.primary` (#4f46e5) dans `tailwind.config.js`, appliqué au `Button` (fini le `bg-blue-700`) et au tint de la tab bar (fini le vert `#052e16`) ; `formatAmount` unique (fr-FR, 2 décimales) utilisé par liste, détail, récap, items et PDF ; emoji ⚠️ de l'ErrorBoundary remplacé par une icône vectorielle. Reste : balayage des `indigo-*` en dur (reclassé P3).
+- **Champ `siret` (n°12)** — ajouté à `businessEntitySchema` (optionnel), la saisie de `settings/edit` n'est plus perdue au typage.
+- **Suppressions (n°5, partiel)** — `style: 'destructive'` posé partout (fait avec le lot a11y) ; l'undo restant est reclassé P3 (nécessite une infra toast).
 
 ### 2026-07-03 — P1 accessibilité (n°3) et console.log (n°8)
 
