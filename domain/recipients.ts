@@ -1,79 +1,71 @@
-import { ENDPOINT, HTTPMethod } from '../constants';
-import { getAuthorization } from './authorization';
+import { request } from './http';
 import { toQueryParams } from './query';
 
-type Filters = {
+// Types alignés sur le contrat API.md §4-5 (routes /recipients).
+// La résolution locale ↔ backend d'un contact se fait par email (API.md §15.15).
+
+export type BackendAddress = {
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip?: string;
+};
+
+export type RecipientFilters = {
   page?: number;
   limit?: number;
-  name?: string;
-  email?: string;
-};
-const getRecipients = async (filters?: Filters) => {
-  const token = await getAuthorization();
-  const params = toQueryParams(filters);
-  const response = await fetch(`${ENDPOINT}/recipients?${params}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  search?: string;
+  starred?: boolean;
+  category?: 'Entreprise' | 'Particulier';
 };
 
-type CreateRecipientPayload = {
-  name?: string;
-  address?: string;
+export type RecipientInput = {
+  contactPerson: string; // seul champ contact requis
   email?: string;
+  phone?: string;
+  category?: 'Entreprise' | 'Particulier';
+  companyName?: string;
+  country?: string; // défaut "TN" côté serveur — dérive le type fiscal
+  fiscalIdentifier?: { type: 'MF' | 'SIRET' | 'SIREN' | 'TVA' | 'none'; value?: string };
   vat?: number;
-};
-const createRecipient = async (payload: CreateRecipientPayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients`, {
-    method: HTTPMethod.POST,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-  return response.json();
+  address?: BackendAddress;
+  notes?: string;
+  starred?: boolean;
 };
 
-const getRecipientById = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+export type BackendRecipient = RecipientInput & {
+  _id: string;
+  userId: string;
+  deleted: boolean; // soft delete côté serveur
+  createdAt: string;
+  updatedAt: string;
 };
 
-type UpdateRecipientPayload = {
-  name?: string;
-  address?: string;
-  email?: string;
-  vat?: number;
-};
-const updateRecipientById = async (id: string, payload: UpdateRecipientPayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
-    method: HTTPMethod.PATCH,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-  return response.json();
-};
+const getRecipients = (filters?: RecipientFilters) =>
+  request<BackendRecipient[]>(`/recipients?${toQueryParams(filters)}`);
 
-const removeRecipient = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/recipients/${id}`, {
-    method: HTTPMethod.DELETE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
-};
+/** Recherche plein-texte serveur (min 2 caractères). */
+const searchRecipients = (q: string) =>
+  request<BackendRecipient[]>(`/recipients/search?${toQueryParams({ q })}`);
 
-export { getRecipients, createRecipient, getRecipientById, updateRecipientById, removeRecipient };
+const getRecipientById = (id: string) => request<BackendRecipient>(`/recipients/${id}`);
+
+const createRecipient = (payload: RecipientInput) =>
+  request<BackendRecipient>('/recipients', { method: 'POST', body: payload });
+
+/** PATCH minimal : n'envoyer que les champs modifiés (API.md §15.7). */
+const updateRecipientById = (id: string, payload: Partial<RecipientInput>) =>
+  request<BackendRecipient>(`/recipients/${id}`, { method: 'PATCH', body: payload });
+
+const removeRecipient = (id: string) =>
+  request<{ id: string }>(`/recipients/${id}`, { method: 'DELETE' });
+
+export {
+  getRecipients,
+  searchRecipients,
+  getRecipientById,
+  createRecipient,
+  updateRecipientById,
+  removeRecipient,
+};

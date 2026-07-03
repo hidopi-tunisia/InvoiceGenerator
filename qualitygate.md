@@ -16,8 +16,8 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 ## Sujets structurels (chantier backend)
 
-**13. Couche `domain/` morte**
-`domain/invoices.ts`, `recipients.ts`, `senders.ts`, `profile.ts` sont implémentés mais non branchés à l'UI. L'app fonctionne entièrement sur le store Zustand local. Décision MVP assumée (MOBILE_GUIDELINES §7) — ne pas brancher partiellement. **C'est le prochain chantier** (roadmap : backend → puis upgrade SDK).
+**13. Couche `domain/` morte — chantier en cours**
+L'app fonctionne entièrement sur le store Zustand local ; la sync n'est pas branchée à l'UI. **Phase 0 livrée le 2026-07-04** : helper réseau unique `domain/http.ts` (timeout 15 s, erreurs typées, retry GET, refresh token 401, X-App-Version), `mappers.ts` (statuts FR↔EN, items), ressources typées API.md, `senders.ts` legacy supprimé, warm-up `/info` branché au boot. Restent les phases 1-6 du plan (store v2 + cloisonnement uid, profil, contacts, factures, moteur de sync, upsell).
 
 **20. Store local non cloisonné par utilisateur**
 Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur) ; à cloisonner par `uid` **pendant le chantier sync** (n°13).

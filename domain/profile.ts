@@ -1,61 +1,57 @@
-import { ENDPOINT, HTTPMethod } from '../constants';
-import { getAuthorization } from './authorization';
+import { request } from './http';
+import { BackendAddress } from './recipients';
 
-type CreateProfilePayload = {
+// Types alignés sur le contrat API.md §4-5 (routes /profile).
+// L'émetteur des factures = le Profile (jamais /senders, legacy — API.md §4).
+// Le premier GET auto-crée le profil côté serveur et démarre le trial 14 jours.
+
+export type BackendProfile = {
+  _id: string; // = UID Firebase
   name: string;
-  address: string;
   email: string;
-};
-const createProfile = async (payload: CreateProfilePayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/profile`, {
-    method: HTTPMethod.POST,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    mode: 'cors',
-    body: JSON.stringify(payload),
-  });
-  return response.json();
-};
-
-const getProfile = async () => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/profile`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  phone?: string;
+  companyName?: string;
+  currency: string;
+  language: 'fr' | 'en' | 'ar';
+  vat?: number;
+  address?: BackendAddress;
+  timbre?: { enabled: boolean; value: number };
+  fiscalIdentifier?: {
+    type: 'MF' | 'SIRET' | 'SIREN' | 'TVA' | 'none';
+    value: string;
+    country: string;
+  };
+  logoUrl?: string;
+  emailVerified: boolean;
+  isProfileComplete: boolean; // auto-calculé côté serveur
 };
 
-type UpdateProfilePayload = {
-  name?: string;
-  address?: string;
-  email?: string;
-};
-const updateProfile = async (payload: UpdateProfilePayload) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/profile`, {
-    method: HTTPMethod.PATCH,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-  return response.json();
-};
+// Champs protégés (_id, userId, createdAt…) interdits dans le body (API.md §10)
+export type ProfileInput = Partial<
+  Pick<
+    BackendProfile,
+    | 'name'
+    | 'phone'
+    | 'companyName'
+    | 'currency'
+    | 'language'
+    | 'vat'
+    | 'address'
+    | 'fiscalIdentifier'
+    | 'timbre'
+  >
+>;
 
-const removeProfile = async () => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/profile`, {
-    method: HTTPMethod.DELETE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
-};
+/** Auto-crée le profil + trial 14 j au premier appel. */
+const getProfile = () => request<BackendProfile>('/profile');
 
-export { createProfile, getProfile, updateProfile, removeProfile };
+const createProfile = (payload: ProfileInput) =>
+  request<BackendProfile>('/profile', { method: 'POST', body: payload });
+
+/** PATCH minimal : n'envoyer que les champs modifiés (API.md §15.7). */
+const updateProfile = (payload: ProfileInput) =>
+  request<BackendProfile>('/profile', { method: 'PATCH', body: payload });
+
+const removeProfile = () => request<null>('/profile', { method: 'DELETE' });
+
+export { getProfile, createProfile, updateProfile, removeProfile };

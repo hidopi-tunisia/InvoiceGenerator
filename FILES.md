@@ -76,7 +76,7 @@ Facturation/
 
 ### `app/onbording/` — Onboarding
 
-- **Rôle** : premier lancement (welcome, config pays/langue/devise/TVA, profil). **Le nom du dossier garde sa typo** — les routes en dépendent.
+- **Rôle** : premier lancement (config pays/langue/devise/TVA, puis profil). **Le nom du dossier garde sa typo** — les routes en dépendent.
 - **Autorisé** : écriture du `profile`, `onboardingStep`, `setOnboardingCompleted`.
 - **Interdit** : renommer le dossier ; créer des factures ici.
 
@@ -115,10 +115,10 @@ Facturation/
 
 ### `domain/` — Services réseau (client REST)
 
-- **Rôle** : couche d'accès au backend (`invoices.ts`, `recipients.ts`, `senders.ts`, `profile.ts`, `authorization.ts`). Implémentée, **pas encore branchée à l'UI**.
-- **Autorisé** : fetch vers `EXPO_PUBLIC_API_URL`, header Bearer via `getAuthorization()`, mapping DTO ↔ types locaux.
-- **Interdit** : JSX, accès au store, logique d'affichage. `authorization.ts` importe Firebase via `'../config'` (relatif) — **conserver cet import relatif**.
-- **Dépendances** : firebase/auth, `app/schema`.
+- **Rôle** : couche d'accès au backend. `http.ts` = helper unique (timeout 15 s, enveloppe `{ success, data, pagination, errors }`, erreurs typées, retry GET, refresh token sur 401, warm-up `/info`) ; `mappers.ts` = conversions locales ↔ backend (statuts FR/EN, items) ; `invoices.ts`, `recipients.ts`, `profile.ts` = ressources typées API.md ; `authorization.ts` = token Firebase ; `query.ts` = query params. Socle prêt (phase 0), **sync pas encore branchée à l'UI** (seul le warm-up l'est).
+- **Autorisé** : appels via `request()` uniquement, mapping DTO ↔ types locaux dans `mappers.ts`.
+- **Interdit** : JSX, accès au store, logique d'affichage, `fetch` direct hors `http.ts`. `authorization.ts` importe Firebase via `'../app/config'` (relatif) — **conserver cet import relatif**. `/senders` est legacy : ne jamais le consommer (l'émetteur = Profile).
+- **Dépendances** : firebase/auth, expo-application, `app/schema`.
 
 ### `hooks/` — Hooks custom
 
@@ -128,7 +128,7 @@ Facturation/
 
 ### `constants/` — Constantes
 
-- **Rôle** : valeurs partagées (`InvoiceStatus` — attention : constantes en anglais mais le store utilise les statuts **français** `'payée' | 'en attente' | 'en retard'`).
+- **Rôle** : valeurs partagées (`API_BASE`/`ENDPOINT`, `HTTPMethod`, `GOOGLE_AUTH`). Les statuts de facture côté app sont les chaînes **françaises** du store ; le mapping vers les statuts backend anglais vit dans `domain/mappers.ts`.
 - **Interdit** : logique, secrets.
 
 ### `assets/` — Ressources statiques
@@ -279,7 +279,7 @@ Rien n'existe aujourd'hui — infrastructure à créer :
 ## Créer une synchronisation (local ↔ backend)
 
 La couche existe mais n'est pas branchée :
-1. Compléter/utiliser `domain/invoices.ts`, `domain/recipients.ts`, `domain/profile.ts` (token via `domain/authorization.ts` — garder l'import relatif `'../config'`).
+1. Compléter/utiliser `domain/invoices.ts`, `domain/recipients.ts`, `domain/profile.ts` (token via `domain/authorization.ts` — garder l'import relatif `'../app/config'`).
 2. Dans `store/index.ts` : ajouter les métadonnées de sync (`syncedAt`, `dirty`) via la fonction `migrate`, et des actions `syncInvoices()` etc. qui appellent `domain/`.
 3. Point d'orchestration : `app/_layout.tsx` (déclencher la sync quand l'utilisateur est authentifié) ou un hook `hooks/useSync.ts`.
 4. Côté backend, les endpoints CRUD existent déjà (`src/routes/invoices.js`, `recipients.js`, `profile.js`).

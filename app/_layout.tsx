@@ -10,6 +10,7 @@ import { vexo } from 'vexo-analytics';
 
 import { auth } from './config'; // Import Firebase auth
 
+import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
@@ -48,6 +49,10 @@ function Layout() {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       setUser(authUser);
       setAuthReady(true);
+      if (authUser) {
+        // Réchauffe l'instance Render avant la première vraie requête (fire-and-forget)
+        warmUpBackend();
+      }
     });
 
     // Unsubscribe on component unmount

@@ -1,65 +1,84 @@
-import { ENDPOINT, HTTPMethod } from '../constants';
-import { getAuthorization } from './authorization';
+import { request } from './http';
+import { BackendInvoiceItem, BackendInvoiceStatus } from './mappers';
 import { toQueryParams } from './query';
 
-type Filters = {
+// Types alignés sur le contrat API.md §4-5 (routes /invoices).
+
+export type InvoiceFilters = {
   page?: number;
   limit?: number;
-  name?: string;
-  email?: string;
-  sender?: string;
-  recipient?: string;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
+  status?: BackendInvoiceStatus;
   tag?: string;
-};
-const getInvoices = async (filters?: Filters) => {
-  const token = await getAuthorization();
-  const params = toQueryParams(filters);
-  const response = await fetch(`${ENDPOINT}/invoices?${params}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+  recipient?: string;
+  startDate?: string; // ISO — utilisé pour la sync différentielle (API.md §15.8)
+  endDate?: string;
+  dueDate?: string;
+  sortBy?: 'date' | 'dueDate' | 'total' | 'createdAt' | 'tag';
+  sortOrder?: 'asc' | 'desc';
 };
 
-const createInvoice = async (payload: any) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/invoices`, {
-    method: HTTPMethod.POST,
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
-  return response.json();
+export type BackendRecipientRef = {
+  _id: string;
+  companyName?: string;
+  contactPerson?: string;
+  email?: string;
 };
 
-const getInvoiceById = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/invoices/${id}`, {
-    method: HTTPMethod.GET,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
+export type BackendInvoice = {
+  _id: string;
+  tag: string;
+  userId: string;
+  recipient: BackendRecipientRef;
+  items: BackendInvoiceItem[];
+  discount?: number;
+  status: BackendInvoiceStatus;
+  total: number; // calculé par le backend — fait foi une fois synchronisé
+  totalInWords: string;
+  date: string;
+  dueDate?: string;
+  paidDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  isLate: boolean; // calculé à la volée par le backend
+  downloadUrl?: string; // PDF Cloudinary si le plan a pdfEnabled
 };
 
-const updateInvoiceById = async (id: string, payload: any) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/invoices/${id}`, {
-    method: HTTPMethod.PATCH,
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
-  return response.json();
+// Ne JAMAIS envoyer total/totalInWords/sender : champs protégés → 400 (API.md §10)
+export type InvoiceInput = {
+  tag?: string; // le numéro local est conservé s'il est unique pour l'utilisateur
+  date?: string;
+  dueDate?: string;
+  recipientId: string;
+  items: BackendInvoiceItem[];
+  discount?: number;
+  status?: BackendInvoiceStatus;
+  paymentMethod?: string;
+  notes?: string;
+  terms?: string;
 };
 
-const removeInvoice = async (id: string) => {
-  const token = await getAuthorization();
-  const response = await fetch(`${ENDPOINT}/invoices/${id}`, {
-    method: HTTPMethod.DELETE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.json();
-};
+const getInvoices = (filters?: InvoiceFilters) =>
+  request<BackendInvoice[]>(`/invoices?${toQueryParams(filters)}`);
 
-export { getInvoices, createInvoice, getInvoiceById, updateInvoiceById, removeInvoice };
+const getInvoiceById = (id: string) => request<BackendInvoice>(`/invoices/${id}`);
+
+const createInvoice = (payload: InvoiceInput) =>
+  request<BackendInvoice>('/invoices', { method: 'POST', body: payload });
+
+const updateInvoiceById = (id: string, payload: Partial<InvoiceInput>) =>
+  request<BackendInvoice>(`/invoices/${id}`, { method: 'PATCH', body: payload });
+
+const updateInvoiceStatus = (id: string, status: BackendInvoiceStatus) =>
+  request<BackendInvoice>(`/invoices/${id}/status`, { method: 'PATCH', body: { status } });
+
+const removeInvoice = (id: string) =>
+  request<{ id: string }>(`/invoices/${id}`, { method: 'DELETE' });
+
+export {
+  getInvoices,
+  getInvoiceById,
+  createInvoice,
+  updateInvoiceById,
+  updateInvoiceStatus,
+  removeInvoice,
+};

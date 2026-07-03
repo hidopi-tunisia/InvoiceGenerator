@@ -501,7 +501,7 @@ Toutes les routes de liste (`GET /invoices`, `/devis`, `/recipients`, `/audit/ti
 
 - Version actuelle : **v1** — toutes les routes data sous `/api/v1`. Endpoints hors version : `/info`, `/ready`, `/docs` (opérationnels, contrat non garanti).
 - Changement **rétrocompatible** (champ ajouté, filtre ajouté) → reste en v1. Changement **cassant** (champ renommé/supprimé, format modifié) → nouvelle racine `/api/v2`, v1 maintenue le temps de la migration des clients mobiles (les apps installées ne se mettent pas à jour instantanément — règle absolue pour une app store).
-- Le client mobile envoie sa version d'app (`expo-application`) dans un header `X-App-Version` (à brancher) pour permettre les stats d'adoption avant tout retrait de v1.
+- Le client mobile envoie sa version d'app (`expo-application`) dans un header `X-App-Version` (branché dans `domain/http.ts` le 2026-07-04) pour permettre les stats d'adoption avant tout retrait de v1.
 
 ## 14. Exemples JSON
 
