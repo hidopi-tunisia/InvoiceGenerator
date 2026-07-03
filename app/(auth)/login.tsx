@@ -1,59 +1,103 @@
-// app/(auth)/login.tsx
-import { useRouter } from 'expo-router';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
-import { Button, Text, TextInput, View } from 'react-native';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Pressable, Text, View } from 'react-native';
 
 import { auth } from '../config'; // Instance Firebase auth
 
+import { LoginForm, loginSchema } from '~/app/schema/auth';
+import { getAuthErrorMessage } from '~/app/utils/auth-errors';
+import { Button } from '~/components/Button';
+import CustomInputText from '~/components/CustomInputText';
+import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
+import PasswordInputText from '~/components/PasswordInputText';
 import { useGoogleSignIn } from '~/hooks/useGoogleSignIn';
 
-const LoginScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen() {
   const [error, setError] = useState('');
-  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
   const { signInWithGoogle, signingIn, ready: googleReady } = useGoogleSignIn(setError);
+  const methods = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
-  const handleLogin = async () => {
+  const onSubmit = async (data: LoginForm) => {
     setError('');
+    setSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      // La redirection est gérée par l'auth-gate dans app/_layout.tsx
-      // (onAuthStateChanged → /onbording ou /(tabs)).
-    } catch (e: any) {
-      setError(e?.message ?? 'Échec de la connexion');
+      await signInWithEmailAndPassword(auth, data.email.trim(), data.password);
+      // Succès : la redirection est gérée par l'auth-gate (app/_layout.tsx),
+      // l'écran est remplacé — on ne réactive pas le bouton (setState post-unmount).
+    } catch (e) {
+      setError(getAuthErrorMessage(e, 'Échec de la connexion. Réessayez.'));
+      setSubmitting(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 12 }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>Connexion</Text>
-      {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-      <TextInput
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 }}
-      />
-      <TextInput
-        placeholder="Mot de passe"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 }}
-      />
-      <Button title="Se connecter" onPress={handleLogin} />
-      <Button
-        title={signingIn ? 'Connexion Google…' : 'Continuer avec Google'}
-        disabled={!googleReady || signingIn}
-        onPress={signInWithGoogle}
-      />
-      <Button title="Créer un compte" onPress={() => router.push('/(auth)/register')} />
-    </View>
-  );
-};
+    <KeyboardAwareScrollView>
+      <View className="flex-1 justify-center">
+        <Text className="mb-2 text-3xl font-bold text-gray-900">Connexion</Text>
+        <Text className="mb-6 text-base text-gray-500">Heureux de vous revoir sur Myfakto.</Text>
 
-export default LoginScreen;
+        {error ? (
+          <Text accessibilityRole="alert" className="mb-4 text-sm text-red-500">
+            {error}
+          </Text>
+        ) : null}
+
+        <FormProvider {...methods}>
+          <CustomInputText
+            name="email"
+            label="Email"
+            placeholder="votre@email.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+          />
+          <PasswordInputText
+            name="password"
+            label="Mot de passe"
+            placeholder="Votre mot de passe"
+            autoComplete="current-password"
+            textContentType="password"
+          />
+
+          <Pressable
+            onPress={() => router.push('/(auth)/forgot-password')}
+            hitSlop={8}
+            accessibilityRole="link"
+            className="mb-6 self-end">
+            <Text className="text-sm font-medium text-blue-600">Mot de passe oublié ?</Text>
+          </Pressable>
+
+          <Button
+            title="Se connecter"
+            loading={submitting}
+            onPress={methods.handleSubmit(onSubmit)}
+          />
+        </FormProvider>
+
+        <Button
+          variant="secondary"
+          className="mt-4"
+          title="Continuer avec Google"
+          loading={signingIn}
+          disabled={!googleReady}
+          onPress={signInWithGoogle}
+        />
+        <Button
+          variant="link"
+          className="mt-2"
+          title="Créer un compte"
+          onPress={() => router.push('/(auth)/register')}
+        />
+      </View>
+    </KeyboardAwareScrollView>
+  );
+}

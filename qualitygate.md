@@ -10,8 +10,7 @@ Analyse de la qualité du code, des défauts identifiés et des pistes d'amélio
 
 ### Critiques
 
-**1. Écrans d'auth reconstruits hors conventions (régression)**
-`login.tsx` / `register.tsx` (réécrits sur `fix/firebase-auth`) : `TextInput` nus avec placeholder comme seul label, `Button` RN natif non stylé, styles inline au lieu de NativeWind, pas de RHF/Zod. Conséquences UX : pas d'état de chargement (double-submit possible), pas d'afficher/masquer le mot de passe, pas d'`autocomplete`/`textContentType` (autofill), et l'erreur affichée est le message Firebase brut en anglais technique (`e?.message`). Le flux « mot de passe oublié » n'existe plus — **bloquant review store** (item n°9 de la checklist MOBILE_GUIDELINES).
+Aucun défaut critique ouvert ✅ (le n°1 — écrans d'auth hors conventions — a été résolu le 2026-07-03, voir « Résolus »).
 
 ### Majeurs (UX / parcours)
 
@@ -44,8 +43,8 @@ Inaccessibles depuis tout flux — dupliqués par les modales locales de `onbord
 **10. Écran `onbording/welcome.tsx` orphelin**
 Déclaré dans le `Stack` de `onbording/_layout.tsx` mais aucun code ne navigue vers lui.
 
-**11. Bugs du composant `Button.tsx`**
-`${styles.primary}` interpole un objet dans `className` → `"[object Object]"` injecté dans les classes ; pas de prop `loading` pourtant décrite comme existante dans MOBILE_GUIDELINES §16 ; import `style` de `twrnc` inutilisé.
+**20. Store local non cloisonné par utilisateur**
+Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une vraie déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur), mais à cloisonner par `uid` au moment du chantier sync — décision à documenter.
 
 **12. Champ `siret` hors schéma dans `settings/edit.tsx`**
 Un `CustomInputText name="siret"` est affiché mais `siret` n'existe pas dans `businessEntitySchema` : la valeur saisie est validée par la règle inline générique puis perdue au typage. L'ajouter au schéma ou retirer le champ.
@@ -97,12 +96,10 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 
 | Priorité | Sujet | Action |
 |----------|-------|--------|
-| P1 | Écrans d'auth (n°1) | Reconstruire selon les conventions : RHF+Zod, composants maison, loading, erreurs Firebase mappées en français, mot de passe oublié |
 | P1 | Accessibilité (n°3) | `accessibilityLabel`/`Role` + `hitSlop` ≥ 44 pt sur les icônes tactiles, labels de tab bar |
 | P1 | `console.log` restants (n°8) | Purger ou conditionner à `__DEV__` |
 | P2 | Statuts factures (n°2) | Dériver « en retard » de la date d'échéance, unifier les couleurs liste/détail |
 | P2 | Indicateur d'étapes wizard (n°4) | « Étape X/4 » dans les headers du wizard |
-| P2 | Button.tsx (n°11) | Corriger l'interpolation, ajouter la prop `loading`, retirer twrnc |
 | P2 | Formats montants + palette (n°7) | Un seul format, un seul bleu primaire dans `tailwind.config.js` |
 | P2 | Suppressions (n°5) | `style: 'destructive'` + undo léger |
 | P2 | Champ siret (n°12) | Ajouter au schéma ou retirer |
@@ -115,6 +112,15 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 ---
 
 ## ✅ Résolus
+
+### 2026-07-03 — déconnexion réelle (découvert en test simulateur)
+
+- **Bouton « Se déconnecter » factice** — `settings/index.tsx` ne faisait aucun `auth.signOut()` : il naviguait manuellement vers `/onbording` (stub « Ajoutez ici votre logique de déconnexion » jamais terminé), laissant la session Firebase active. Corrigé : confirmation (`Alert` destructive — l'app étant offline-first, une déconnexion accidentelle hors ligne bloque l'utilisateur), abandon du brouillon, `signOut()`, et **aucune navigation manuelle** (l'auth-gate redirige vers login). Révèle la limitation n°20 (store non cloisonné par compte).
+
+### 2026-07-03 — refonte des écrans d'auth (P1 n°1) + Button (n°11)
+
+- **Écrans d'auth reconstruits selon les conventions** — `login.tsx`, `register.tsx` et nouveau `forgot-password.tsx` : RHF + Zod (`app/schema/auth.ts`), composants maison (`CustomInputText` + nouveau `PasswordInputText` avec toggle afficher/masquer accessible), NativeWind, état `loading` anti double-submit, autofill (`autoComplete`/`textContentType`), erreurs Firebase mappées en français (`app/utils/auth-errors.ts`, messages non-énumérants). Le flux « mot de passe oublié » (`sendPasswordResetEmail`) lève le bloquant store n°9 — avec réponse générique anti-énumération de comptes.
+- **`Button.tsx` corrigé** — interpolation `[object Object]` supprimée, prop `loading` (spinner + disabled + `accessibilityState`), plus aucune trace de twrnc.
 
 ### 2026-07-03 — correction des P0 (branche `fix/firebase-auth`)
 

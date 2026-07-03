@@ -21,7 +21,7 @@
 
 ## 2. Navigation
 
-- 🟢 **Uniquement expo-router** : `router.push/replace/back` et `<Link>`. 🟡 Interdit et à purger : `useNavigation()` de `@react-navigation/native` (encore présent dans `(auth)/login.tsx` / `register.tsx` — source du bug de navigation dans le `catch`).
+- 🟢 **Uniquement expo-router** : `router.push/replace/back` et `<Link>`. `useNavigation()` de `@react-navigation/native` est interdit (purgé des écrans d'auth le 2026-07-03).
 - 🟢 L'auth gate vit **exclusivement** dans `app/_layout.tsx` via `onAuthStateChanged` : non connecté → `/(auth)/login`, sans onboarding → `/onbording`, sinon `/(tabs)`. Aucun écran ne re-vérifie l'auth lui-même.
 - 🟢 Chaque groupe de routes a son `_layout.tsx` ; tout nouvel écran est déclaré dans le `<Stack>` parent et accessible depuis un flux réel — pas d'écran orphelin (cas actuel des modales `(modals)/country` et `language` : 🟡 les brancher ou les supprimer).
 - 🟢 `router.replace` pour les transitions dont on ne doit pas revenir (post-login, post-onboarding, succès de facture) ; `router.push` sinon.
@@ -196,7 +196,7 @@
 Ordonnée par blocage. Tout 🟡 ci-dessus doit être traité ; en synthèse :
 
 **Bloquant soumission (crash / rejet)**
-1. Corriger le bug critique restant de `qualitygate.md` (n°1) : écrans d'auth hors conventions (RHF+Zod, loading, erreurs Firebase en français, mot de passe oublié). ✅ Résolus le 2026-07-03 : onboarding persisté, TVA calculée, `replace` après commit, facture vide impossible, bouton de test supprimé, Sentry réactivé.
+1. ✅ Plus aucun bug critique ouvert dans `qualitygate.md` (2026-07-03) : onboarding persisté, TVA calculée, `replace` après commit, facture vide impossible, bouton de test supprimé, Sentry réactivé (cause racine : version), écrans d'auth reconstruits selon les conventions.
 2. Justesse métier : TVA réellement calculée dans les totaux (`app/utils/invoice.ts`) et PDF fidèle au profil (`taxRate`, devise) — une app de facturation qui calcule faux est morte en review utilisateur.
 3. Purger le bouton de test de l'accueil et tout `console.log` (dont la clé Vexo).
 4. `npx tsc --noEmit` et `npm run lint` passent sans erreur.
@@ -206,7 +206,7 @@ Ordonnée par blocage. Tout 🟡 ci-dessus doit être traité ; en synthèse :
 6. Permissions déclarées = permissions utilisées (audit `app.json` post-prebuild).
 7. `userInterfaceStyle: "light"` verrouillé ; icône, splash, nom « Myfakto » cohérents.
 8. Politique de confidentialité (URL) + formulaires App Privacy (Apple) / Data Safety (Google) reflétant : Firebase Auth, Sentry, Vexo.
-9. Flux mot de passe oublié : `forgot_psx.tsx` a été supprimé — soit le réimplémenter (`sendPasswordResetEmail`), soit retirer tout lien vers lui. Un lien mort en review = rejet.
+9. ✅ Flux mot de passe oublié réimplémenté (2026-07-03) : `(auth)/forgot-password.tsx` (`sendPasswordResetEmail`, réponse générique anti-énumération), lien depuis l'écran de connexion.
 10. Suppression de compte accessible dans l'app (exigence Apple/Google pour toute app avec création de compte).
 
 **Qualité de lancement**
