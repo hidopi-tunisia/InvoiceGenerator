@@ -4,7 +4,7 @@ Fichiers : `app/onbording/index.tsx`, `app/onbording/profile.tsx`
 
 > Note : le dossier s'appelle `onbording` (typo intentionnel — ne pas renommer)
 >
-> Les modales pays/langue sont **locales** à `onbording/index.tsx` (composant `Modal` RN). Les routes `app/(modals)/country.tsx` et `language.tsx` sont orphelines (défaut n°21 de `qualitygate.md`) — à brancher ou supprimer.
+> Les modales pays/langue sont **locales** à `onbording/index.tsx` (composant `Modal` RN). Les anciennes routes orphelines `app/(modals)/` et `onbording/welcome.tsx` ont été supprimées le 2026-07-03.
 
 ---
 

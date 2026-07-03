@@ -23,7 +23,7 @@
 
 - 🟢 **Uniquement expo-router** : `router.push/replace/back` et `<Link>`. `useNavigation()` de `@react-navigation/native` est interdit (purgé des écrans d'auth le 2026-07-03).
 - 🟢 L'auth gate vit **exclusivement** dans `app/_layout.tsx` via `onAuthStateChanged` : non connecté → `/(auth)/login`, sans onboarding → `/onbording`, sinon `/(tabs)`. Aucun écran ne re-vérifie l'auth lui-même.
-- 🟢 Chaque groupe de routes a son `_layout.tsx` ; tout nouvel écran est déclaré dans le `<Stack>` parent et accessible depuis un flux réel — pas d'écran orphelin (cas actuel des modales `(modals)/country` et `language` : 🟡 les brancher ou les supprimer).
+- 🟢 Chaque groupe de routes a son `_layout.tsx` ; tout nouvel écran est déclaré dans le `<Stack>` parent et accessible depuis un flux réel — pas d'écran orphelin (les anciennes modales `(modals)/` et `onbording/welcome` ont été supprimées le 2026-07-04).
 - 🟢 `router.replace` pour les transitions dont on ne doit pas revenir (post-login, post-onboarding, succès de facture) ; `router.push` sinon.
 - 🟢 Entrer dans le wizard **uniquement** après `store.startNewInvoice()` ; quitter proprement = `resetNewInvoice()` ou reprise depuis l'accueil.
 
@@ -129,7 +129,7 @@
 
 ## 18. Infinite Scroll
 
-- 🟢 Listes locales (factures, contacts) : virtualisation via `@legendapp/list`/FlatList suffit — **pas de pagination UI au MVP**, le volume d'un utilisateur (centaines de factures max) ne le justifie pas.
+- 🟢 Listes locales (factures, contacts) : virtualisation via Animated.FlatList (Reanimated) suffit — **pas de pagination UI au MVP**, le volume d'un utilisateur (centaines de factures max) ne le justifie pas.
 - 🔵 Post-sync : `onEndReached` + `page/limit` du backend (`ResponseFormatter.paginated`), avec footer spinner et garde anti-appels multiples.
 
 ## 19. Pull To Refresh
@@ -183,7 +183,7 @@
 
 ## 27. Performance
 
-- 🟢 Listes non bornées → virtualisation (`@legendapp/list`/FlatList) ; jamais de `.map()` dans un `ScrollView` pour les factures/contacts.
+- 🟢 Listes non bornées → virtualisation (Animated.FlatList (Reanimated)) ; jamais de `.map()` dans un `ScrollView` pour les factures/contacts.
 - 🟢 Sélecteurs Zustand ciblés (§5) = première défense anti re-render ; `useCallback` sur les handlers passés aux items de liste.
 - 🟢 Travail lourd (génération PDF) déclenché par action utilisateur, jamais dans le rendu ; l'écran détail génère le PDF **une fois** et réutilise l'URI.
 - 🟡 Nettoyer `package.json` avant release : dépendances redondantes (double SDK Firebase JS + `@react-native-firebase/*` si toujours présent, `twrnc` alors que NativeWind est la convention) — chaque lib inutile alourdit le bundle et l'app startup.

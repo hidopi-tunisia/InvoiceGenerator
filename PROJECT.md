@@ -106,7 +106,6 @@ Facturation/
 | `app/` | Écrans (expo-router : chaque fichier = une route) |
 | `app/(auth)/` | Login, inscription (Firebase Auth) |
 | `app/(tabs)/` | Navigation principale : accueil, factures, contacts, paramètres |
-| `app/(modals)/` | Modales de sélection pays / langue |
 | `app/invoices/generate/` | Assistant de création de facture (4 étapes) |
 | `app/onbording/` | Onboarding premier lancement (le typo du nom est volontairement conservé) |
 | `app/utils/` | Génération PDF (`pdf.ts`), numéro de facture (`invoice.ts`), demande d'avis (`review.ts`) |
@@ -186,7 +185,7 @@ Une facture en cours (`newInvoice`) est reprennable depuis l'accueil si l'utilis
 
 ## Performance
 
-- Listes animées avec `react-native-reanimated` ; listes virtualisées (`@legendapp/list`).
+- Listes animées avec `react-native-reanimated` ; listes virtualisées (Animated.FlatList).
 - Génération PDF mobile locale (pas d'aller-retour réseau).
 - Côté backend : PDF généré **après** la réponse HTTP (`setImmediate`) pour ne pas bloquer la requête ; compression HTTP activée.
 - Le backend tourne sur Render (plan avec cold starts possibles) — à prendre en compte pour les timeouts côté client.

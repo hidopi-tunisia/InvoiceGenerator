@@ -14,7 +14,7 @@
 
 ## Navigation correcte
 
-- [ ] Tout nouvel écran est accessible depuis un flux réel (pas d'écran orphelin comme `(modals)/country`).
+- [ ] Tout nouvel écran est accessible depuis un flux réel (aucun écran orphelin).
 - [ ] Navigation uniquement via `expo-router` (`router.push/replace`) — jamais `useNavigation` de `@react-navigation/native`.
 - [ ] Le retour arrière (geste iOS + bouton Android) laisse l'app dans un état cohérent, notamment dans le wizard (`newInvoice` non corrompu).
 - [ ] L'auth gate de `app/_layout.tsx` couvre le nouvel écran (pas d'écran protégé accessible sans login).
@@ -70,7 +70,7 @@
 
 ## Performance
 
-- [ ] Listes longues virtualisées (`@legendapp/list` / FlatList), jamais de `.map()` dans un ScrollView pour des données non bornées.
+- [ ] Listes longues virtualisées (Animated.FlatList), jamais de `.map()` dans un ScrollView pour des données non bornées.
 - [ ] Pas de travail lourd (génération PDF, parsing) sur le fil du rendu — déclenché par action utilisateur ou différé.
 
 ## Pas de re-render inutile

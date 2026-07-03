@@ -73,7 +73,7 @@ export default function LoginScreen() {
             hitSlop={8}
             accessibilityRole="link"
             className="mb-6 self-end">
-            <Text className="text-sm font-medium text-blue-600">Mot de passe oublié ?</Text>
+            <Text className="text-sm font-medium text-primary">Mot de passe oublié ?</Text>
           </Pressable>
 
           <Button

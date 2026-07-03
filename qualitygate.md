@@ -2,63 +2,25 @@
 
 Analyse de la qualité du code, des défauts identifiés et des pistes d'amélioration.
 
-> Dernière mise à jour : 2026-07-03 — correction des P0 sur la branche `fix/firebase-auth` (11 défauts résolus, voir la section « Résolus » en fin de document). Audit UX de référence : 2026-07-02 (grille ui-ux-pro-max croisée avec `workflow/`).
+> Dernière mise à jour : 2026-07-04 — lot P3 terminé sur `fix/firebase-auth` : **tous les défauts P0/P1/P2/P3 de l'audit sont résolus** (voir « Résolus »). Restent deux sujets structurels liés au prochain chantier (intégration backend). Audit UX de référence : 2026-07-02 (grille ui-ux-pro-max croisée avec `workflow/`).
 
 ---
 
-## Défauts (Bugs)
+## Défauts ouverts
 
-### Critiques
+### Critiques / Majeurs / Mineurs
 
-Aucun défaut critique ouvert ✅ (le n°1 — écrans d'auth hors conventions — a été résolu le 2026-07-03, voir « Résolus »).
-
-### Majeurs (UX / parcours)
-
-**5. Pas d'undo après suppression**
-La confirmation destructive est en place (liste, détail, contacts) ; il manque un undo léger (« Annuler » en toast/snackbar) pour les suppressions accidentelles. Nécessite une infra de toast inexistante — post-MVP raisonnable.
-
-**6. Sélecteur d'année déroutant**
-Choisir l'année de filtre ouvre un `DateTimePicker` jour/mois/année complet en spinner (`invoices/index.tsx`).
-
-**7. Balayage palette incomplet**
-Le token `colors.primary` (#4f46e5) est en place (`tailwind.config.js`) et appliqué au `Button` et à la tab bar, mais les écrans utilisent encore des `indigo-500`/`indigo-600` en dur — balayage `bg-primary`/`text-primary` à finir (préalable dark mode, MOBILE_GUIDELINES §23).
-
-### Mineurs
-
-**9. `app/(modals)/country.tsx` et `language.tsx` non connectés**
-Inaccessibles depuis tout flux — dupliqués par les modales locales de `onbording/index.tsx`. Les brancher ou les supprimer.
-
-**10. Écran `onbording/welcome.tsx` orphelin**
-Déclaré dans le `Stack` de `onbording/_layout.tsx` mais aucun code ne navigue vers lui.
-
-**20. Store local non cloisonné par utilisateur**
-Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une vraie déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur), mais à cloisonner par `uid` au moment du chantier sync — décision à documenter.
+Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 ---
 
-## Problèmes de qualité de code
-
-### Architecture
+## Sujets structurels (chantier backend)
 
 **13. Couche `domain/` morte**
-`domain/invoices.ts`, `recipients.ts`, `senders.ts`, `profile.ts` sont implémentés mais non branchés à l'UI. L'app fonctionne entièrement sur le store Zustand local. Décision MVP assumée (MOBILE_GUIDELINES §7) — ne pas brancher partiellement.
+`domain/invoices.ts`, `recipients.ts`, `senders.ts`, `profile.ts` sont implémentés mais non branchés à l'UI. L'app fonctionne entièrement sur le store Zustand local. Décision MVP assumée (MOBILE_GUIDELINES §7) — ne pas brancher partiellement. **C'est le prochain chantier** (roadmap : backend → puis upgrade SDK).
 
-**14. `InvoiceStatus` jamais utilisé**
-`constants/index.ts` définit des valeurs anglaises (`PAID`, `PENDING`…) ; le store et les composants utilisent les chaînes françaises. La constante est inutile.
-
-**15. Imports incohérents**
-Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias `~/` dans les mêmes fichiers.
-
-### Dépendances
-
-**16. `expo-sqlite` installé mais non utilisé** (package.json + plugin app.json, aucun import).
-
-**17. `react-native-flags` installé mais inutilisé.**
-
-**18. `twrnc` et NativeWind coexistent** — `twrnc` à retirer au profit de NativeWind seul.
-
-**19. `@legendapp/list` et `Animated.FlatList` en alternance**
-`LegendList` dans `(tabs)/contacts`, `Animated.FlatList` dans les factures et le contact du wizard. Standardiser.
+**20. Store local non cloisonné par utilisateur**
+Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur) ; à cloisonner par `uid` **pendant le chantier sync** (n°13).
 
 ---
 
@@ -77,21 +39,26 @@ Mélange d'imports relatifs profonds (`'../../../components/Button'`) et d'alias
 
 ---
 
-## Améliorations prioritaires
+## Prochains chantiers
 
-| Priorité | Sujet | Action |
-|----------|-------|--------|
-| P3 | Balayage palette (n°7) | Remplacer les `indigo-*` en dur par `primary` dans les écrans |
-| P3 | Undo suppression (n°5) | Snackbar « Annuler » (nécessite une infra toast) |
-| P3 | Sélecteur d'année (n°6) | Remplacer par une liste d'années simple |
-| P3 | Deps mortes (n°16-18) | Retirer `expo-sqlite`, `react-native-flags`, `twrnc` |
-| P3 | Listes (n°19) | Standardiser LegendList ou FlatList |
-| P3 | Écrans orphelins (n°9-10) | Brancher ou supprimer les modales et `welcome.tsx` |
-| P3 | Imports (n°15) | Alias `~/` partout |
+| Ordre | Chantier | Contenu |
+|-------|----------|---------|
+| 1 | **Intégration backend** (n°13) | Brancher `domain/` sur l'UI selon API.md : timeouts AbortController (§7 guidelines), helper de parsing `{ success, data, message, timestamp }`, stratégie de sync (métadonnées `syncedAt`/`dirty` via `migrate()`), cloisonnement du store par `uid` (n°20) |
+| 2 | **Upgrade SDK 52 → 56** | Après le backend (décision 2026-07-03) — bloquant Play Store (target API level), procédure en annexe de MOBILE_GUIDELINES.md |
 
 ---
 
 ## ✅ Résolus
+
+### 2026-07-04 — lot P3 (solde de l'audit)
+
+- **Écrans orphelins (n°9-10)** — `app/(modals)/country.tsx`, `language.tsx` et `onbording/welcome.tsx` supprimés (docs FILES/PROJECT/workflow mises à jour).
+- **Dépendances mortes (n°16-19)** — `expo-sqlite` (+ plugin app.json), `react-native-flags`, `twrnc`, `@legendapp/list` et `hermes-engine` désinstallés ; listes standardisées sur `Animated.FlatList` (Reanimated). ⚠️ Retrait d'un module natif (expo-sqlite) : rebuild des dev clients nécessaire au prochain build.
+- **`InvoiceStatus` (n°14)** — constante anglaise retirée de `constants/` (note ajoutée : le mapping des statuts backend se fera dans `domain/` lors de la sync).
+- **Imports (n°15)** — plus aucun import relatif profond dans `app/` (alias `~/` partout ; exception documentée `domain/authorization.ts` conservée).
+- **Balayage palette (n°7, solde)** — plus aucun `indigo-*`/`blue-*` d'action en dur dans les écrans : `bg-primary`, `text-primary`, teintes `primary/5`-`primary/10` (seule la palette décorative des avatars garde des couleurs variées).
+- **Sélecteur d'année (n°6)** — modale liste simple (années des factures + année courante), remplace le spinner date complet.
+- **Undo de suppression (n°5, solde)** — composant `Snackbar` léger (auto-dismiss 5 s, action unique, `accessibilityLiveRegion`) + action store `addInvoice` de ré-insertion ; branché sur les listes factures et contacts.
 
 ### 2026-07-03 — P2 (statuts, wizard, palette/formats, siret)
 

@@ -6,11 +6,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import { customEvent } from 'vexo-analytics';
 
-import { Button } from '../../../components/Button';
-import { generateInvoicePdf } from '../../utils/pdf';
-
 import { Invoice } from '~/app/schema/invoice';
+import { generateInvoicePdf } from '~/app/utils/pdf';
 import { useReviews } from '~/app/utils/review';
+import { Button } from '~/components/Button';
 import { useStore } from '~/store';
 
 export const unstable_settings = {
@@ -112,7 +111,7 @@ export default function SuccessScreen() {
         <Button
           onPress={handleShare}
           disabled={isLoading}
-          className={`${isLoading ? 'bg-gray-300' : 'bg-indigo-500'} mt-6 rounded-full px-6 py-3 text-lg font-semibold`}
+          className={`${isLoading ? 'bg-gray-300' : 'bg-primary'} mt-6 rounded-full px-6 py-3 text-lg font-semibold`}
           variant="primary"
           title={isLoading ? 'Génération en cours...' : 'Partager la facture'}
         />

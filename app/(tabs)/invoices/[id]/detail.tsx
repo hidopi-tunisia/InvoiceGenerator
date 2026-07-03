@@ -209,7 +209,7 @@ export default function InvoiceDetailScreen() {
           )}
           <View className="mt-2 flex-row items-center justify-between border-t border-gray-100 pt-2">
             <Text className="text-lg font-bold">Total :</Text>
-            <Text className="text-lg font-bold text-indigo-600">
+            <Text className="text-lg font-bold text-primary">
               {formatAmount(total)} {currency}
             </Text>
           </View>

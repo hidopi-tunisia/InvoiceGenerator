@@ -5,11 +5,17 @@ import { View, Text, TextInput, Alert, Pressable } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
-import { BusinessEntity } from '../../schema/invoice';
-
+import { BusinessEntity } from '~/app/schema/invoice';
+import Snackbar from '~/components/Snackbar';
 import { useStore } from '~/store';
 
-function ContactListItem({ contact }: { contact: BusinessEntity }) {
+function ContactListItem({
+  contact,
+  onDeleted,
+}: {
+  contact: BusinessEntity;
+  onDeleted: (contact: BusinessEntity) => void;
+}) {
   const startNewInvoice = useStore((state) => state.startNewInvoice);
   const addRecipientInfo = useStore((state) => state.addRecipientInfo);
   const deleteContact = useStore((state) => state.deleteContact);
@@ -52,7 +58,14 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
         } else if (index === 1) {
           Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
             { text: 'Annuler', style: 'cancel' },
-            { text: 'Supprimer', style: 'destructive', onPress: () => deleteContact(contact) },
+            {
+              text: 'Supprimer',
+              style: 'destructive',
+              onPress: () => {
+                deleteContact(contact);
+                onDeleted(contact); // le parent affiche le snackbar d'annulation
+              },
+            },
           ]);
         }
       }}
@@ -60,8 +73,8 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
       dropdownMenuMode={false}>
       <View className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
         {/* Avatar avec initiales */}
-        <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-          <Text className="text-lg font-semibold text-indigo-600">{getInitials(contact.name)}</Text>
+        <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <Text className="text-lg font-semibold text-primary">{getInitials(contact.name)}</Text>
         </View>
 
         {/* Informations du contact */}
@@ -86,8 +99,10 @@ function ContactListItem({ contact }: { contact: BusinessEntity }) {
 
 export default function ContactsScreen() {
   const contacts = useStore((state) => state.contacts);
+  const addContact = useStore((state) => state.addContact);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletedContact, setDeletedContact] = useState<BusinessEntity | null>(null);
 
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -132,7 +147,7 @@ export default function ContactsScreen() {
             <Pressable
               onPress={() => router.push('/invoices/generate/new-contact')}
               accessibilityRole="button"
-              className="mt-6 rounded-lg bg-indigo-500 px-6 py-3">
+              className="mt-6 rounded-lg bg-primary px-6 py-3">
               <Text className="text-sm font-semibold text-white">Créer un contact</Text>
             </Pressable>
           )}
@@ -142,9 +157,23 @@ export default function ContactsScreen() {
           data={filteredContacts}
           keyExtractor={(item) => item.id}
           itemLayoutAnimation={LinearTransition}
-          renderItem={({ item }) => <ContactListItem contact={item} />}
+          renderItem={({ item }) => (
+            <ContactListItem contact={item} onDeleted={setDeletedContact} />
+          )}
         />
       )}
+
+      {/* Undo de suppression */}
+      <Snackbar
+        visible={!!deletedContact}
+        message={`Contact ${deletedContact?.name ?? ''} supprimé`}
+        actionLabel="Annuler"
+        onAction={() => {
+          if (deletedContact) addContact(deletedContact);
+          setDeletedContact(null);
+        }}
+        onDismiss={() => setDeletedContact(null)}
+      />
     </View>
   );
 }

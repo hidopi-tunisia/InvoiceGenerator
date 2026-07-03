@@ -34,6 +34,7 @@ export type InvoiceState = {
   resetNewInvoice: () => void;
   saveInvoice: () => void;
   deleteInvoice: (invoice: Invoice) => void;
+  addInvoice: (invoice: Invoice) => void; // ré-insertion (undo de suppression)
   setOnboardingCompleted: () => void;
   //addSenderInfo: (sender: BusinessEntity) => void;
   addRecipientInfo: (recipient: BusinessEntity | null) => void;
@@ -142,6 +143,11 @@ export const useStore = create<InvoiceState>()(
         set((state) => ({
           invoices: state.invoices.filter((inv) => inv.id !== invoice.id),
         }));
+      },
+      addInvoice: (invoice) => {
+        if (!get().invoices.some((inv) => inv.id === invoice.id)) {
+          set((state) => ({ invoices: [invoice, ...state.invoices] }));
+        }
       },
       updateInvoice: (updatedInvoice) => {
         set((state) => ({

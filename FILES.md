@@ -13,7 +13,6 @@ Facturation/
 │   ├── app/                   ← Écrans + routes (expo-router)
 │   │   ├── (auth)/            ← Login / inscription
 │   │   ├── (tabs)/            ← Onglets : accueil, factures, contacts, paramètres
-│   │   ├── (modals)/          ← Modales pays / langue
 │   │   ├── invoices/          ← Wizard de création + écran succès
 │   │   ├── onbording/         ← Onboarding premier lancement (typo conservée)
 │   │   ├── schema/            ← Schémas Zod
@@ -67,12 +66,6 @@ Facturation/
 - **Autorisé** : lecture/écriture du store via sélecteurs, navigation.
 - **Interdit** : duplication de la logique du wizard, calculs de totaux inline.
 - **Dépendances** : `~/store`, `~/components`, `app/utils` (pdf pour le détail).
-
-### `app/(modals)/` — Modales
-
-- **Rôle** : sélecteurs pays et langue, présentés en modal.
-- **Autorisé** : listes de sélection, écriture d'un champ du profil (`setCountry`, `setLanguage`).
-- **Interdit** : toute autre mutation du store.
 
 ### `app/invoices/generate/` — Wizard de facture
 
@@ -247,7 +240,7 @@ Facturation/
 
 ## Créer un écran
 
-1. Créer `app/<groupe>/mon-ecran.tsx` (la route découle du chemin). Écran modal → le placer sous `(modals)/`.
+1. Créer `app/<groupe>/mon-ecran.tsx` (la route découle du chemin). Écran modal → utiliser le composant Modal RN localement (pattern onbording/index).
 2. Si nouveau groupe : ajouter un `_layout.tsx` dans le dossier et déclarer le screen dans le `<Stack>` du layout parent (`app/_layout.tsx`).
 3. Formulaire ? Schéma dans `app/schema/invoice.ts` (ou nouveau fichier schema), composants `~/components/CustomInputText` sous `<FormProvider>`.
 4. Données ? Sélecteurs/actions dans `store/index.ts` — jamais de logique métier dans l'écran.

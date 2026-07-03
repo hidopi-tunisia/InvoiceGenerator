@@ -1,8 +1,7 @@
 import { Feather } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Text, Pressable, Alert, Modal } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { Invoice } from '~/app/schema/invoice';
@@ -13,9 +12,16 @@ import {
   getStatusColor,
   getTotals,
 } from '~/app/utils/invoice';
+import Snackbar from '~/components/Snackbar';
 import { useStore } from '~/store';
 
-const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
+const InvoiceListItem = ({
+  invoice,
+  onDeleted,
+}: {
+  invoice: Invoice;
+  onDeleted: (invoice: Invoice) => void;
+}) => {
   const deleteInvoice = useStore((state) => state.deleteInvoice);
   const router = useRouter();
   const { total } = getTotals(invoice);
@@ -24,7 +30,14 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   const handleDelete = () => {
     Alert.alert('Confirmer suppression', `Supprimer la facture ${invoice.invoiceNumber} ?`, [
       { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => deleteInvoice(invoice) },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: () => {
+          deleteInvoice(invoice);
+          onDeleted(invoice); // le parent affiche le snackbar d'annulation
+        },
+      },
     ]);
   };
 
@@ -69,9 +82,19 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
 export default function InvoicesScreen() {
   const router = useRouter();
   const invoices = useStore((state) => state.invoices);
+  const addInvoice = useStore((state) => state.addInvoice);
+  const [deletedInvoice, setDeletedInvoice] = useState<Invoice | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
   const [filter, setFilter] = useState<'all' | 'paid' | 'unpaid' | 'overdue'>('all');
+
+  // Années réellement présentes dans les factures (+ année courante), décroissantes
+  const availableYears = [
+    ...new Set([
+      new Date().getFullYear(),
+      ...invoices.map((invoice) => new Date(invoice.invoiceDate).getFullYear()),
+    ]),
+  ].sort((a, b) => b - a);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const year = new Date(invoice.invoiceDate).getFullYear();
@@ -104,9 +127,7 @@ export default function InvoicesScreen() {
             key={label}
             onPress={() => setFilter(['all', 'paid', 'unpaid', 'overdue'][index] as any)}
             className={`rounded-full px-4 py-2 ${
-              filter === ['all', 'paid', 'unpaid', 'overdue'][index]
-                ? 'bg-indigo-500'
-                : 'bg-gray-200'
+              filter === ['all', 'paid', 'unpaid', 'overdue'][index] ? 'bg-primary' : 'bg-gray-200'
             }`}>
             <Text
               className={`text-sm ${
@@ -121,23 +142,50 @@ export default function InvoicesScreen() {
       </View>
 
       <Pressable
-        onPress={() => setShowDatePicker(true)}
+        onPress={() => setShowYearPicker(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`Filtrer par année, actuellement ${selectedYear}`}
         className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-3 shadow-sm">
         <Text className="text-gray-600">Année : {selectedYear}</Text>
         <Feather name="calendar" size={20} color="#6b7280" />
       </Pressable>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={new Date(selectedYear, 0)}
-          mode="date"
-          display="spinner"
-          onChange={(_, date) => {
-            setShowDatePicker(false);
-            if (date) setSelectedYear(date.getFullYear());
-          }}
-        />
-      )}
+      {/* Sélection d'année : simple liste (un spinner date complet était déroutant) */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showYearPicker}
+        onRequestClose={() => setShowYearPicker(false)}>
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/50"
+          onPress={() => setShowYearPicker(false)}>
+          <Pressable onPress={() => {}} className="max-h-96 w-4/5 rounded-2xl bg-white p-6">
+            <Text className="mb-4 text-xl font-bold text-black">Choisissez une année</Text>
+            {availableYears.map((year) => (
+              <Pressable
+                key={year}
+                onPress={() => {
+                  setSelectedYear(year);
+                  setShowYearPicker(false);
+                }}
+                accessibilityRole="button"
+                className={`mb-2 rounded-lg border p-4 ${
+                  year === selectedYear ? 'border-primary bg-primary/10' : 'border-gray-300'
+                }`}>
+                <Text
+                  className={`text-center text-base ${
+                    year === selectedYear ? 'font-semibold text-primary' : 'text-gray-700'
+                  }`}>
+                  {year}
+                </Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setShowYearPicker(false)} accessibilityRole="button">
+              <Text className="mt-2 text-center text-primary">Fermer</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Animated.FlatList
         data={filteredInvoices}
@@ -153,9 +201,21 @@ export default function InvoicesScreen() {
         contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => (
           <Animated.View layout={LinearTransition}>
-            <InvoiceListItem invoice={item} />
+            <InvoiceListItem invoice={item} onDeleted={setDeletedInvoice} />
           </Animated.View>
         )}
+      />
+
+      {/* Undo de suppression */}
+      <Snackbar
+        visible={!!deletedInvoice}
+        message={`Facture ${deletedInvoice?.invoiceNumber ?? ''} supprimée`}
+        actionLabel="Annuler"
+        onAction={() => {
+          if (deletedInvoice) addInvoice(deletedInvoice);
+          setDeletedInvoice(null);
+        }}
+        onDismiss={() => setDeletedInvoice(null)}
       />
     </View>
   );

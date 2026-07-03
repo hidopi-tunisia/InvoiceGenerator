@@ -24,10 +24,10 @@ export default function Home() {
   return (
     <>
       <Stack.Screen options={{ title: 'Accueil', headerShown: false }} />
-      <View className="flex-1 items-center justify-center bg-indigo-50 p-6">
+      <View className="flex-1 items-center justify-center bg-primary/5 p-6">
         {/* Message de bienvenue */}
         <View className="mb-8">
-          <Text className="text-center text-3xl font-bold text-indigo-600">
+          <Text className="text-center text-3xl font-bold text-primary">
             Bienvenue dans votre application de facturation !
           </Text>
           <Text className="mt-2 text-center text-lg text-gray-600">
@@ -38,7 +38,7 @@ export default function Home() {
         {/* Bouton mis en avant */}
         <Button
           title="Nouvelle Facture"
-          className="w-3/4 rounded-lg bg-indigo-500 py-4 shadow-lg"
+          className="w-3/4 rounded-lg bg-primary py-4 shadow-lg"
           onPress={onNewInvoice}
         />
         {existingNewInvoice && (

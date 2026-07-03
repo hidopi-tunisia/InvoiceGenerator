@@ -9,7 +9,7 @@ import { BusinessEntity } from '~/app/schema/invoice';
 import { useStore } from '~/store';
 
 const getAvatarColor = (name: string) => {
-  const colors = ['bg-indigo-500', 'bg-green-500', 'bg-blue-500', 'bg-red-500', 'bg-yellow-500'];
+  const colors = ['bg-primary', 'bg-green-500', 'bg-blue-500', 'bg-red-500', 'bg-yellow-500'];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 };
@@ -104,7 +104,7 @@ export default function ContactsScreen() {
         onPress={() => router.push('/invoices/generate/new-contact')}
         accessibilityRole="button"
         accessibilityLabel="Créer un nouveau contact"
-        className="absolute bottom-6 right-6 h-16 w-16 items-center justify-center rounded-full bg-indigo-500 shadow-lg shadow-black/30">
+        className="absolute bottom-6 right-6 h-16 w-16 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/30">
         <AntDesign name="plus" size={24} color="#fff" />
       </Pressable>
     </View>

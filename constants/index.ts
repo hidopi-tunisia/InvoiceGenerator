@@ -31,13 +31,6 @@ export const HTTPMethod = {
   DELETE: 'DELETE',
 };
 
-export const InvoiceStatus = {
-  DRAFT: 'Draft',
-  PENDING: 'Pending',
-  PAID: 'Paid',
-  PARTIAL_PAYMENT: 'Partial_Payment',
-  OVERDUE: 'Overdue',
-  CANCELLED: 'Overdue',
-  REJECTED: 'Rejected',
-  REFUNDED: 'Refunded',
-};
+// NB : les statuts de facture côté app sont les chaînes françaises du store
+// ('payée' | 'en attente') + le statut dérivé 'en retard' (app/utils/invoice.ts).
+// Les statuts backend (anglais) seront mappés dans domain/ au moment de la sync.

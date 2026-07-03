@@ -2,10 +2,9 @@ import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { Button } from '../../../components/Button';
-import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
-
 import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import { Button } from '~/components/Button';
+import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
 
 export default function InvoiceSummary() {
@@ -34,7 +33,7 @@ export default function InvoiceSummary() {
     <KeyboardAwareScrollView>
       <View className="flex-1 gap-1">
         {/* Header de la facture */}
-        <View className="mb-6 rounded-b-lg bg-blue-600 p-4 shadow-lg">
+        <View className="mb-6 rounded-b-lg bg-primary p-4 shadow-lg">
           <Text className="mb-2 text-2xl font-bold text-white">
             # {invoice.invoiceNumber || 'N/A'}
           </Text>

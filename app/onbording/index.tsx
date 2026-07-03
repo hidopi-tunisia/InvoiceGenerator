@@ -93,8 +93,8 @@ export default function OnbordingScreen() {
               className="flex-row items-center justify-between rounded-lg border border-gray-300 p-4"
               onPress={() => setShowCountryModal(true)}>
               <View className="flex-row items-center">
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
-                  <Feather name="globe" size={20} color="#4285F4" />
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Feather name="globe" size={20} color="#4f46e5" />
                 </View>
                 <Text className="text-base">{countryName ?? 'Sélectionner'}</Text>
               </View>
@@ -109,7 +109,7 @@ export default function OnbordingScreen() {
               className="flex-row items-center justify-between rounded-lg border border-gray-300 p-4"
               onPress={() => setShowLanguageModal(true)}>
               <View className="flex-row items-center">
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                   <Feather name="type" size={20} color="#A855F7" />
                 </View>
                 <Text className="text-base">{languageName ?? 'Sélectionner'}</Text>
@@ -181,7 +181,7 @@ export default function OnbordingScreen() {
               </Pressable>
             ))}
             <Pressable onPress={() => setShowCountryModal(false)}>
-              <Text className="mt-4 text-center text-blue-600">Fermer</Text>
+              <Text className="mt-4 text-center text-primary">Fermer</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -210,7 +210,7 @@ export default function OnbordingScreen() {
               </Pressable>
             ))}
             <Pressable onPress={() => setShowLanguageModal(false)}>
-              <Text className="mt-4 text-center text-blue-600">Fermer</Text>
+              <Text className="mt-4 text-center text-primary">Fermer</Text>
             </Pressable>
           </Pressable>
         </Pressable>

@@ -5,13 +5,12 @@ import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
-import { Button } from '../../../components/Button';
-import CustomInputText from '../../../components/CustomInputText';
-import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView';
-import NumericInputText from '../../../components/NumericInputText';
-import { InvoiceItem, invoiceItemSchema } from '../../schema/invoice';
-
+import { InvoiceItem, invoiceItemSchema } from '~/app/schema/invoice';
 import { formatAmount, getInvoiceCurrency } from '~/app/utils/invoice';
+import { Button } from '~/components/Button';
+import CustomInputText from '~/components/CustomInputText';
+import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
+import NumericInputText from '~/components/NumericInputText';
 import { useStore } from '~/store';
 
 const itemsSchema = z.object({

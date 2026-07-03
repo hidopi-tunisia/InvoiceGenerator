@@ -5,11 +5,10 @@ import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
 
-import { Button } from '../../../../components/Button';
-import CustomInputText from '../../../../components/CustomInputText';
-import KeyboardAwareScrollView from '../../../../components/KeyboardAwareScrollView';
-import { BusinessEntity, businessEntitySchema } from '../../../schema/invoice';
-
+import { BusinessEntity, businessEntitySchema } from '~/app/schema/invoice';
+import { Button } from '~/components/Button';
+import CustomInputText from '~/components/CustomInputText';
+import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
 
 export default function ContactEditScreen() {
