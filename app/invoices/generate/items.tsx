@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
-//import * as ContextMenu from 'zeego/context-menu';
 import { z } from 'zod';
 
 import { Button } from '../../../components/Button';
@@ -12,29 +11,32 @@ import KeyboardAwareScrollView from '../../../components/KeyboardAwareScrollView
 import NumericInputText from '../../../components/NumericInputText';
 import { InvoiceItem, invoiceItemSchema } from '../../schema/invoice';
 
+import { getInvoiceCurrency } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 const itemsSchema = z.object({
-  items: z.array(invoiceItemSchema), //TODO: Add minimum 1 item
+  items: z.array(invoiceItemSchema).min(1, 'Ajoutez au moins un article à la facture'),
 });
-
-type Items = z.infer<typeof itemsSchema>;
 
 type FormValues = {
   items: InvoiceItem[];
 };
 
+// Ligne vierge présentée par défaut — le prix à 0 force une saisie réelle (min 1 au schéma)
+const emptyItem: InvoiceItem = { name: '', quantity: 1, price: 0 };
+
 export default function GenerateInvoice() {
   // Configuration du formulaire avec React Hook Form et Zod
   const addItems = useStore((data) => data.addItems);
   const items = useStore((data) => data.newInvoice?.items);
+  const currency = useStore((data) => getInvoiceCurrency(data.newInvoice ?? undefined));
   const methods = useForm<FormValues>({
     resolver: zodResolver(itemsSchema),
     defaultValues: {
-      items: items || [],
+      items: items?.length ? items : [emptyItem],
     },
   });
-  const { control, handleSubmit } = methods;
+  const { control } = methods;
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'items',
@@ -70,7 +72,11 @@ export default function GenerateInvoice() {
                     placeholder="Entrez la quantité"
                     keyboardType="numeric"
                     onChangeText={(value) => {
-                      methods.setValue(`items.${index}.quantity`, Number(value));
+                      const parsed = Number(value.replace(',', '.'));
+                      methods.setValue(
+                        `items.${index}.quantity`,
+                        Number.isNaN(parsed) ? 0 : parsed
+                      );
                     }}
                   />
                 </View>
@@ -81,10 +87,11 @@ export default function GenerateInvoice() {
                   <Text className="mb-1 text-right text-lg font-semibold text-gray-600">Total</Text>
                   <View className="h-12 justify-center rounded-md bg-gray-100 px-3">
                     <Text className="text-right font-bold text-gray-700">
-                      {(methods.watch(`items.${index}.quantity`) || 0) *
-                        (methods.watch(`items.${index}.price`) || 0)}{' '}
-                      {/* € */}
-                      TND
+                      {(
+                        (methods.watch(`items.${index}.quantity`) || 0) *
+                        (methods.watch(`items.${index}.price`) || 0)
+                      ).toFixed(2)}{' '}
+                      {currency}
                     </Text>
                   </View>
                 </View>
@@ -97,12 +104,12 @@ export default function GenerateInvoice() {
               )}
             </View>
           ))}
+          {/* Erreur de niveau liste (minimum 1 article) */}
+          {methods.formState.errors.items?.message && (
+            <Text className="text-sm text-red-500">{methods.formState.errors.items.message}</Text>
+          )}
           {/* Bouton pour ajouter un nouvel item (link) */}
-          <Button
-            variant="link"
-            title="+ Ajouter un item"
-            onPress={() => append({ name: '', quantity: 1, price: 0.0 })}
-          />
+          <Button variant="link" title="+ Ajouter un item" onPress={() => append(emptyItem)} />
         </View>
 
         <Button

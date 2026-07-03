@@ -19,6 +19,15 @@
 - [ ] Le retour arrière (geste iOS + bouton Android) laisse l'app dans un état cohérent, notamment dans le wizard (`newInvoice` non corrompu).
 - [ ] L'auth gate de `app/_layout.tsx` couvre le nouvel écran (pas d'écran protégé accessible sans login).
 
+## Cohérence UX (parcours)
+
+- [ ] Toute chaîne visible par l'utilisateur est en **français correct** (pas de label anglais, pas de titre de dev type « Yoopiii », accents inclus dans les headers).
+- [ ] Après une action irréversible (sauvegarde de facture, complétion d'onboarding), navigation en `router.replace` — le retour arrière ne doit jamais re-exposer l'écran de commit.
+- [ ] Montants affichés de façon uniforme (`formatNumberWithSpaces` + devise du **profil**) — jamais de devise en dur.
+- [ ] Flux multi-étapes : progression visible (« étape X/N ») et étapes conformes au diagramme `workflow/` correspondant.
+- [ ] Un seul CTA primaire par écran ; couleurs issues de la palette existante (pas de nouveau bleu/vert ad hoc).
+- [ ] Toute erreur montrée à l'utilisateur offre une issue (réessayer, corriger) — jamais un échec silencieux en `console.error`.
+
 ## Responsive
 
 - [ ] Aucune dimension en dur qui casse sur petit écran (utiliser flex/`%`/classes Tailwind adaptatives).

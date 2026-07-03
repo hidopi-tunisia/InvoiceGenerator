@@ -1,22 +1,34 @@
 import '../global.css';
-// import * as Sentry from '@sentry/react-native'; // TEMP: disabled to diagnose require(undefined)
+import * as Sentry from '@sentry/react-native';
+import { isRunningInExpoGo } from 'expo';
 import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 'expo-router';
 import { User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { vexo } from 'vexo-analytics';
 
-import { useStore } from '~/store';
 import { auth } from './config'; // Import Firebase auth
+
+import { useStore } from '~/store';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
 
-console.log(vexoApiKey, '1');
-vexo(vexoApiKey as string);
-
+// Analytics uniquement en production (une seule initialisation)
 if (!__DEV__ && vexoApiKey) {
   vexo(vexoApiKey);
 }
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
+Sentry.init({
+  dsn: 'https://2cacf18cbc1431eb07b8b3bdad5edbe7@o4508658689572864.ingest.de.sentry.io/4508658744361040',
+  debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  tracesSampleRate: 1.0, // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing. Adjusting this value in production.
+  integrations: [navigationIntegration],
+  enableNativeFramesTracking: !isRunningInExpoGo(), // Tracks slow and frozen frames in the application
+});
 
 function Layout() {
   const [user, setUser] = useState<User | null>(null); // Track user authentication state
@@ -27,6 +39,10 @@ function Layout() {
   const onboardingCompleted = useStore((state) => state.onboardingCompleted);
 
   useEffect(() => {
+    if (ref?.current) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+
     // Subscribe to authentication state changes
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       setUser(authUser);
@@ -60,7 +76,7 @@ function Layout() {
       <Stack.Screen
         name="invoices/[id]/success"
         options={{
-          headerTitle: 'Yoopiii', // Titre par défaut pour les sous-routes
+          headerTitle: 'Facture générée',
           headerBackTitle: 'Accueil', // Texte du bouton retour
         }}
       />
@@ -69,7 +85,7 @@ function Layout() {
     </Stack>
   );
 }
-export default Layout; // TEMP: Sentry.wrap disabled for diagnosis
+export default Sentry.wrap(Layout);
 
 //cette fonction va capter n'importe quelle erreur dans l'application
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {

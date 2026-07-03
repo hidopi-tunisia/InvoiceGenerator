@@ -6,7 +6,7 @@ import { View, Text, Pressable, Alert } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { Invoice } from '~/app/schema/invoice';
-import { getTotals } from '~/app/utils/invoice';
+import { getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { useStore } from '~/store';
 
 export const formatNumberWithSpaces = (number: number): string => {
@@ -16,7 +16,7 @@ export const formatNumberWithSpaces = (number: number): string => {
     maximumFractionDigits: 2,
   })
     .format(number)
-    .replace(/ /g, ' '); // Remplace les espaces insécables par des espaces normaux
+    .replace(/[\u00a0\u202f]/g, ' '); // Remplace les espaces insécables par des espaces normaux
 };
 
 const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
@@ -32,9 +32,9 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
   };
 
   return (
-    <Pressable 
-    //router.push(`/contacts/${contact.id}/edit`);
-    onPress={() => router.push(`/invoices/${invoice.id}/detail`)}
+    <Pressable
+      //router.push(`/contacts/${contact.id}/edit`);
+      onPress={() => router.push(`/invoices/${invoice.id}/detail`)}
       className="mb-3 rounded-xl bg-white p-5 shadow-sm shadow-black/5">
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
@@ -44,7 +44,7 @@ const InvoiceListItem = ({ invoice }: { invoice: Invoice }) => {
 
         <View className="items-end">
           <Text className="text-lg font-semibold text-gray-900">
-            {formatNumberWithSpaces(total)} TND
+            {formatNumberWithSpaces(total)} {getInvoiceCurrency(invoice)}
           </Text>
           <Text className="mt-1 text-sm text-gray-500">
             {new Date(invoice.invoiceDate).toLocaleDateString()}

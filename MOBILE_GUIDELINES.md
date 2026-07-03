@@ -196,7 +196,7 @@
 Ordonnée par blocage. Tout 🟡 ci-dessus doit être traité ; en synthèse :
 
 **Bloquant soumission (crash / rejet)**
-1. Corriger les bugs critiques connus de `qualitygate.md` : import `useState` manquant et code mort dans `_layout.tsx`, navigation dans le `catch` de `register.tsx`, données d'onboarding non sauvegardées.
+1. Corriger le bug critique restant de `qualitygate.md` (n°1) : écrans d'auth hors conventions (RHF+Zod, loading, erreurs Firebase en français, mot de passe oublié). ✅ Résolus le 2026-07-03 : onboarding persisté, TVA calculée, `replace` après commit, facture vide impossible, bouton de test supprimé, Sentry réactivé.
 2. Justesse métier : TVA réellement calculée dans les totaux (`app/utils/invoice.ts`) et PDF fidèle au profil (`taxRate`, devise) — une app de facturation qui calcule faux est morte en review utilisateur.
 3. Purger le bouton de test de l'accueil et tout `console.log` (dont la clé Vexo).
 4. `npx tsc --noEmit` et `npm run lint` passent sans erreur.

@@ -1,5 +1,6 @@
 import { ENDPOINT, HTTPMethod } from '../constants';
 import { getAuthorization } from './authorization';
+import { toQueryParams } from './query';
 
 type Filters = {
   page?: number;
@@ -9,7 +10,7 @@ type Filters = {
 };
 const getRecipients = async (filters?: Filters) => {
   const token = await getAuthorization();
-  const params = new URLSearchParams(filters);
+  const params = toQueryParams(filters);
   const response = await fetch(`${ENDPOINT}/recipients?${params}`, {
     method: HTTPMethod.GET,
     headers: { Authorization: `Bearer ${token}` },
@@ -75,10 +76,4 @@ const removeRecipient = async (id: string) => {
   return response.json();
 };
 
-export {
-  getRecipients,
-  createRecipient,
-  getRecipientById,
-  updateRecipientById,
-  removeRecipient,
-};
+export { getRecipients, createRecipient, getRecipientById, updateRecipientById, removeRecipient };

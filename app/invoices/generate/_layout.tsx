@@ -19,10 +19,10 @@ export default function GenerateInvoiceLayout() {
     <Stack>
       {/* Rennommer les titres des pages */}
       <Stack.Screen name="index" options={{ title: 'Facture' }} />
-      <Stack.Screen name="contact" options={{ title: 'Selectionnez un client' }} />
-      <Stack.Screen name="new-contact" options={{ title: 'Nouveau Contact' }} />
-      <Stack.Screen name="items" options={{ title: 'Designations' }} />
-      <Stack.Screen name="summary" options={{ title: 'Recap' }} />
+      <Stack.Screen name="contact" options={{ title: 'Sélectionnez un client' }} />
+      <Stack.Screen name="new-contact" options={{ title: 'Nouveau contact' }} />
+      <Stack.Screen name="items" options={{ title: 'Désignations' }} />
+      <Stack.Screen name="summary" options={{ title: 'Récapitulatif' }} />
     </Stack>
   );
 }

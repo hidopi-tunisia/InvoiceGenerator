@@ -4,8 +4,9 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import { Button, Text, TextInput, View } from 'react-native';
 
-import { useGoogleSignIn } from '~/hooks/useGoogleSignIn';
 import { auth } from '../config'; // Instance Firebase auth
+
+import { useGoogleSignIn } from '~/hooks/useGoogleSignIn';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');

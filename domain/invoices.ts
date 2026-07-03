@@ -1,5 +1,6 @@
-import { ENDPOINT, HTTPMethod, InvoiceStatus } from '../constants';
+import { ENDPOINT, HTTPMethod } from '../constants';
 import { getAuthorization } from './authorization';
+import { toQueryParams } from './query';
 
 type Filters = {
   page?: number;
@@ -15,7 +16,7 @@ type Filters = {
 };
 const getInvoices = async (filters?: Filters) => {
   const token = await getAuthorization();
-  const params = new URLSearchParams(filters);
+  const params = toQueryParams(filters);
   const response = await fetch(`${ENDPOINT}/invoices?${params}`, {
     method: HTTPMethod.GET,
     headers: { Authorization: `Bearer ${token}` },
@@ -61,10 +62,4 @@ const removeInvoice = async (id: string) => {
   return response.json();
 };
 
-export {
-  getInvoices,
-  createInvoice,
-  getInvoiceById,
-  updateInvoiceById,
-  removeInvoice,
-};
+export { getInvoices, createInvoice, getInvoiceById, updateInvoiceById, removeInvoice };

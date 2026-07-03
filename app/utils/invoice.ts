@@ -1,36 +1,36 @@
-import { Invoice, InvoiceItem } from '../schema/invoice';
+import { Invoice } from '../schema/invoice';
 
 import { useStore } from '~/store';
 
-const getSubtotal = (items: InvoiceItem[]): number => {
-  return items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-};
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
-const getTotal = (items: InvoiceItem[]) => {
-  const subtotal = getSubtotal(items);
-  const total = subtotal;
-  return total;
-};
-
+// Le taux et la devise sont figés sur la facture à sa création ;
+// le profil ne sert que de fallback pour les factures antérieures à ces champs.
 export const getTotals = (invoice: Partial<Invoice>) => {
   const items = invoice.items || [];
-  const subtotal = getSubtotal(items);
-  const total = getTotal(items);
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const taxRate = invoice.taxRate ?? useStore.getState().profile.taxRate ?? 0;
+  const tax = subtotal * (taxRate / 100);
 
-  return { subtotal, total };
+  return {
+    subtotal: round2(subtotal),
+    taxRate,
+    tax: round2(tax),
+    total: round2(subtotal + tax),
+  };
 };
 
-const INVOICE_NUMBER_PREFIX = 'INV';
-const INVOICE_NUMBER_FORMAT = `${INVOICE_NUMBER_PREFIX}-{SEQ3}{MM}{YY}`;
+export const getInvoiceCurrency = (invoice?: Partial<Invoice>): string =>
+  invoice?.currency ?? useStore.getState().profile.currency ?? 'TND';
 
+const INVOICE_NUMBER_PREFIX = 'INV';
+
+// Format : INV-{SEQ3}{MM}{YY}
 export const generateInvoiceNumber = (): string => {
   const invoices = useStore.getState().invoices;
   const now = new Date();
 
   // 1. Trouver le dernier numéro séquentiel du mois courant
-  const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
-  const currentYear = now.getFullYear().toString().slice(-2);
-
   const lastInvoice = invoices
     .filter((invoice) => {
       const invoiceDate = new Date(invoice.invoiceDate);

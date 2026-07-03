@@ -12,7 +12,7 @@ flowchart TD
     INIT --> STEP1[Étape 1\n/invoices/generate/index\nInfos Facture]
 
     STEP1 --> STEP1_FORM[Numéro de facture\nDate de facture\nDate d'échéance]
-    STEP1_FORM -->|Suivant| SAVE_INFO[store.addInvoiceInfo\ninvoiceNumber + dates]
+    STEP1_FORM -->|Suivant| SAVE_INFO[store.addInvoiceInfo\ninvoiceNumber + dates\nécrits à la racine de newInvoice]
 
     SAVE_INFO --> ROUTE_CHECK{Routing conditionnel}
     ROUTE_CHECK -->|recipient déjà\ndans newInvoice| STEP3[Étape 3 — Items]
@@ -37,12 +37,14 @@ flowchart TD
     ITEMS_FORM -->|Suivant| SAVE_ITEMS[store.addItems\nliste des InvoiceItem]
     SAVE_ITEMS --> STEP4
 
-    STEP4[Étape 4\n/invoices/generate/summary\nRécapitulatif] --> RECAP_VIEW[Carte bleue header\nInfos sender\nInfos recipient\nListe désignations\nSous-total · Total]
+    STEP4[Étape 4\n/invoices/generate/summary\nRécapitulatif] --> RECAP_VIEW[Carte bleue header\nÉmetteur · Destinataire\nListe désignations\nSous-total · TVA · Total]
     RECAP_VIEW -->|Confirmer et générer| SAVE_INV[store.saveInvoice\nAjoute newInvoice → invoices\nAuto-ajoute recipient → contacts\nVide newInvoice]
-    SAVE_INV --> SUCCESS[/invoices/:id/success\nÉcran Succès]
+    SAVE_INV -->|router.replace| SUCCESS[/invoices/:id/success\nÉcran Succès]
 
     SUCCESS --> ANIM[Animation Lottie\n+ generateInvoicePdf]
     ANIM -->|PDF prêt| SHARE_BTN[Bouton Partager la facture]
+    ANIM -->|Échec| RETRY[Message d'erreur\n+ bouton Réessayer]
+    RETRY -->|Réessayer| ANIM
     SHARE_BTN -->|Tap| NATIVE_SHARE[expo-sharing\nSharesheet natif]
     NATIVE_SHARE --> REVIEW[requestFeedbackOrReview\nNote app ou feedback]
     SUCCESS --> BACK_HOME[Bouton Revenir à l'accueil\nresetNewInvoice + router.replace /]
@@ -97,7 +99,7 @@ Tableau dynamique (React Hook Form `useFieldArray`). Chaque item :
 | Prix unitaire | NumericInput | Oui (min 1) |
 | Total ligne | Calculé (qté × prix) | Lecture seule |
 
-**Minimum 1 item requis.** L'item peut être supprimé seulement si `nb items > 1`.
+**Minimum 1 item requis** — validé par Zod (`.min(1)` sur le tableau) ; l'écran présente une ligne vierge par défaut (quantité 1, prix 0 — le prix min 1 force une saisie réelle). L'item peut être supprimé seulement si `nb items > 1`. La devise affichée est celle de la facture (fallback profil).
 
 **Action store :** `addItems(items[])`
 
@@ -113,33 +115,37 @@ Affichage en lecture seule :
 │  Date: 01/07/2026               │
 │  Échéance: 15/07/2026           │
 ├─────────────────────────────────┤
-│  DE : Mon Entreprise            │
-│  Adresse, TVA                   │
+│  ÉMETTEUR : Mon Entreprise      │
+│  Adresse, N° TVA                │
 ├─────────────────────────────────┤
-│  À : Client SARL                │
-│  Adresse, Email, TVA            │
+│  DESTINATAIRE : Client SARL     │
+│  Adresse, Email, N° TVA         │
 ├─────────────────────────────────┤
 │  Désignation    Qté   Prix  Tot │
 │  Développement   1    500  500  │
 │  Design          2    150  300  │
 ├─────────────────────────────────┤
-│  Sous-total :            800    │
-│  Total :                 800    │
+│  Sous-total :         800.00    │
+│  TVA (19%) :          152.00    │
+│  Total :              952.00    │
 └─────────────────────────────────┘
          [Confirmer et générer]
 ```
 
-**Action store :** `saveInvoice()` → persiste dans `store.invoices[]` + auto-ajout contact
+La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa création (fallback : taux du profil pour les factures antérieures). La ligne TVA n'apparaît que si le taux est > 0. Montants suffixés de la devise de la facture.
+
+**Action store :** `saveInvoice()` → persiste dans `store.invoices[]` + auto-ajout contact, puis **`router.replace`** vers l'écran succès (le retour arrière ne revient pas au récap).
 
 ---
 
 ### Succès (`/invoices/[id]/success`)
 
 1. Animation Lottie au chargement
-2. `generateInvoicePdf(invoice, subtotal, total)` appelé automatiquement
+2. `generateInvoicePdf(invoice)` appelé automatiquement (la fonction calcule elle-même les totaux)
 3. Bouton **"Partager la facture"** (visible quand PDF prêt) → `expo-sharing`
-4. Après partage → `requestFeedbackOrReview()` (demande note, throttle 3 jours)
-5. Lien **"Revenir à l'accueil"** → `resetNewInvoice()` + `router.replace('/')`
+4. En cas d'échec de génération : message d'erreur français + bouton **"Réessayer"**
+5. Après partage → `requestFeedbackOrReview()` (demande note, throttle 3 jours)
+6. Lien **"Revenir à l'accueil"** → `resetNewInvoice()` + `router.replace('/')`
 
 ---
 

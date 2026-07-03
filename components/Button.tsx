@@ -1,6 +1,5 @@
 import { forwardRef } from 'react';
 import { Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
-import { style } from 'twrnc';
 
 type ButtonProps = {
   title: string; // Titre du bouton

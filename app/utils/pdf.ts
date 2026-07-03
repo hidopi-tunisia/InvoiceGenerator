@@ -1,12 +1,15 @@
 import * as FileSystem from 'expo-file-system';
 import { printToFileAsync } from 'expo-print';
 
+import { getInvoiceCurrency, getTotals } from './invoice';
 import { Invoice } from '../schema/invoice';
 
-const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
+const generateHtml = (invoice: Invoice) => {
+  const { subtotal, taxRate, tax, total } = getTotals(invoice);
+  const currency = getInvoiceCurrency(invoice);
   const html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="fr">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -126,10 +129,9 @@ const generateHtml = (invoice: Invoice, subtotal: number, total: number) => {
       <div class="invoice-container">
         <!-- Header -->
         <div class="header">
-          <img src="https://hidopi.com/wp-content/uploads/2019/10/logo_hidopi_black_site.png" alt="Logo" class="logo" />
           <div class="invoice-title">
             <h1>Facture</h1>
-<p><strong>Numéro :</strong> #${invoice.invoiceInfo?.invoiceNumber || 'N/A'}</p>
+<p><strong>Numéro :</strong> #${invoice.invoiceNumber || 'N/A'}</p>
 <p><strong>Date :</strong> ${
     invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'
   }</p>
@@ -156,8 +158,8 @@ ${
             <h2>À :</h2>
             <p>${invoice.recipient.name}</p>
             <p>${invoice.recipient.address}</p>
-            <p>${invoice.recipient.email}</p>
-            <p>${invoice.sender.tva}</p>
+            <p>${invoice.recipient.email || ''}</p>
+            <p>${invoice.recipient.tva || ''}</p>
           </div>
         </div>
     
@@ -174,27 +176,28 @@ ${
               </tr>
             </thead>
             <tbody>
-            ${invoice.items.map(
-              (item) =>
-                `
+            ${invoice.items
+              .map(
+                (item) =>
+                  `
             <tr>
                 <td>${item.name}</td>
                 <td>${item.quantity}</td>
-                <td>${item.price.toFixed(2)} TND</td>
-                <td>${(item.quantity * item.price).toFixed(2)} TND</td>
+                <td>${item.price.toFixed(2)} ${currency}</td>
+                <td>${(item.quantity * item.price).toFixed(2)} ${currency}</td>
               </tr>
               `
-            )}
+              )
+              .join('')}
             </tbody>
           </table>
         </div>
     
         <!-- Total -->
         <div class="total">
-          <div>Sous-total : ${subtotal.toFixed(2)} TND</div>
-          <div>TVA (20%) : 40.00 TND</div>
-          <div>Droit de Timbre : 0.99 TND</div>
-          <div style="font-size: 18px;">Total : ${total.toFixed(2)} TND</div>
+          <div>Sous-total : ${subtotal.toFixed(2)} ${currency}</div>
+          ${taxRate > 0 ? `<div>TVA (${taxRate}%) : ${tax.toFixed(2)} ${currency}</div>` : ''}
+          <div style="font-size: 18px;">Total : ${total.toFixed(2)} ${currency}</div>
         </div>
     
         <!-- Payment Terms -->
@@ -214,22 +217,15 @@ ${
   return html;
 };
 
-export const generateInvoicePdf = async (invoice: Invoice, subtotal: number, total: number) => {
-  try {
-    // On iOS/android prints the given html. On web prints the HTML from the current page.
-    const { uri } = await printToFileAsync({ html: generateHtml(invoice, subtotal, total) });
-    const permanentUri =
-      FileSystem.documentDirectory + `facture-${invoice.invoiceInfo.invoiceNumber}.pdf`;
-    // move to document directory
-    const file = await FileSystem.moveAsync({
-      from: uri,
-      to: permanentUri,
-    });
-    console.log('Fichier transféré à ', permanentUri);
-    console.log('File has been saved to:', permanentUri);
-    return permanentUri;
-    // await shareAsync(permanentUri, { UTI: '.pdf', mimeType: 'application/pdf' });
-  } catch (error) {
-    console.log('Error lors de la generation du PDF', error);
-  }
+// Lève en cas d'échec : les écrans appelants gèrent l'erreur (message utilisateur).
+export const generateInvoicePdf = async (invoice: Invoice) => {
+  // On iOS/android prints the given html. On web prints the HTML from the current page.
+  const { uri } = await printToFileAsync({ html: generateHtml(invoice) });
+  const permanentUri = FileSystem.documentDirectory + `facture-${invoice.invoiceNumber}.pdf`;
+  // move to document directory
+  await FileSystem.moveAsync({
+    from: uri,
+    to: permanentUri,
+  });
+  return permanentUri;
 };

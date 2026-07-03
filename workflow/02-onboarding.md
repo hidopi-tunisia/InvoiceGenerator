@@ -1,8 +1,10 @@
 # 02 — Flux d'Onboarding
 
-Fichiers : `app/onbording/index.tsx`, `app/onbording/profile.tsx`, `app/(modals)/country.tsx`, `app/(modals)/language.tsx`
+Fichiers : `app/onbording/index.tsx`, `app/onbording/profile.tsx`
 
 > Note : le dossier s'appelle `onbording` (typo intentionnel — ne pas renommer)
+>
+> Les modales pays/langue sont **locales** à `onbording/index.tsx` (composant `Modal` RN). Les routes `app/(modals)/country.tsx` et `language.tsx` sont orphelines (défaut n°21 de `qualitygate.md`) — à brancher ou supprimer.
 
 ---
 
@@ -17,18 +19,20 @@ flowchart TD
     STEP1 --> CURRENCY_PILLS[Pills Devise\nTND / EUR / USD]
     STEP1 --> TVA_INPUT[Champ Taux TVA\ndéfaut: 20%]
 
-    PAYS_BTN --> MODAL_PAYS[Modal /modals/country\nTunisie · France · Maroc]
-    MODAL_PAYS -->|Sélection| SET_COUNTRY[store.setCountry]
+    PAYS_BTN --> MODAL_PAYS[Modal locale\nTunisie · France]
+    MODAL_PAYS -->|Sélection| SET_COUNTRY[Code pays\nen état local]
     SET_COUNTRY --> STEP1
 
-    LANG_BTN --> MODAL_LANG[Modal /modals/language\nFrançais · Arabe · Anglais]
-    MODAL_LANG -->|Sélection| SET_LANG[store.setLanguage]
+    LANG_BTN --> MODAL_LANG[Modal locale\nFrançais · Anglais]
+    MODAL_LANG -->|Sélection| SET_LANG[Code langue\nen état local]
     SET_LANG --> STEP1
 
-    CURRENCY_PILLS -->|Tap| SET_CURRENCY[Sélection visuelle\nlocale uniquement]
+    CURRENCY_PILLS -->|Tap| SET_CURRENCY[Code devise\nen état local]
     TVA_INPUT -->|Saisie| SET_TVA[Valeur locale]
 
-    STEP1 -->|Bouton Suivant| SAVE1[store.setCountry\nstore.setLanguage\nprofile.currency\nprofile.taxRate]
+    STEP1 -->|Bouton Suivant| VALIDATE_TVA{Taux TVA\nvalide 0-100 ?}
+    VALIDATE_TVA -->|Non| TVA_ERR[Erreur sous le champ]
+    VALIDATE_TVA -->|Oui| SAVE1[store.setCountry\nstore.setLanguage\nstore.setCurrency\nstore.setTaxRate]
     SAVE1 --> STEP2[Étape 2\n/onbording/profile\nProfil Entreprise]
 
     STEP2 --> NAME_INPUT[Champ Nom\nrequis]
@@ -37,9 +41,11 @@ flowchart TD
 
     STEP2 -->|Bouton Sauvegarder| VALIDATE{Validation\nZod}
     VALIDATE -->|Erreur| FORM_ERR[Messages d'erreur\nsous chaque champ]
-    VALIDATE -->|OK| SAVE2[store.setProfile\nstore.setOnboardingCompleted]
-    SAVE2 --> HOME[/(tabs)/index\nAccueil]
+    VALIDATE -->|OK| SAVE2[store.setProfile — fusion\nstore.setOnboardingCompleted]
+    SAVE2 -->|router.replace| HOME[/(tabs)/index\nAccueil]
 ```
+
+> `setProfile` **fusionne** avec le profil existant (name/address/tva par-dessus country/language/currency/taxRate déjà persistés à l'étape 1). `router.replace` : le retour arrière ne revient pas dans l'onboarding.
 
 ---
 
@@ -49,12 +55,14 @@ flowchart TD
 
 | Champ | Type | Valeur par défaut | Obligatoire |
 |---|---|---|---|
-| Pays | Modal picker | — | Non |
-| Langue | Modal picker | — | Non |
-| Devise | Pills (TND/EUR/USD) | TND | Non |
-| Taux TVA | Champ numérique | 20 | Non |
+| Pays | Modal picker | profil existant, sinon — | Non |
+| Langue | Modal picker | profil existant, sinon — | Non |
+| Devise | Pills (TND/EUR/USD) | profil existant, sinon TND | Non |
+| Taux TVA | Champ numérique | profil existant, sinon 20 | Oui (0-100, validé au Suivant) |
 
-**Actions store :** `setCountry()`, `setLanguage()`, updates sur `profile.currency` et `profile.taxRate`
+Les sélections sont stockées par **code** (`TN`, `fr`, `TND`), jamais par libellé affiché.
+
+**Actions store (au « Suivant ») :** `setCountry()`, `setLanguage()`, `setCurrency()`, `setTaxRate()`
 
 ---
 
@@ -66,31 +74,27 @@ flowchart TD
 | Adresse | TextInput multilignes | Oui (min 1 car.) |
 | Numéro TVA | TextInput | Non |
 
-**Validation :** React Hook Form + Zod (`BusinessEntitySchema`)
+**Validation :** React Hook Form + Zod (`businessEntitySchema`)
 
-**Actions store :** `setProfile(data)` + `setOnboardingCompleted()`
+**Actions store :** `setProfile(data)` (fusion) + `setOnboardingCompleted()`, puis `router.replace('/')`
 
 ---
 
-## Modals
+## Modales (locales à `onbording/index.tsx`)
 
-### Modal Pays (`/(modals)/country`)
-
-Options disponibles :
-- 🇹🇳 Tunisie
-- 🇫🇷 France
-- 🇲🇦 Maroc
-
-Comportement : ouvre avec animation fade depuis le bas, fond semi-transparent `bg-black/50`, carte blanche arrondie. Fermeture via croix (×) ou lien "Annuler".
-
-### Modal Langue (`/(modals)/language`)
+### Modale Pays
 
 Options disponibles :
-- Français
-- Arabe
-- Anglais
+- 🇹🇳 Tunisie (`TN`)
+- 🇫🇷 France (`FR`)
 
-Même comportement que le modal pays.
+### Modale Langue
+
+Options disponibles :
+- Français (`fr`)
+- Anglais (`en`)
+
+Comportement commun : `Modal` transparent avec fond `bg-black/50`, carte blanche arrondie, fermeture par tap sur le fond ou lien « Fermer ». La sélection écrit le **code** en état local ; la persistance n'a lieu qu'au « Suivant ».
 
 ---
 
