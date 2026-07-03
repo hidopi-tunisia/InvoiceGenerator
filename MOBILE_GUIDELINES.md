@@ -41,7 +41,7 @@
 
 ## 5. State Management
 
-- 🟢 **Un seul store Zustand** : [store/index.ts](store/index.ts), persisté AsyncStorage sous `facture-store`. Interdit d'en créer un second.
+- 🟢 **Un seul store Zustand** : [store/index.ts](store/index.ts), persisté AsyncStorage sous `facture-store-{uid}` (cloisonnement par compte via `store/user-scope.ts`). Interdit d'en créer un second.
 - 🟢 Sélecteurs ciblés obligatoires : `useStore((s) => s.invoices)` — jamais `useStore()` entier (re-render global).
 - 🟢 Toute mutation passe par une action nommée du store ; jamais de `set` inline depuis un écran.
 - 🟢 Toute évolution du schéma persisté s'accompagne d'une mise à jour de `migrate()` (les utilisateurs existants ont des données à l'ancien format).
@@ -72,7 +72,7 @@
 - 🟢 Trois emplacements, trois usages — ne pas les mélanger :
   | Donnée | Emplacement |
   |---|---|
-  | État applicatif (profil, factures, contacts) | Zustand → AsyncStorage (`facture-store`) |
+  | État applicatif (profil, factures, contacts) | Zustand → AsyncStorage (`facture-store-{uid}`) |
   | Fichiers générés (PDFs `facture-{n°}.pdf`) | `FileSystem.documentDirectory` |
   | Session Firebase | gérée par le SDK (persistance AsyncStorage via `app/config.ts`) |
 - 🟢 Jamais de donnée métier écrite directement en AsyncStorage hors du store.
@@ -80,7 +80,7 @@
 ## 10. AsyncStorage
 
 - 🟢 Accès uniquement via le middleware `persist` de Zustand — pas de `AsyncStorage.setItem` manuel.
-- 🟢 Clé unique `facture-store` ; ne jamais la renommer (perte de données utilisateur) — toute évolution passe par `migrate()`.
+- 🟢 Clé par utilisateur `facture-store-{uid}` gérée exclusivement par `store/user-scope.ts` (adoption de l'ancienne clé unique au premier login post-mise à jour) ; ne jamais toucher aux clés manuellement — toute évolution de schéma passe par `migrate()`.
 - 🟢 AsyncStorage n'est **pas chiffré** : aucun secret n'y transite (voir §11).
 
 ## 11. Secure Storage

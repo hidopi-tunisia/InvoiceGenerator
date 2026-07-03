@@ -12,6 +12,7 @@ import { auth } from './config'; // Import Firebase auth
 
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
+import { scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
 
@@ -46,13 +47,19 @@ function Layout() {
     }
 
     // Subscribe to authentication state changes
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
-      setUser(authUser);
-      setAuthReady(true);
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       if (authUser) {
         // Réchauffe l'instance Render avant la première vraie requête (fire-and-forget)
         warmUpBackend();
+        // Cloisonnement : pointer le store sur le tiroir de CET utilisateur et
+        // réhydrater AVANT d'autoriser la redirection — sinon l'auth-gate
+        // déciderait (onboarding ou tabs) sur les données du mauvais compte.
+        await scopeStoreToUser(authUser.uid);
+      } else {
+        scopeStoreToAnonymous();
       }
+      setUser(authUser);
+      setAuthReady(true);
     });
 
     // Unsubscribe on component unmount

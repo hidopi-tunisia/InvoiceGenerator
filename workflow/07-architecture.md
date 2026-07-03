@@ -11,7 +11,7 @@ graph TD
     UI --> PDF[PDF Generation\nexpo-print + expo-sharing]
     UI --> ANALYTICS[vexo-analytics]
 
-    STORE --> ASYNC[AsyncStorage\nclé: facture-store]
+    STORE --> ASYNC[AsyncStorage\nclé: facture-store-{uid}]
 
     AUTH --> FIREBASE[(Firebase\nAuth SDK)]
     PDF --> FS[FileSystem\ndocumentDirectory]
@@ -32,7 +32,7 @@ graph TD
 ### Schéma d'État
 
 ```
-store (persiste dans AsyncStorage sous "facture-store")
+store (persiste dans AsyncStorage sous "facture-store-{uid}")
 ├── profile: BusinessEntity          ← Émetteur (le compte utilisateur)
 │   ├── id, name, address
 │   ├── tva, email

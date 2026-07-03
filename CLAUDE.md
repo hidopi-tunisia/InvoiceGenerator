@@ -58,7 +58,7 @@ Route groups:
 - `app/onbording/` — first-run onboarding flow (note: folder name has typo, keep it)
 
 ### State Management
-A single **Zustand** store at `store/index.ts` persists all app data to AsyncStorage under the key `facture-store`. It owns:
+A single **Zustand** store at `store/index.ts` persists all app data to AsyncStorage under a per-user key `facture-store-{uid}` (scoped at login by `store/user-scope.ts`; the legacy single key is adopted by the first account that signs in). It owns:
 - `profile` — the sender's `BusinessEntity` (name, address, TVA, currency, taxRate, country, language)
 - `invoices` — array of all saved invoices
 - `newInvoice` — the in-progress invoice being created (Partial<Invoice>)

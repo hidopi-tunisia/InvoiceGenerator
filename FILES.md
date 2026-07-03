@@ -108,7 +108,7 @@ Facturation/
 
 ### `store/` — État global (Zustand)
 
-- **Rôle** : store **unique** `store/index.ts`, persisté en AsyncStorage (`facture-store`). Détient profile, invoices, newInvoice, contacts, onboarding.
+- **Rôle** : store **unique** `store/index.ts`, persisté en AsyncStorage sous une clé par utilisateur (`facture-store-{uid}`, bascule via `store/user-scope.ts` à la connexion). Détient profile, invoices, newInvoice, contacts, onboarding.
 - **Autorisé** : état, actions, fonction `migrate` pour toute évolution de schéma persisté.
 - **Interdit** : créer un second store ; JSX ; appels réseau (la sync passera par `domain/`).
 - **Dépendances** : zustand, AsyncStorage, expo-crypto, `app/schema`, `app/utils/invoice`.

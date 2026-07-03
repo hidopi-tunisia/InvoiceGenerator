@@ -15,6 +15,9 @@ export type InvoiceState = {
   onboardingCompleted: boolean;
   //Review
   lastReviewRequestAt: Date | null;
+  // Sync backend (phase 5) : date ISO du dernier pull différentiel réussi
+  lastSyncAt: string | null;
+  setLastSyncAt: (date: string) => void;
 
   //Contacts :
   contacts: BusinessEntity[];
@@ -47,25 +50,33 @@ export type InvoiceState = {
   previousOnboardingStep: () => void;
 };
 
+// État de données par défaut — utilisé à la création du store ET par
+// store/user-scope.ts pour réinitialiser avant de réhydrater le tiroir
+// d'un autre utilisateur (cloisonnement par uid).
+export const createInitialData = () => ({
+  profile: {
+    id: Crypto.randomUUID(),
+    name: '',
+    address: '',
+    tva: '',
+    currency: 'TND', // Devise par défaut
+    taxRate: 20, // Taux TVA par défaut
+    country: '',
+    language: '',
+  } as BusinessEntity,
+  onboardingStep: 'index' as const,
+  onboardingCompleted: false,
+  lastReviewRequestAt: null,
+  lastSyncAt: null,
+  invoices: [] as Invoice[],
+  newInvoice: null,
+  contacts: [] as BusinessEntity[],
+});
+
 export const useStore = create<InvoiceState>()(
   persist(
     (set, get) => ({
-      profile: {
-        id: Crypto.randomUUID(),
-        name: '',
-        address: '',
-        tva: '',
-        currency: 'TND', // Devise par défaut
-        taxRate: 20, // Taux TVA par défaut
-        country: '',
-        language: '',
-      },
-      onboardingStep: 'index', // Valeur initiale
-      onboardingCompleted: false,
-      lastReviewRequestAt: null,
-      invoices: [],
-      newInvoice: null,
-      contacts: [], // Initialisation du contacts
+      ...createInitialData(),
       // PROFILE
       // Fusion (pas remplacement) : l'étape profil de l'onboarding et settings/edit
       // n'envoient que name/address/tva — ne pas écraser country/language/currency/taxRate.
@@ -120,6 +131,8 @@ export const useStore = create<InvoiceState>()(
       },
       // REVIEW REQUEST
       setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
+      // SYNC
+      setLastSyncAt: (date) => set(() => ({ lastSyncAt: date })),
       // CONTACTS
       deleteContact: (contact) => {
         set((state) => ({
@@ -176,10 +189,16 @@ export const useStore = create<InvoiceState>()(
       },
     }),
     {
+      // La clé est repointée sur `facture-store-{uid}` à la connexion
+      // (store/user-scope.ts) — celle-ci n'est que le point de départ anonyme.
       name: 'facture-store',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1, // sans version explicite, zustand n'appelle jamais migrate()
-      migrate: (persistedState: any) => {
+      // Pas d'hydratation automatique au chargement du module : elle lirait la
+      // clé héritée et pourrait résoudre APRÈS le scoping par uid (course).
+      // Seul store/user-scope.ts réhydrate, explicitement, sur la bonne clé.
+      skipHydration: true,
+      version: 2, // sans version explicite, zustand n'appelle jamais migrate()
+      migrate: (persistedState: any, version) => {
         // Migration pour les utilisateurs existants
         if (persistedState?.profile && !persistedState.profile.currency) {
           persistedState.profile.currency = 'TND';
@@ -198,6 +217,18 @@ export const useStore = create<InvoiceState>()(
         }
         if (persistedState?.newInvoice) {
           persistedState.newInvoice = flattenInvoiceInfo(persistedState.newInvoice);
+        }
+        // v2 : métadonnées de sync — tout l'existant est antérieur au backend,
+        // donc marqué dirty pour être poussé lors de la première synchronisation.
+        if (version < 2) {
+          const markDirty = (entity: any) => ({ ...entity, dirty: true });
+          if (Array.isArray(persistedState?.invoices)) {
+            persistedState.invoices = persistedState.invoices.map(markDirty);
+          }
+          if (Array.isArray(persistedState?.contacts)) {
+            persistedState.contacts = persistedState.contacts.map(markDirty);
+          }
+          persistedState.lastSyncAt = null;
         }
         return persistedState as InvoiceState;
       },

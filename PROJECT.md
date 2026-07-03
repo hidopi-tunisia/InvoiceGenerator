@@ -34,7 +34,7 @@ Myfakto (nom historique : Fatourty) est une application mobile de **facturation 
 | Framework | React Native 0.76 + Expo SDK 52 (TypeScript) |
 | Navigation | expo-router v4 (routing par fichiers) |
 | Styling | NativeWind (Tailwind CSS pour RN) |
-| État global | Zustand + persistance AsyncStorage (clé `facture-store`) |
+| État global | Zustand + persistance AsyncStorage (clé `facture-store-{uid}` par utilisateur) |
 | Formulaires | React Hook Form + Zod |
 | PDF | expo-print (HTML → PDF) + expo-sharing |
 | Analytics / Monitoring | vexo-analytics + Sentry |

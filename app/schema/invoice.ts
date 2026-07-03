@@ -13,6 +13,10 @@ export const businessEntitySchema = z.object({
   taxRate: z.number().optional(),
   country: z.string().optional(),
   language: z.string().optional(),
+  // Métadonnées de sync backend (jamais saisies en formulaire)
+  remoteId: z.string().optional(), // ObjectId côté serveur — le local garde son UUID
+  syncedAt: z.string().optional(), // ISO du dernier push/pull réussi
+  dirty: z.boolean().optional(), // modification locale non poussée
 });
 
 //BusinessEntity : une entité autrement dit, c'est les info de l'entreprise qui va facturer à son client.
@@ -60,4 +64,8 @@ export type Invoice = InvoiceInfo & {
   // Figés à la création depuis le profil (une facture émise ne change pas de taux/devise)
   taxRate?: number;
   currency?: string;
+  // Métadonnées de sync backend
+  remoteId?: string; // ObjectId côté serveur — le local garde son UUID
+  syncedAt?: string; // ISO du dernier push/pull réussi
+  dirty?: boolean; // modification locale non poussée
 };

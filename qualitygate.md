@@ -19,8 +19,7 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 **13. Couche `domain/` morte — chantier en cours**
 L'app fonctionne entièrement sur le store Zustand local ; la sync n'est pas branchée à l'UI. **Phase 0 livrée le 2026-07-04** : helper réseau unique `domain/http.ts` (timeout 15 s, erreurs typées, retry GET, refresh token 401, X-App-Version), `mappers.ts` (statuts FR↔EN, items), ressources typées API.md, `senders.ts` legacy supprimé, warm-up `/info` branché au boot. Restent les phases 1-6 du plan (store v2 + cloisonnement uid, profil, contacts, factures, moteur de sync, upsell).
 
-**20. Store local non cloisonné par utilisateur**
-Le store Zustand (`facture-store`) n'est pas rattaché à l'UID Firebase : après une déconnexion, un **autre** compte qui se connecte sur le même appareil voit les factures/contacts/profil du compte précédent. Assumé pour le MVP (appareil mono-utilisateur) ; à cloisonner par `uid` **pendant le chantier sync** (n°13).
+~~**20. Store local non cloisonné par utilisateur**~~ ✅ **Résolu le 2026-07-04 (phase 1)** — clé de persistance par compte `facture-store-{uid}` (`store/user-scope.ts`) : bascule + réinitialisation mémoire + réhydratation **avant** la redirection de l'auth-gate ; les données héritées de l'ancienne clé unique sont adoptées par le premier compte connecté après la mise à jour (backup `facture-store-legacy-backup` conservé quelques versions). Migration store **v2** : métadonnées de sync (`remoteId`/`syncedAt`/`dirty`) — l'existant est marqué `dirty` pour la première synchronisation.
 
 ---
 
