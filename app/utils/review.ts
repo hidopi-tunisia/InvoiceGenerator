@@ -5,10 +5,13 @@ import { Alert, Linking } from 'react-native';
 import { useStore } from '~/store';
 
 export const useReviews = () => {
-  const { lastReviewRequestAt, setLastReviewRequestAt } = useStore((state) => ({
-    lastReviewRequestAt: state.lastReviewRequestAt ? new Date(state.lastReviewRequestAt) : null,
-    setLastReviewRequestAt: state.setLastReviewRequestAt,
-  }));
+  // Sélecteurs ciblés obligatoires (MOBILE_GUIDELINES §5) : un sélecteur qui
+  // retourne un objet/Date recréé à chaque appel rend le snapshot instable
+  // → boucle de rendus (« Maximum update depth exceeded ») dès qu'une
+  // écriture store survient pendant que l'écran est monté.
+  const lastReviewRequestAtRaw = useStore((state) => state.lastReviewRequestAt);
+  const setLastReviewRequestAt = useStore((state) => state.setLastReviewRequestAt);
+  const lastReviewRequestAt = lastReviewRequestAtRaw ? new Date(lastReviewRequestAtRaw) : null;
 
   // ✅ Demander un avis sur l'App Store / Google Play
   const askForReview = useCallback(async () => {

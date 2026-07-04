@@ -12,6 +12,7 @@ import { auth } from './config'; // Import Firebase auth
 
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
+import { syncContacts } from '~/store/contacts-sync';
 import { syncProfileOnBoot } from '~/store/profile-sync';
 import { scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
@@ -56,9 +57,9 @@ function Layout() {
         // réhydrater AVANT d'autoriser la redirection — sinon l'auth-gate
         // déciderait (onboarding ou tabs) sur les données du mauvais compte.
         await scopeStoreToUser(authUser.uid);
-        // Sync profil non bloquante : pré-remplit un store vierge depuis le
-        // backend (utilisateur venu du front web) ou pousse le profil local.
-        syncProfileOnBoot();
+        // Sync non bloquante : profil d'abord (peut sauter l'onboarding pour
+        // un utilisateur venu du front web), puis contacts (push dirty + pull).
+        syncProfileOnBoot().then(() => syncContacts());
       } else {
         scopeStoreToAnonymous();
       }

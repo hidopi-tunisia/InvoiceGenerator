@@ -48,10 +48,26 @@ flowchart TD
 │  [CS] Client SARL                │
 │       45 Av. Charles de Gaulle   │
 │                              [📄]│
+│                                  │
+│                            (+)   │  ← FAB → /contacts/new
 └──────────────────────────────────┘
 ```
 
 **Avatar** : Deux premières lettres du nom en majuscules, fond coloré généré automatiquement.
+
+---
+
+## Création Manuelle (`/contacts/new`)
+
+FAB « + » (bas droite) et CTA de l'état vide. Même formulaire que l'étape 2B du wizard (nom, adresse, n° TVA, email) mais **hors wizard** : `addContact()` + `syncContactById()` (push backend fire-and-forget) + retour à la liste. Ne pas utiliser `invoices/generate/new-contact` depuis cet onglet — il démarre une facture.
+
+---
+
+## Synchronisation backend (phase 3)
+
+- **Push** : contacts `dirty` poussés vers `/recipients` (POST, ou PATCH si `remoteId`) — au boot, et après chaque création/édition d'écran. `409` (email existant, ex. créé côté front Angular) → adoption du recipient serveur via recherche par email. `404` sur PATCH → remoteId abandonné, recréation.
+- **Pull** : toutes les pages (`limit=20`), merge par `remoteId` puis par email ; un contact local `dirty` gagne (il sera poussé), sinon le serveur fait foi.
+- **Suppression** : DELETE distant différé à la fermeture du snackbar — un undo n'envoie jamais de suppression. Hors ligne, l'orphelin serveur attend la file de mutations (phase 5).
 
 ---
 

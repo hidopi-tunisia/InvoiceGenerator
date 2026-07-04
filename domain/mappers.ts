@@ -1,6 +1,11 @@
-import { BackendProfile, ProfileInput } from './profile';
-import { BusinessEntity, InvoiceItem } from '../app/schema/invoice';
-import { InvoiceDisplayStatus } from '../app/utils/invoice';
+import * as Crypto from 'expo-crypto';
+
+import type { BackendProfile, ProfileInput } from './profile';
+import type { BackendRecipient, RecipientInput } from './recipients';
+import type { BusinessEntity, InvoiceItem } from '../app/schema/invoice';
+// import type obligatoire : app/utils/invoice importe le store → un import
+// valeur créerait un cycle de modules au bundling.
+import type { InvoiceDisplayStatus } from '../app/utils/invoice';
 
 // ---------------------------------------------------------------------------
 // Table de conversion UNIQUE local ↔ backend (API.md §15.14).
@@ -59,6 +64,43 @@ export const fromBackendItems = (items: BackendInvoiceItem[]): InvoiceItem[] =>
 //   address (string)  ↔ address.street (le local ne structure pas l'adresse)
 //   country           ↔ fiscalIdentifier.country + address.country
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Contact local (BusinessEntity) ↔ Recipient backend.
+// Résolution locale ↔ serveur : par remoteId, sinon par email (API.md §15.15).
+//   name (local)     ↔ companyName + contactPerson (le local n'a qu'un nom)
+//   address (string) ↔ address.street
+//   tva              ↔ fiscalIdentifier.value (type libre côté recipients)
+// ---------------------------------------------------------------------------
+
+/** Contact local → body POST/PATCH /recipients (contactPerson est requis). */
+export const toBackendRecipientInput = (contact: BusinessEntity): RecipientInput => ({
+  contactPerson: contact.name,
+  companyName: contact.name,
+  email: contact.email || undefined,
+  address: contact.address ? { street: contact.address } : undefined,
+  fiscalIdentifier: contact.tva ? { type: 'none', value: contact.tva } : undefined,
+});
+
+/** Recipient backend → contact local (pull) : marqué propre (dirty: false). */
+export const fromBackendRecipient = (remote: BackendRecipient): BusinessEntity => {
+  const addressParts = [
+    remote.address?.street,
+    remote.address?.zip,
+    remote.address?.city,
+    remote.address?.country,
+  ].filter(Boolean);
+  return {
+    id: Crypto.randomUUID(), // id local — le lien serveur est remoteId
+    name: remote.companyName || remote.contactPerson,
+    address: addressParts.join(', '),
+    email: remote.email || undefined,
+    tva: remote.fiscalIdentifier?.value || undefined,
+    remoteId: remote._id,
+    syncedAt: new Date().toISOString(),
+    dirty: false,
+  };
+};
 
 const fiscalTypeForCountry = (country?: string): 'MF' | 'TVA' | 'none' => {
   if (country === 'TN') return 'MF';

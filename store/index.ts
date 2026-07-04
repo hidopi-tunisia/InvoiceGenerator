@@ -21,9 +21,9 @@ export type InvoiceState = {
 
   //Contacts :
   contacts: BusinessEntity[];
-  addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact
+  addContact: (contact: BusinessEntity) => void; // Fonction d'ajout de contact (dirty par défaut)
   deleteContact: (id: BusinessEntity) => void; // Fonction de suppression de contact
-  updateContact: (contact: BusinessEntity) => void; // Fonction de mise à jour de contact
+  updateContact: (contact: Partial<BusinessEntity> & { id: string }) => void; // fusionne (préserve remoteId/syncedAt)
   //getSingleInvoice: (invoice: Invoice) => Invoice | undefined;
   updateInvoice: (invoice: Invoice) => void;
   // Fonction de mise à jour de facture
@@ -139,16 +139,21 @@ export const useStore = create<InvoiceState>()(
           contacts: state.contacts.filter((c) => c.id !== contact.id),
         }));
       },
+      // Fusion : les écrans n'envoient que les champs métier — remoteId/syncedAt
+      // sont préservés. dirty est posé sauf si l'appelant (sync) le fixe explicitement.
       updateContact: (contact) => {
         set((state) => ({
-          contacts: state.contacts.map((c) => (c.id === contact.id ? contact : c)),
+          contacts: state.contacts.map((c) =>
+            c.id === contact.id ? { ...c, ...contact, dirty: contact.dirty ?? true } : c
+          ),
         }));
-      }, // Fonction de mise à jour de contact
+      },
       addContact: (contact) => {
         // Vérifiez si l'ID existe déjà dans les contacts
         if (!get().contacts.some((c) => c.id === contact.id)) {
           set((state) => ({
-            contacts: [contact, ...state.contacts],
+            // dirty par défaut : un contact créé localement doit être poussé
+            contacts: [{ dirty: true, ...contact }, ...state.contacts],
           }));
         }
       },

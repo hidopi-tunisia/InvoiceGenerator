@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Crypto from 'expo-crypto';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
@@ -12,43 +12,42 @@ import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
 import { syncContactById } from '~/store/contacts-sync';
 
-export default function ContactEditScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>(); // Récupération de l'id du contact
-  const contact = useStore((state) => state.contacts.find((c) => c.id === id)); // Récupération du contact
-  const updateContact = useStore((state) => state.updateContact); // Fonction de mise à jour de contact
-
+// Création d'un contact hors wizard (FAB de l'onglet Contacts).
+// Ne pas confondre avec invoices/generate/new-contact : celui-ci démarre
+// une facture (layout du wizard) et enchaîne sur l'étape articles.
+export default function NewContactScreen() {
+  const addContact = useStore((state) => state.addContact);
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
-    defaultValues: {
-      id: contact?.id || Crypto.randomUUID(),
-      name: contact?.name,
-      address: contact?.address,
-      tva: contact?.tva,
-      email: contact?.email,
-    },
+    defaultValues: { id: Crypto.randomUUID() },
   });
+
   const onSubmit = (data: BusinessEntity) => {
-    updateContact(data); // fusion : remoteId/syncedAt préservés, dirty posé
+    addContact(data); // dirty par défaut → poussé ci-dessous puis au boot si échec
     syncContactById(data.id); // fire-and-forget vers le backend
-    // navigate : revient à la liste avec le nom pour le snackbar de confirmation
-    router.navigate({ pathname: '/contacts', params: { updated: data.name } });
+    // navigate (pas back) : revient à la liste en lui passant le nom ajouté,
+    // qu'elle affiche en snackbar de confirmation.
+    router.navigate({ pathname: '/contacts', params: { added: data.name } });
   };
 
   return (
     <FormProvider {...methods}>
       <KeyboardAwareScrollView edges={[]}>
-        <Text className="mb-4 text-2xl font-bold">Modifier le Contact</Text>
+        <Text className="mb-4 text-2xl font-bold">Nouveau contact</Text>
 
         <CustomInputText name="name" label="Nom" placeholder="Entrez le nom" />
-        <CustomInputText name="address" label="Adresse" placeholder="Entrez l'adresse" multiline />
+        <CustomInputText
+          name="address"
+          label="Adresse"
+          placeholder="Entrez l'adresse"
+          multiline
+          numberOfLines={3}
+          className="min-h-28"
+        />
         <CustomInputText name="tva" label="Numéro de TVA" placeholder="Entrez le numéro de TVA" />
         <CustomInputText name="email" label="E-mail" placeholder="E-mail Pro" />
 
-        <Button
-          title="Mettre à jour"
-          className="mt-auto"
-          onPress={methods.handleSubmit(onSubmit)}
-        />
+        <Button title="Ajouter" className="mt-auto" onPress={methods.handleSubmit(onSubmit)} />
       </KeyboardAwareScrollView>
     </FormProvider>
   );

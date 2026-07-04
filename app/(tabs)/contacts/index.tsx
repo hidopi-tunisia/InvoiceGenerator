@@ -1,6 +1,6 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Alert, Pressable } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -8,6 +8,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { BusinessEntity } from '~/app/schema/invoice';
 import Snackbar from '~/components/Snackbar';
 import { useStore } from '~/store';
+import { pushContactDeletion } from '~/store/contacts-sync';
 
 function ContactListItem({
   contact,
@@ -104,6 +105,21 @@ export default function ContactsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletedContact, setDeletedContact] = useState<BusinessEntity | null>(null);
 
+  // Confirmations : /contacts/new revient avec ?added=<nom>, l'édition avec
+  // ?updated=<nom>. Le param est consommé avec '' (une valeur `undefined`
+  // serait sérialisée en chaîne littérale "undefined" et re-déclencherait l'effet).
+  const { added, updated } = useLocalSearchParams<{ added?: string; updated?: string }>();
+  const [confirmation, setConfirmation] = useState<string | null>(null);
+  useEffect(() => {
+    if (added) {
+      setConfirmation(`Contact ${added} ajouté`);
+      router.setParams({ added: '' });
+    } else if (updated) {
+      setConfirmation(`Contact ${updated} modifié`);
+      router.setParams({ updated: '' });
+    }
+  }, [added, updated, router]);
+
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -145,7 +161,7 @@ export default function ContactsScreen() {
           </Text>
           {!searchQuery && (
             <Pressable
-              onPress={() => router.push('/invoices/generate/new-contact')}
+              onPress={() => router.push('/contacts/new')}
               accessibilityRole="button"
               className="mt-6 rounded-lg bg-primary px-6 py-3">
               <Text className="text-sm font-semibold text-white">Créer un contact</Text>
@@ -163,7 +179,25 @@ export default function ContactsScreen() {
         />
       )}
 
-      {/* Undo de suppression */}
+      {/* Bouton flottant : nouveau contact (hors wizard) */}
+      <Pressable
+        onPress={() => router.push('/contacts/new')}
+        accessibilityRole="button"
+        accessibilityLabel="Ajouter un nouveau contact"
+        className="absolute bottom-6 right-6 h-16 w-16 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/30">
+        <Feather name="plus" size={26} color="#fff" />
+      </Pressable>
+
+      {/* Confirmation d'ajout/modification (masquée si un undo est affiché) */}
+      <Snackbar
+        visible={!!confirmation && !deletedContact}
+        message={confirmation ?? ''}
+        onDismiss={() => setConfirmation(null)}
+        duration={3000}
+      />
+
+      {/* Undo de suppression — la suppression distante ne part qu'à la fermeture
+          du snackbar : un undo n'envoie donc jamais de DELETE au serveur */}
       <Snackbar
         visible={!!deletedContact}
         message={`Contact ${deletedContact?.name ?? ''} supprimé`}
@@ -172,7 +206,10 @@ export default function ContactsScreen() {
           if (deletedContact) addContact(deletedContact);
           setDeletedContact(null);
         }}
-        onDismiss={() => setDeletedContact(null)}
+        onDismiss={() => {
+          if (deletedContact) pushContactDeletion(deletedContact);
+          setDeletedContact(null);
+        }}
       />
     </View>
   );
