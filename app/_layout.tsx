@@ -13,6 +13,7 @@ import { auth } from './config'; // Import Firebase auth
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
 import { syncContacts } from '~/store/contacts-sync';
+import { syncInvoices } from '~/store/invoices-sync';
 import { syncProfileOnBoot } from '~/store/profile-sync';
 import { scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
@@ -57,9 +58,12 @@ function Layout() {
         // réhydrater AVANT d'autoriser la redirection — sinon l'auth-gate
         // déciderait (onboarding ou tabs) sur les données du mauvais compte.
         await scopeStoreToUser(authUser.uid);
-        // Sync non bloquante : profil d'abord (peut sauter l'onboarding pour
-        // un utilisateur venu du front web), puis contacts (push dirty + pull).
-        syncProfileOnBoot().then(() => syncContacts());
+        // Sync non bloquante, en séquence : profil (peut sauter l'onboarding
+        // pour un utilisateur venu du front web) → contacts → factures
+        // (le push d'une facture exige le remoteId de son contact).
+        syncProfileOnBoot()
+          .then(() => syncContacts())
+          .then(() => syncInvoices());
       } else {
         scopeStoreToAnonymous();
       }

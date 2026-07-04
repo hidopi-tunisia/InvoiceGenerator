@@ -56,41 +56,12 @@ export const formatAmount = (amount: number): string =>
     .format(amount)
     .replace(/[\u00a0\u202f]/g, ' ');
 
-const INVOICE_NUMBER_PREFIX = 'INV';
+// La génération/validation du numéro vit dans ./invoice-number (module pur, sans
+// dépendance au store) pour éviter le cycle store ↔ utils/invoice. Re-exporté ici
+// pour compatibilité des imports existants.
+export { generateInvoiceNumber, validateInvoiceNumber } from './invoice-number';
 
-// Format : INV-{SEQ3}{MM}{YY}
-export const generateInvoiceNumber = (): string => {
-  const invoices = useStore.getState().invoices;
-  const now = new Date();
-
-  // 1. Trouver le dernier numéro séquentiel du mois courant
-  const lastInvoice = invoices
-    .filter((invoice) => {
-      const invoiceDate = new Date(invoice.invoiceDate);
-      return (
-        invoiceDate.getMonth() + 1 === now.getMonth() + 1 &&
-        invoiceDate.getFullYear() === now.getFullYear()
-      );
-    })
-    .sort(
-      (a, b) =>
-        parseInt((b.invoiceNumber || '').split('-')[1]?.substring(0, 3) || '0', 10) -
-        parseInt((a.invoiceNumber || '').split('-')[1]?.substring(0, 3) || '0', 10)
-    )[0];
-
-  // 2. Calculer le prochain numéro séquentiel
-  const lastSeq = lastInvoice
-    ? parseInt((lastInvoice.invoiceNumber?.split('-')[1] || '000').substring(0, 3), 10)
-    : 0;
-
-  const sequentialNumber = (lastSeq + 1).toString().padStart(3, '0');
-
-  // 3. Construction du numéro complet
-  return `INV-${sequentialNumber}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear().toString().slice(-2)}`;
-};
-
-// Fonction de validation du format
-export const validateInvoiceNumber = (invoiceNumber: string): boolean => {
-  const regex = new RegExp(`^${INVOICE_NUMBER_PREFIX}-\\d{3}(0[1-9]|1[0-2])\\d{2}$`);
-  return regex.test(invoiceNumber);
-};
+// Format de date unique de l'app : dd/mm/yyyy (fr-FR), indépendant de la
+// locale du device (un simulateur en anglais afficherait mm/dd/yyyy).
+export const formatDate = (value: Date | string): string =>
+  new Date(value).toLocaleDateString('fr-FR');

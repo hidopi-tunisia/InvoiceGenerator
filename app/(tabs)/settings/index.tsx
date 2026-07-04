@@ -8,6 +8,7 @@ import { auth } from '~/app/config';
 import { useReviews } from '~/app/utils/review';
 import { getSubscriptionUsage, SubscriptionUsage } from '~/domain/subscription';
 import { useStore } from '~/store';
+import { refreshProfileFromServer } from '~/store/profile-sync';
 
 const PLAN_LABELS: Record<SubscriptionUsage['plan'], string> = {
   trial: 'Essai gratuit',
@@ -33,6 +34,9 @@ export default function SettingScreen() {
       .catch(() => {
         // Silencieux : offline-first, la section abonnement est un bonus
       });
+    // Rafraîchit le profil depuis le serveur à l'ouverture des Réglages :
+    // devise, TVA, etc. restent alignées sur la source de vérité (web inclus).
+    refreshProfileFromServer();
     return () => {
       cancelled = true;
     };

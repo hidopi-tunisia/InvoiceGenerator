@@ -142,7 +142,7 @@ Facturation/
 
 - **Authentification** : connexion / inscription email + mot de passe, Google Sign-In, persistance de session, déconnexion.
 - **Onboarding** : sélection pays, langue, devise, taux de TVA ; création du profil entreprise (nom, adresse, n° TVA).
-- **Création de facture** (assistant) : numéro auto-généré (`INV-{SEQ3}{MM}{YY}`), dates validées par Zod, sélection ou création de contact, lignes d'articles dynamiques avec calcul en temps réel, récapitulatif avant sauvegarde.
+- **Création de facture** (assistant) : numéro auto-généré (`INV-YYYY-NNNN`, aligné backend), dates validées par Zod, sélection ou création de contact, lignes d'articles dynamiques avec calcul en temps réel, récapitulatif avant sauvegarde.
 - **Gestion des factures** : liste avec filtres par statut et par année, détail, marquage « payée », suppression avec confirmation.
 - **PDF** : génération à l'ouverture du détail, sauvegarde locale, partage via la sharesheet native.
 - **Contacts** : auto-ajout du destinataire à la sauvegarde d'une facture, recherche, édition, suppression.

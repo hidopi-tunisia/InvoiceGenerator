@@ -1,6 +1,6 @@
 import { useStore } from './index';
 import type { BusinessEntity } from '../app/schema/invoice';
-import { ConflictError, NotFoundError } from '../domain/http';
+import { ConflictError, NotFoundError, reportSyncError } from '../domain/http';
 import { fromBackendRecipient, toBackendRecipientInput } from '../domain/mappers';
 import {
   BackendRecipient,
@@ -60,11 +60,15 @@ const pushContact = async (contact: BusinessEntity): Promise<void> => {
             dirty: false,
           });
         }
-      } catch {
-        // silencieux — restera dirty
+      } catch (retryError) {
+        reportSyncError('pushContact.conflictRetry', retryError);
       }
+      return;
     }
-    // Échec réseau/serveur : le contact reste dirty, retenté plus tard.
+    // Validation (400) / 5xx / etc. : remonté pour diagnostic (le contact
+    // reste dirty, retenté plus tard). Un échec ici bloque aussi le push des
+    // factures qui référencent ce contact.
+    reportSyncError('pushContact', error);
   }
 };
 
@@ -130,8 +134,8 @@ export const syncContacts = async (): Promise<void> => {
   try {
     await pushDirtyContacts();
     await pullContacts();
-  } catch {
-    // Réseau indisponible / backend froid : l'app continue en local.
+  } catch (error) {
+    reportSyncError('syncContacts', error); // l'app continue en local
   }
 };
 

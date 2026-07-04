@@ -6,6 +6,7 @@ import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice
 import { Button } from '~/components/Button';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
+import { syncInvoiceById } from '~/store/invoices-sync';
 
 export default function InvoiceSummary() {
   // Récupération de la facture en cours
@@ -19,9 +20,11 @@ export default function InvoiceSummary() {
 
   // Fonction appelée lors de la confirmation de la facture
   const handleGenerateInvoice = () => {
+    const invoiceId = invoice?.id;
     saveInvoice();
+    if (invoiceId) syncInvoiceById(invoiceId); // fire-and-forget vers le backend
     // replace : la facture est sauvegardée, le retour arrière ne doit pas revenir au récap
-    router.replace(`/invoices/${invoice?.id}/success`);
+    router.replace(`/invoices/${invoiceId}/success`);
   };
 
   // Si aucune facture n'est trouvée, on redirige vers l'accueil

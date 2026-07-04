@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import * as Application from 'expo-application';
 
 import { ENDPOINT } from '../constants';
@@ -177,6 +178,18 @@ export const request = async <T>(
   }
 
   return { data: (envelope?.data ?? null) as T, pagination: envelope?.pagination };
+};
+
+/**
+ * Signale un échec de sync à Sentry en préservant l'offline-first : un
+ * `NetworkError` (hors ligne / cold start) est ATTENDU et n'est pas remonté ;
+ * tout le reste (validation 400, quota 403, conflit, 5xx…) l'est, avec le
+ * contexte de l'opération, pour rendre les échecs de sync silencieux
+ * diagnosticables. À appeler dans les `catch` des modules de sync.
+ */
+export const reportSyncError = (context: string, error: unknown): void => {
+  if (error instanceof NetworkError) return; // offline attendu, pas de bruit
+  Sentry.captureException(error, { tags: { area: 'sync', operation: context } });
 };
 
 /**

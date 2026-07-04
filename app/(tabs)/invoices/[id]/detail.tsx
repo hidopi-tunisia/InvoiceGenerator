@@ -7,13 +7,15 @@ import { customEvent } from 'vexo-analytics';
 
 import {
   formatAmount,
+  formatDate,
   getDisplayStatus,
   getInvoiceCurrency,
   getStatusColor,
   getTotals,
 } from '~/app/utils/invoice';
-import { generateInvoicePdf } from '~/app/utils/pdf';
+import { downloadRemoteInvoicePdf, generateInvoicePdf } from '~/app/utils/pdf';
 import { useStore } from '~/store';
+import { pushInvoiceDeletion, pushInvoiceStatus } from '~/store/invoices-sync';
 
 export default function InvoiceDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -35,7 +37,12 @@ export default function InvoiceDetailScreen() {
 
     setIsLoading(true);
     try {
-      const uri = await generateInvoicePdf(invoice);
+      // PDF serveur (source de vérité si le plan le génère), sinon local
+      const uri = invoice.remotePdfUrl
+        ? await downloadRemoteInvoicePdf(invoice.remotePdfUrl, invoice.invoiceNumber).catch(() =>
+            generateInvoicePdf(invoice)
+          )
+        : await generateInvoicePdf(invoice);
       setPdfUri(uri);
       customEvent('Facture_PDF_Generee', { invoiceNumber: invoice.invoiceNumber });
     } catch {
@@ -75,11 +82,8 @@ export default function InvoiceDetailScreen() {
   const handleMarkAsPaid = () => {
     if (!invoice) return;
 
-    updateInvoice({
-      ...invoice,
-      status: 'payée',
-      //total, // Persist le total calculé
-    });
+    updateInvoice({ id: invoice.id, status: 'payée' });
+    pushInvoiceStatus(invoice.id); // fire-and-forget : PATCH /invoices/:id/status
     Alert.alert('Succès', 'Facture marquée comme payée');
   };
 
@@ -92,6 +96,9 @@ export default function InvoiceDetailScreen() {
         onPress: () => {
           if (invoice) {
             deleteInvoice(invoice);
+            // Pas d'undo depuis le détail (on quitte l'écran) : suppression
+            // distante immédiate, best-effort.
+            pushInvoiceDeletion(invoice);
             router.back();
           }
         },
@@ -150,13 +157,13 @@ export default function InvoiceDetailScreen() {
           <View className="space-y-2">
             <View className="flex-row justify-between">
               <Text className="text-gray-600">Date d'émission :</Text>
-              <Text>{new Date(invoice.invoiceDate).toLocaleDateString()}</Text>
+              <Text>{formatDate(invoice.invoiceDate)}</Text>
             </View>
 
             {invoice.invoiceDueDate && (
               <View className="flex-row justify-between">
                 <Text className="text-gray-600">Date d'échéance :</Text>
-                <Text>{new Date(invoice.invoiceDueDate).toLocaleDateString()}</Text>
+                <Text>{formatDate(invoice.invoiceDueDate)}</Text>
               </View>
             )}
           </View>

@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import { printToFileAsync } from 'expo-print';
 
-import { formatAmount, getInvoiceCurrency, getTotals } from './invoice';
+import { formatAmount, formatDate, getInvoiceCurrency, getTotals } from './invoice';
 import { Invoice } from '../schema/invoice';
 
 const generateHtml = (invoice: Invoice) => {
@@ -132,14 +132,12 @@ const generateHtml = (invoice: Invoice) => {
           <div class="invoice-title">
             <h1>Facture</h1>
 <p><strong>Numéro :</strong> #${invoice.invoiceNumber || 'N/A'}</p>
-<p><strong>Date :</strong> ${
-    invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'
-  }</p>
+<p><strong>Date :</strong> ${invoice.invoiceDate ? formatDate(invoice.invoiceDate) : 'N/A'}</p>
 ${
   invoice.invoiceDueDate
-    ? `<p><strong>Date d'échéance :</strong> ${new Date(
-        invoice.invoiceDueDate
-      ).toLocaleDateString()}</p>`
+    ? `<p><strong>Date d'échéance :</strong> ${new Date(invoice.invoiceDueDate).toLocaleDateString(
+        'fr-FR'
+      )}</p>`
     : ''
 }
  </div>
@@ -215,6 +213,21 @@ ${
     
     `;
   return html;
+};
+
+// Télécharge le PDF serveur (Cloudinary, plan avec pdfGeneration) — source de
+// vérité une fois la facture synchronisée (API.md §15.17). Lève en cas d'échec :
+// l'appelant retombe sur la génération locale.
+export const downloadRemoteInvoicePdf = async (
+  url: string,
+  invoiceNumber: string
+): Promise<string> => {
+  const target = FileSystem.documentDirectory + `facture-${invoiceNumber}.pdf`;
+  const { status, uri } = await FileSystem.downloadAsync(url, target);
+  if (status !== 200) {
+    throw new Error(`Téléchargement du PDF échoué (${status})`);
+  }
+  return uri;
 };
 
 // Lève en cas d'échec : les écrans appelants gèrent l'erreur (message utilisateur).

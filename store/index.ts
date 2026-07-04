@@ -4,7 +4,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
-import { generateInvoiceNumber } from '~/app/utils/invoice';
+// Module pur (pas d'import du store) : casse le cycle store ↔ utils/invoice.
+import { generateInvoiceNumber } from '~/app/utils/invoice-number';
 
 export type InvoiceState = {
   onboardingStep: 'index' | 'profile' | 'tax' | 'completed';
@@ -25,7 +26,7 @@ export type InvoiceState = {
   deleteContact: (id: BusinessEntity) => void; // Fonction de suppression de contact
   updateContact: (contact: Partial<BusinessEntity> & { id: string }) => void; // fusionne (préserve remoteId/syncedAt)
   //getSingleInvoice: (invoice: Invoice) => Invoice | undefined;
-  updateInvoice: (invoice: Invoice) => void;
+  updateInvoice: (invoice: Partial<Invoice> & { id: string }) => void; // fusionne (préserve remoteId/syncedAt)
   // Fonction de mise à jour de facture
   //updateInvoiceStatus: (invoiceId: string, newStatus: 'payée' | 'en attente' | 'en retard') => void;
   setProfile: (profile: Partial<BusinessEntity>) => void; // fusionne avec l'existant
@@ -80,7 +81,12 @@ export const useStore = create<InvoiceState>()(
       // PROFILE
       // Fusion (pas remplacement) : l'étape profil de l'onboarding et settings/edit
       // n'envoient que name/address/tva — ne pas écraser country/language/currency/taxRate.
-      setProfile: (profile) => set((state) => ({ profile: { ...state.profile, ...profile } })),
+      // dirty posé par défaut (sauf si la sync le fixe) : une modif locale non
+      // poussée ne doit jamais être écrasée par le profil serveur au boot.
+      setProfile: (profile) =>
+        set((state) => ({
+          profile: { ...state.profile, ...profile, dirty: profile.dirty ?? true },
+        })),
       completeOnboarding: () =>
         set({
           onboardingCompleted: true,
@@ -95,7 +101,7 @@ export const useStore = create<InvoiceState>()(
         set(() => ({
           newInvoice: {
             id: Crypto.randomUUID(),
-            invoiceNumber: generateInvoiceNumber(),
+            invoiceNumber: generateInvoiceNumber(get().invoices),
             sender: get().profile,
             items: [],
             invoiceDate: new Date(),
@@ -121,7 +127,8 @@ export const useStore = create<InvoiceState>()(
           return; // Si la facture n'existe pas, ne rien faire
         }
         set((state) => ({
-          invoices: [newInvoice, ...state.invoices],
+          // dirty : une facture créée localement doit être poussée au backend
+          invoices: [{ ...newInvoice, dirty: true }, ...state.invoices],
           newInvoice: null,
         }));
         // Ajoute le contact du destinataire dans contacts s'il n'existe pas
@@ -167,10 +174,13 @@ export const useStore = create<InvoiceState>()(
           set((state) => ({ invoices: [invoice, ...state.invoices] }));
         }
       },
+      // Fusion : dirty est posé sauf si l'appelant (sync) le fixe explicitement.
       updateInvoice: (updatedInvoice) => {
         set((state) => ({
           invoices: state.invoices.map((invoice) =>
-            invoice.id === updatedInvoice.id ? updatedInvoice : invoice
+            invoice.id === updatedInvoice.id
+              ? { ...invoice, ...updatedInvoice, dirty: updatedInvoice.dirty ?? true }
+              : invoice
           ),
         }));
       },

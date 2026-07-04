@@ -14,6 +14,11 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 ---
 
+## Défauts ouverts (post phase 4)
+
+**21. Fichiers non-routes sous `app/` → warnings expo-router**
+`app/config.ts`, `app/schema/*`, `app/utils/*` déclenchent chacun un `Route ... is missing the required default export` : expo-router scanne tout `app/` comme des routes. Bénin (dev uniquement, sans impact prod) mais bruyant. **Fix correct** : relocaliser les modules non-routes hors de `app/` (ex. `schema/`, `utils/`, `lib/config.ts`) + réécrire les imports `~/app/utils` → `~/utils` etc. Refactor mécanique ~40 imports, à faire en chantier dédié avec sa passe de vérif (docs CLAUDE.md/FILES.md/MOBILE_GUIDELINES à ajuster).
+
 ## Sujets structurels (chantier backend)
 
 **13. Couche `domain/` morte — chantier en cours**
@@ -22,7 +27,12 @@ L'app fonctionne local-first ; la sync se branche progressivement.
 - **Phase 1 livrée (2026-07-04)** : cloisonnement du store par uid + migration v2 (cf. n°20 résolu).
 - **Phase 2 livrée (2026-07-04)** : sync du profil — `store/profile-sync.ts` : au boot connecté, `GET /profile` (auto-création + trial serveur) ; store vierge + profil serveur renseigné (utilisateur venu du front Angular) → pré-remplissage local et onboarding sauté si `isProfileComplete` ; sinon push local (LWW simple, retenté via flag `dirty`). Push explicite après sauvegarde (onboarding, réglages, taxes/devise à la sortie d'écran). Carte Abonnement dans Réglages (`GET /subscription/usage`, best-effort).
 - **Phase 3 livrée (2026-07-04)** : sync des contacts — `store/contacts-sync.ts` : push des `dirty` (POST/PATCH, adoption par email sur 409, recréation sur 404), pull paginé complet avec merge (remoteId puis email, le `dirty` local gagne), suppression distante différée à la fermeture du snackbar (l'undo n'envoie jamais de DELETE). `addContact`/`updateContact` posent `dirty` par défaut ; `updateContact` fusionne (préserve `remoteId`). Ajout produit : FAB « + » sur l'onglet Contacts → nouvelle route `/contacts/new` hors wizard.
-- **Restent** : phase 4 (factures), 5 (moteur de sync + pull-to-refresh + file de mutations), 6 (upsell 403 → plans + Stripe Checkout).
+- **Phase 4 livrée (2026-07-04)** : sync des factures — `store/invoices-sync.ts` : push des `dirty` avec **contact d'abord** (POST /invoices exige l'ObjectId du destinataire), `tag` = numéro local (409 → recréation sans tag, le numéro serveur est adopté au pull), 403 quota → reste locale (upsell en phase 6) ; « marquer payée » → `PATCH /:id/status` ; suppression distante différée au snackbar (immédiate depuis le détail, sans undo) ; pull paginé + merge (remoteId puis tag, `dirty` local gagne). PDF : téléchargement du Cloudinary serveur (`downloadUrl`, plans avec pdfGeneration) avec fallback expo-print. `saveInvoice` pose `dirty` ; `updateInvoice` fusionne. ⚠️ Limitation connue : le total local (TVA du profil) peut diverger du total serveur si remise/droit de timbre sont configurés côté backend — le PDF serveur fait foi.
+- **Correctifs phase 4 (2026-07-04)** :
+  - **Cycle de modules cassé** : `generateInvoiceNumber`/`validateInvoiceNumber` extraits dans `app/utils/invoice-number.ts` (module pur) ; le store l'importe et passe `get().invoices` → plus de cycle `store ↔ utils/invoice` (warning « require cycle / uninitialized values »).
+  - **Échecs de sync visibles** : `reportSyncError` (domain/http.ts) remonte à Sentry tout échec **non-réseau** (400/403/409/5xx) — l'offline reste silencieux. Branché sur push contacts/factures/profil/statut ; un push de facture sauté faute de `remoteId` destinataire émet un `captureMessage` warning. Rend diagnosticable le cas « facture absente du web ».
+  - **Numéro `INV-YYYY-NNNN`** (aligné backend, anti-collision sur les factures pull) ; **statut poussé `Pending`** (et non `Unpaid`/« Non payé ») ; **dates `dd/mm/yyyy`** (`formatDate` fr-FR) partout ; **devise/TVA : le serveur fait foi** au boot et à l'ouverture des Réglages (`refreshProfileFromServer`) — un habitué de l'EUR ne retombe pas en TND.
+- **Restent** : phase 5 (moteur de sync : file de mutations persistée, retour au premier plan, pull-to-refresh), 6 (upsell 403 → plans + Stripe Checkout).
 
 ~~**20. Store local non cloisonné par utilisateur**~~ ✅ **Résolu le 2026-07-04 (phase 1)** — clé de persistance par compte `facture-store-{uid}` (`store/user-scope.ts`) : bascule + réinitialisation mémoire + réhydratation **avant** la redirection de l'auth-gate ; les données héritées de l'ancienne clé unique sont adoptées par le premier compte connecté après la mise à jour (backup `facture-store-legacy-backup` conservé quelques versions). Migration store **v2** : métadonnées de sync (`remoteId`/`syncedAt`/`dirty`) — l'existant est marqué `dirty` pour la première synchronisation.
 

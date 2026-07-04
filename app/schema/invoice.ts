@@ -68,4 +68,5 @@ export type Invoice = InvoiceInfo & {
   remoteId?: string; // ObjectId côté serveur — le local garde son UUID
   syncedAt?: string; // ISO du dernier push/pull réussi
   dirty?: boolean; // modification locale non poussée
+  remotePdfUrl?: string; // PDF Cloudinary (si le plan a pdfGeneration) — prioritaire sur expo-print
 };

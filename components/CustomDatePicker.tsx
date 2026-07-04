@@ -40,7 +40,7 @@ export default function CustomDatePicker({
           <>
             <Pressable onPress={() => setDatePickerVisibility(true)}>
               <TextInput
-                value={value ? new Date(value).toLocaleDateString() : placeholder}
+                value={value ? new Date(value).toLocaleDateString('fr-FR') : placeholder}
                 editable={false}
                 pointerEvents="none"
                 className="h-12 rounded-md border border-gray-300 bg-white p-4"

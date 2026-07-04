@@ -62,6 +62,14 @@ Les filtres et l'affichage utilisent le **statut dérivé** (`getDisplayStatus` 
 | Impayées | `'en attente'` (échéance non dépassée) |
 | En retard | `'en retard'` (échéance dépassée, non payée) |
 
+### Synchronisation backend (phase 4)
+
+- **Push** : factures `dirty` → `/invoices` au boot et à la sauvegarde du wizard. Le contact destinataire est poussé d'abord (le POST exige son ObjectId). `tag` = numéro local, conservé si unique (sinon recréation sans tag, numéro serveur adopté au pull). 403 quota → la facture reste locale (upsell phase 6).
+- **« Marquer payée »** : `PATCH /invoices/:id/status` fire-and-forget.
+- **Suppression** : différée à la fermeture du snackbar depuis la liste (undo sans DELETE) ; immédiate depuis le détail (pas d'undo).
+- **Pull** : toutes les pages, merge par remoteId puis tag — le `dirty` local gagne.
+- **PDF** : si la facture a un `remotePdfUrl` (plan avec génération PDF), le détail télécharge le PDF serveur (source de vérité) avec fallback expo-print.
+
 ### Indicateur Visuel de Statut
 
 Couleurs partagées liste/détail (`getStatusColor`) :

@@ -1,8 +1,9 @@
 import * as Crypto from 'expo-crypto';
 
+import type { BackendInvoice, InvoiceInput } from './invoices';
 import type { BackendProfile, ProfileInput } from './profile';
 import type { BackendRecipient, RecipientInput } from './recipients';
-import type { BusinessEntity, InvoiceItem } from '../app/schema/invoice';
+import type { BusinessEntity, Invoice, InvoiceItem } from '../app/schema/invoice';
 // import type obligatoire : app/utils/invoice importe le store → un import
 // valeur créerait un cycle de modules au bundling.
 import type { InvoiceDisplayStatus } from '../app/utils/invoice';
@@ -29,12 +30,14 @@ export type BackendInvoiceItem = { label: string; quantity: number; unitPrice: n
 
 /**
  * Statut local → backend (pour les POST/PATCH).
- * « en retard » n'est jamais poussé : c'est un statut dérivé de l'échéance —
- * le backend fait pareil (auto-status `Unpaid` + `isLate`, API.md §7).
+ * 'en attente' → 'Pending' (et non 'Unpaid' : côté web, Unpaid s'affiche
+ * « Non payé » — le backend bascule lui-même Pending → Unpaid quand
+ * l'échéance est dépassée, API.md §7). « en retard » n'est jamais poussé :
+ * statut dérivé de l'échéance des deux côtés.
  */
 export const toBackendStatus = (
   status?: 'payée' | 'en attente' | 'en retard'
-): BackendInvoiceStatus => (status === 'payée' ? 'Paid' : 'Unpaid');
+): BackendInvoiceStatus => (status === 'payée' ? 'Paid' : 'Pending');
 
 /**
  * Statut backend → statut d'affichage local. `isLate` (calculé par le backend
@@ -64,6 +67,67 @@ export const fromBackendItems = (items: BackendInvoiceItem[]): InvoiceItem[] =>
 //   address (string)  ↔ address.street (le local ne structure pas l'adresse)
 //   country           ↔ fiscalIdentifier.country + address.country
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Facture locale ↔ Invoice backend.
+//   invoiceNumber ↔ tag (conservé par le serveur s'il est unique)
+//   invoiceDate/invoiceDueDate ↔ date/dueDate (ISO)
+//   recipient ↔ recipientId (ObjectId du contact — il doit être poussé avant)
+// Le statut stocké localement reste 'payée' | 'en attente' ('en retard' est
+// dérivé de l'échéance des deux côtés — jamais persisté).
+// Jamais total/totalInWords/sender dans le body (champs protégés → 400).
+// ---------------------------------------------------------------------------
+
+const toIsoDate = (value?: Date | string) => (value ? new Date(value).toISOString() : undefined);
+
+/** Facture locale → body POST/PATCH /invoices. */
+export const toBackendInvoiceInput = (
+  invoice: Invoice,
+  recipientRemoteId: string
+): InvoiceInput => ({
+  tag: invoice.invoiceNumber || undefined,
+  date: toIsoDate(invoice.invoiceDate),
+  dueDate: toIsoDate(invoice.invoiceDueDate),
+  recipientId: recipientRemoteId,
+  items: toBackendItems(invoice.items),
+  status: toBackendStatus(invoice.status),
+});
+
+/**
+ * Invoice backend → facture locale (pull). Le destinataire est relié au
+ * contact local par remoteId quand il existe, sinon reconstruit a minima.
+ * `sender` = profil local (le backend le déduit du token, il n'expose que l'id).
+ */
+export const fromBackendInvoice = (
+  remote: BackendInvoice,
+  localContacts: BusinessEntity[],
+  localProfile: BusinessEntity
+): Invoice => {
+  const recipient =
+    localContacts.find((c) => c.remoteId === remote.recipient?._id) ??
+    ({
+      id: Crypto.randomUUID(),
+      name: remote.recipient?.companyName || remote.recipient?.contactPerson || 'Client',
+      address: '',
+      email: remote.recipient?.email || undefined,
+      remoteId: remote.recipient?._id,
+    } as BusinessEntity);
+
+  return {
+    id: Crypto.randomUUID(), // id local — le lien serveur est remoteId
+    invoiceNumber: remote.tag,
+    invoiceDate: new Date(remote.date),
+    invoiceDueDate: remote.dueDate ? new Date(remote.dueDate) : undefined,
+    sender: localProfile,
+    recipient,
+    items: fromBackendItems(remote.items ?? []),
+    status: remote.status === 'Paid' || remote.status === 'Refunded' ? 'payée' : 'en attente',
+    remoteId: remote._id,
+    remotePdfUrl: remote.downloadUrl || undefined,
+    syncedAt: new Date().toISOString(),
+    dirty: false,
+  };
+};
 
 // ---------------------------------------------------------------------------
 // Contact local (BusinessEntity) ↔ Recipient backend.

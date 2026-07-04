@@ -60,7 +60,7 @@ flowchart TD
 
 | Champ | Type | Détail |
 |---|---|---|
-| Numéro de facture | TextInput | Format `INV-{SEQ3}{MM}{YY}`, pré-généré |
+| Numéro de facture | TextInput | Format `INV-YYYY-NNNN` (aligné backend), pré-généré |
 | Date de facture | DatePicker modal | Obligatoire, défaut = aujourd'hui |
 | Date d'échéance | DatePicker modal | Obligatoire, défaut = aujourd'hui + 14j |
 
@@ -154,11 +154,11 @@ La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa
 ## Format du Numéro de Facture
 
 ```
-INV-{SEQ3}{MM}{YY}
-    └─ 001 ─┘└06┘└26┘
-             Mois Année
+INV-YYYY-NNNN
+    └2026┘└0042┘
+    Année  Séquence annuelle (4 chiffres)
 
-Exemple : INV-001 0626 (1ère facture de Juin 2026)
+Exemple : INV-2026-0042
 ```
 
-Généré par `app/utils/invoice.ts:generateInvoiceNumber()` — incrémente le max du mois courant.
+Généré par `app/utils/invoice.ts:generateInvoiceNumber()` — aligné sur le format `tag` du backend : incrémente le max de l'année courante, avec boucle anti-collision (les factures rapatriées du serveur sont prises en compte). Poussé comme `tag` à la sync ; en cas de 409, le numéro serveur est adopté au pull.

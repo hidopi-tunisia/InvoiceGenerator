@@ -7,6 +7,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Invoice } from '~/app/schema/invoice';
 import {
   formatAmount,
+  formatDate,
   getDisplayStatus,
   getInvoiceCurrency,
   getStatusColor,
@@ -14,6 +15,7 @@ import {
 } from '~/app/utils/invoice';
 import Snackbar from '~/components/Snackbar';
 import { useStore } from '~/store';
+import { pushInvoiceDeletion } from '~/store/invoices-sync';
 
 const InvoiceListItem = ({
   invoice,
@@ -56,9 +58,7 @@ const InvoiceListItem = ({
           <Text className="text-lg font-semibold text-gray-900">
             {formatAmount(total)} {getInvoiceCurrency(invoice)}
           </Text>
-          <Text className="mt-1 text-sm text-gray-500">
-            {new Date(invoice.invoiceDate).toLocaleDateString()}
-          </Text>
+          <Text className="mt-1 text-sm text-gray-500">{formatDate(invoice.invoiceDate)}</Text>
         </View>
       </View>
 
@@ -206,7 +206,8 @@ export default function InvoicesScreen() {
         )}
       />
 
-      {/* Undo de suppression */}
+      {/* Undo de suppression — la suppression distante ne part qu'à la fermeture
+          du snackbar : un undo n'envoie donc jamais de DELETE au serveur */}
       <Snackbar
         visible={!!deletedInvoice}
         message={`Facture ${deletedInvoice?.invoiceNumber ?? ''} supprimée`}
@@ -215,7 +216,10 @@ export default function InvoicesScreen() {
           if (deletedInvoice) addInvoice(deletedInvoice);
           setDeletedInvoice(null);
         }}
-        onDismiss={() => setDeletedInvoice(null)}
+        onDismiss={() => {
+          if (deletedInvoice) pushInvoiceDeletion(deletedInvoice);
+          setDeletedInvoice(null);
+        }}
       />
     </View>
   );
