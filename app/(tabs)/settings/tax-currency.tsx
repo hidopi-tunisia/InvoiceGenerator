@@ -1,10 +1,21 @@
 import { Picker } from '@react-native-picker/picker';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TextInput } from 'react-native';
 
 import { useStore } from '~/store';
+import { pushProfile } from '~/store/profile-sync';
+
 export default function TaxCurrencyScreen() {
-  const { profile, setProfile } = useStore();
+  const profile = useStore((state) => state.profile);
+  const setProfile = useStore((state) => state.setProfile);
+
+  // L'écran sauvegarde à chaque frappe : on ne pousse vers le backend
+  // qu'une fois, à la sortie de l'écran (fire-and-forget).
+  useEffect(() => {
+    return () => {
+      pushProfile();
+    };
+  }, []);
 
   return (
     <View className="flex-1 bg-gray-50 p-4">
@@ -15,7 +26,7 @@ export default function TaxCurrencyScreen() {
           <Text className="mb-2 text-sm text-gray-500">Devise principale</Text>
           <Picker
             selectedValue={profile.currency}
-            onValueChange={(value) => setProfile({ ...profile, currency: value })}>
+            onValueChange={(value) => setProfile({ currency: value })}>
             <Picker.Item label="Dinar Tunisien (TND)" value="TND" />
             <Picker.Item label="Euro (EUR)" value="EUR" />
             <Picker.Item label="Dollar USD" value="USD" />
@@ -26,7 +37,7 @@ export default function TaxCurrencyScreen() {
           <Text className="mb-2 text-sm text-gray-500">Taux de TVA par défaut</Text>
           <TextInput
             value={profile.taxRate?.toString()}
-            onChangeText={(text) => setProfile({ ...profile, taxRate: parseFloat(text) || 0 })}
+            onChangeText={(text) => setProfile({ taxRate: parseFloat(text) || 0 })}
             keyboardType="numeric"
             className="rounded-lg border border-gray-200 p-3"
             placeholder="Ex: 19%"

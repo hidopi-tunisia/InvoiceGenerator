@@ -1,4 +1,5 @@
-import { InvoiceItem } from '../app/schema/invoice';
+import { BackendProfile, ProfileInput } from './profile';
+import { BusinessEntity, InvoiceItem } from '../app/schema/invoice';
 import { InvoiceDisplayStatus } from '../app/utils/invoice';
 
 // ---------------------------------------------------------------------------
@@ -48,3 +49,62 @@ export const toBackendItems = (items: InvoiceItem[]): BackendInvoiceItem[] =>
 
 export const fromBackendItems = (items: BackendInvoiceItem[]): InvoiceItem[] =>
   items.map((item) => ({ name: item.label, quantity: item.quantity, price: item.unitPrice }));
+
+// ---------------------------------------------------------------------------
+// Profil local (BusinessEntity du store) ↔ Profile backend.
+// Correspondances retenues :
+//   name (local)      ↔ companyName (le nom affiché sur les factures)
+//   taxRate           ↔ vat (taux en %)
+//   tva (identifiant) ↔ fiscalIdentifier.value (type dérivé du pays)
+//   address (string)  ↔ address.street (le local ne structure pas l'adresse)
+//   country           ↔ fiscalIdentifier.country + address.country
+// ---------------------------------------------------------------------------
+
+const fiscalTypeForCountry = (country?: string): 'MF' | 'TVA' | 'none' => {
+  if (country === 'TN') return 'MF';
+  if (country === 'FR') return 'TVA';
+  return 'none';
+};
+
+/** Profil local → body PATCH/POST /profile (jamais de champs protégés). */
+export const toBackendProfileInput = (profile: BusinessEntity): ProfileInput => ({
+  companyName: profile.name || undefined,
+  currency: profile.currency || undefined,
+  language: profile.language === 'en' ? 'en' : 'fr',
+  vat: profile.taxRate,
+  address: profile.address
+    ? { street: profile.address, country: profile.country || undefined }
+    : undefined,
+  fiscalIdentifier: profile.tva
+    ? {
+        type: fiscalTypeForCountry(profile.country),
+        value: profile.tva,
+        country: profile.country || 'TN',
+      }
+    : undefined,
+});
+
+/**
+ * Profil backend → champs locaux (bootstrap d'un utilisateur venu du front
+ * Angular : store mobile vierge mais profil serveur renseigné). Ne retourne
+ * que les champs non vides — le merge préserve le reste du profil local.
+ */
+export const fromBackendProfile = (remote: BackendProfile): Partial<BusinessEntity> => {
+  const local: Partial<BusinessEntity> = {};
+  const name = remote.companyName || remote.name;
+  if (name) local.name = name;
+  if (remote.currency) local.currency = remote.currency;
+  if (remote.language) local.language = remote.language;
+  if (remote.vat !== undefined) local.taxRate = remote.vat;
+  if (remote.fiscalIdentifier?.value) local.tva = remote.fiscalIdentifier.value;
+  const country = remote.fiscalIdentifier?.country || remote.address?.country;
+  if (country) local.country = country;
+  const addressParts = [
+    remote.address?.street,
+    remote.address?.zip,
+    remote.address?.city,
+    remote.address?.country,
+  ].filter(Boolean);
+  if (addressParts.length) local.address = addressParts.join(', ');
+  return local;
+};

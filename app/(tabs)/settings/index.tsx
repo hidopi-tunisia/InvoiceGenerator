@@ -1,18 +1,42 @@
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Linking, Alert } from 'react-native';
 
 import { auth } from '~/app/config';
 import { useReviews } from '~/app/utils/review';
+import { getSubscriptionUsage, SubscriptionUsage } from '~/domain/subscription';
 import { useStore } from '~/store';
+
+const PLAN_LABELS: Record<SubscriptionUsage['plan'], string> = {
+  trial: 'Essai gratuit',
+  starter: 'Starter',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+};
 
 export default function SettingScreen() {
   const router = useRouter();
   const profile = useStore((state) => state.profile);
   const resetNewInvoice = useStore((state) => state.resetNewInvoice);
   const { requestFeedbackOrReview, askForFeedback } = useReviews();
+
+  // Abonnement : affichage best-effort — l'échec réseau masque simplement la carte
+  const [usage, setUsage] = useState<SubscriptionUsage | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getSubscriptionUsage()
+      .then(({ data }) => {
+        if (!cancelled) setUsage(data);
+      })
+      .catch(() => {
+        // Silencieux : offline-first, la section abonnement est un bonus
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const settingsItems = [
     {
@@ -66,6 +90,29 @@ export default function SettingScreen() {
           {profile?.name || 'Votre Entreprise'}
         </Text>
       </View>
+
+      {/* Abonnement (best-effort : absent hors ligne) */}
+      {usage && (
+        <View className="mb-4 bg-white px-4 py-4">
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-base font-semibold text-gray-900">
+                Plan {PLAN_LABELS[usage.plan]}
+              </Text>
+              <Text className="mt-1 text-sm text-gray-600">
+                {usage.invoicesThisMonth}
+                {usage.invoiceLimit != null ? ` / ${usage.invoiceLimit}` : ''} factures ce mois-ci
+              </Text>
+              {usage.status === 'trialing' && usage.trialEndDate && (
+                <Text className="mt-1 text-sm text-gray-500">
+                  Essai jusqu'au {new Date(usage.trialEndDate).toLocaleDateString('fr-FR')}
+                </Text>
+              )}
+            </View>
+            <Feather name="award" size={22} color="#4f46e5" />
+          </View>
+        </View>
+      )}
 
       {/* Liste des paramètres style iOS */}
       <View className="bg-white px-4">

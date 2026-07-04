@@ -28,7 +28,7 @@ export type InvoiceState = {
   updateInvoice: (invoice: Invoice) => void;
   // Fonction de mise à jour de facture
   //updateInvoiceStatus: (invoiceId: string, newStatus: 'payée' | 'en attente' | 'en retard') => void;
-  setProfile: (profile: BusinessEntity) => void;
+  setProfile: (profile: Partial<BusinessEntity>) => void; // fusionne avec l'existant
   setCountry: (country: string) => void;
   setLanguage: (language: string) => void;
   setCurrency: (currency: string) => void;

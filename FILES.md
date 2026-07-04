@@ -109,13 +109,13 @@ Facturation/
 ### `store/` — État global (Zustand)
 
 - **Rôle** : store **unique** `store/index.ts`, persisté en AsyncStorage sous une clé par utilisateur (`facture-store-{uid}`, bascule via `store/user-scope.ts` à la connexion). Détient profile, invoices, newInvoice, contacts, onboarding.
-- **Autorisé** : état, actions, fonction `migrate` pour toute évolution de schéma persisté.
+- **Autorisé** : état, actions, fonction `migrate` pour toute évolution de schéma persisté. Modules frères : `user-scope.ts` (cloisonnement par uid), `profile-sync.ts` (glue sync profil — seuls modules du dossier autorisés à importer `domain/`).
 - **Interdit** : créer un second store ; JSX ; appels réseau (la sync passera par `domain/`).
 - **Dépendances** : zustand, AsyncStorage, expo-crypto, `app/schema`, `app/utils/invoice`.
 
 ### `domain/` — Services réseau (client REST)
 
-- **Rôle** : couche d'accès au backend. `http.ts` = helper unique (timeout 15 s, enveloppe `{ success, data, pagination, errors }`, erreurs typées, retry GET, refresh token sur 401, warm-up `/info`) ; `mappers.ts` = conversions locales ↔ backend (statuts FR/EN, items) ; `invoices.ts`, `recipients.ts`, `profile.ts` = ressources typées API.md ; `authorization.ts` = token Firebase ; `query.ts` = query params. Socle prêt (phase 0), **sync pas encore branchée à l'UI** (seul le warm-up l'est).
+- **Rôle** : couche d'accès au backend. `http.ts` = helper unique (timeout 15 s, enveloppe `{ success, data, pagination, errors }`, erreurs typées, retry GET, refresh token sur 401, warm-up `/info`) ; `mappers.ts` = conversions locales ↔ backend (statuts FR/EN, items) ; `invoices.ts`, `recipients.ts`, `profile.ts`, `subscription.ts` = ressources typées API.md ; `authorization.ts` = token Firebase ; `query.ts` = query params. Socle prêt (phase 0), **sync pas encore branchée à l'UI** (seul le warm-up l'est).
 - **Autorisé** : appels via `request()` uniquement, mapping DTO ↔ types locaux dans `mappers.ts`.
 - **Interdit** : JSX, accès au store, logique d'affichage, `fetch` direct hors `http.ts`. `authorization.ts` importe Firebase via `'../app/config'` (relatif) — **conserver cet import relatif**. `/senders` est legacy : ne jamais le consommer (l'émetteur = Profile).
 - **Dépendances** : firebase/auth, expo-application, `app/schema`.

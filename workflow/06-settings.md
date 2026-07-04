@@ -50,6 +50,9 @@ flowchart TD
 ┌──────────────────────────────────┐
 │  Mon Entreprise SARL             │  ← store.profile.name
 │                                  │
+│  Plan Essai gratuit         🏅   │  ← GET /subscription/usage (best-effort,
+│  3 / 10 factures ce mois-ci      │     carte absente hors ligne)
+│  Essai jusqu'au 18/07/2026       │
 │  ──────────────────────          │
 │  ✏️  Modifier le profil      ›   │
 │  💲  Taxes & Devise          ›   │
@@ -76,7 +79,7 @@ flowchart TD
 | Numéro TVA | Non |
 | SIRET | Non |
 
-**Action :** `store.setProfile(updatedData)` + retour
+**Action :** `store.setProfile(updatedData)` + `pushProfile()` (fire-and-forget vers le backend) + retour
 
 ---
 
@@ -87,7 +90,7 @@ flowchart TD
 | Devise | TND (Dinar), EUR (Euro), USD (Dollar) |
 | Taux TVA | Numérique (ex: 20 pour 20%) |
 
-**Actions :** `store.setProfile({ currency })` + `store.setTaxRate(rate)`
+**Actions :** `store.setProfile({ currency | taxRate })` à chaque changement ; `pushProfile()` une seule fois **à la sortie de l'écran**.
 
 > Ces valeurs sont utilisées dans la génération PDF et dans le récapitulatif des factures.
 
@@ -97,12 +100,11 @@ flowchart TD
 
 Séquence :
 1. Tap "Se déconnecter"
-2. Confirmation alerte (si implémentée)
-3. `Firebase.auth().signOut()`
-4. `store.resetNewInvoice()` — vide la facture en cours
-5. `router.replace('/onbording')` — retour à l'onboarding
+2. **Confirmation** (Alert, bouton destructif — l'app est offline-first : une déconnexion accidentelle hors ligne bloque jusqu'au retour du réseau)
+3. `store.resetNewInvoice()` — abandonne le brouillon en cours
+4. `auth.signOut()` — **aucune navigation manuelle**
 
-> L'auth-gate dans `_layout.tsx` détecte ensuite `user = null` et redirige automatiquement vers `/(auth)/login`.
+> L'auth-gate (`_layout.tsx`) détecte `user = null`, pointe le store sur la clé anonyme (`store/user-scope.ts` — les données restent dans le tiroir `facture-store-{uid}` de leur propriétaire) et redirige vers `/(auth)/login`.
 
 ---
 

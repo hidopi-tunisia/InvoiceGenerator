@@ -11,6 +11,7 @@ import { Button } from '~/components/Button';
 import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
+import { pushProfile } from '~/store/profile-sync';
 
 export default function ProfileScreen() {
   const setProfile = useStore((data) => data.setProfile);
@@ -28,6 +29,7 @@ export default function ProfileScreen() {
   const onSubmit = (data: BusinessEntity) => {
     setProfile(data);
     setOnboardingCompleted();
+    pushProfile(); // fire-and-forget : pousse le profil complet vers le backend
     // replace : l'onboarding est terminé, le retour arrière ne doit pas y revenir
     router.replace('/');
   };

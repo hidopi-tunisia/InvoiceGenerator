@@ -12,6 +12,7 @@ import { auth } from './config'; // Import Firebase auth
 
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
+import { syncProfileOnBoot } from '~/store/profile-sync';
 import { scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
@@ -55,6 +56,9 @@ function Layout() {
         // réhydrater AVANT d'autoriser la redirection — sinon l'auth-gate
         // déciderait (onboarding ou tabs) sur les données du mauvais compte.
         await scopeStoreToUser(authUser.uid);
+        // Sync profil non bloquante : pré-remplit un store vierge depuis le
+        // backend (utilisateur venu du front web) ou pousse le profil local.
+        syncProfileOnBoot();
       } else {
         scopeStoreToAnonymous();
       }

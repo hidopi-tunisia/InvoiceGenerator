@@ -10,6 +10,7 @@ import { Button } from '~/components/Button';
 import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
+import { pushProfile } from '~/store/profile-sync';
 
 export default function ProfileScreen() {
   const setProfile = useStore((data) => data.setProfile);
@@ -23,8 +24,9 @@ export default function ProfileScreen() {
       tva: profile?.tva,
     },
   });
-  const onSubmit = (data: any) => {
-    setProfile(data); //TODO: integrer AutoSave ??
+  const onSubmit = (data: BusinessEntity) => {
+    setProfile(data);
+    pushProfile(); // fire-and-forget : pousse le profil vers le backend
     router.back();
   };
 

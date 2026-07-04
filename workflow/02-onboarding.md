@@ -5,6 +5,8 @@ Fichiers : `app/onbording/index.tsx`, `app/onbording/profile.tsx`
 > Note : le dossier s'appelle `onbording` (typo intentionnel — ne pas renommer)
 >
 > Les modales pays/langue sont **locales** à `onbording/index.tsx` (composant `Modal` RN). Les anciennes routes orphelines `app/(modals)/` et `onbording/welcome.tsx` ont été supprimées le 2026-07-03.
+>
+> **Bootstrap serveur (phase 2 sync)** : au boot connecté, si le store local est vierge, `store/profile-sync.ts` tente `GET /profile` — un utilisateur venu du front web (Angular) retrouve son profil pré-rempli, et **l'onboarding est sauté** si `isProfileComplete`. Hors ligne : onboarding classique, non bloquant. À la sauvegarde du profil (étape 2), `pushProfile()` pousse vers le backend (fire-and-forget, retenté au boot si échec).
 
 ---
 
