@@ -80,7 +80,18 @@ function ContactListItem({
 
         {/* Informations du contact */}
         <View className="flex-1">
-          <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
+            {contact.syncError && (
+              <Pressable
+                onPress={() => Alert.alert('Non synchronisé', contact.syncError)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Contact non synchronisé, voir le détail">
+                <Feather name="alert-triangle" size={14} color="#f59e0b" />
+              </Pressable>
+            )}
+          </View>
           <Text className="text-sm text-gray-600">{contact.address}</Text>
         </View>
 

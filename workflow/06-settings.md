@@ -50,8 +50,8 @@ flowchart TD
 ┌──────────────────────────────────┐
 │  Mon Entreprise SARL             │  ← store.profile.name
 │                                  │
-│  Plan Essai gratuit         🏅   │  ← GET /subscription/usage (best-effort,
-│  3 / 10 factures ce mois-ci      │     carte absente hors ligne)
+│  Plan Essai gratuit         ›    │  ← GET /subscription/usage (best-effort,
+│  3 / 10 factures ce mois-ci      │     carte absente hors ligne) → /settings/subscription
 │  Essai jusqu'au 18/07/2026       │
 │  ──────────────────────          │
 │  ✏️  Modifier le profil      ›   │
@@ -93,6 +93,16 @@ flowchart TD
 **Actions :** `store.setProfile({ currency | taxRate })` à chaque changement ; `pushProfile()` une seule fois **à la sortie de l'écran**.
 
 > Ces valeurs sont utilisées dans la génération PDF et dans le récapitulatif des factures.
+
+---
+
+## Abonnement (`/settings/subscription`) — phase 6
+
+Accessible en tapant la carte Abonnement. Affiche les plans (`GET /subscription/plans`), le plan courant surligné (`GET /subscription/usage`), un toggle **mensuel / annuel**. « Choisir ce plan » → `POST /subscription/checkout { plan, billingInterval }` → ouverture de l'URL Stripe via `expo-web-browser`. Au retour du navigateur : re-fetch de l'usage + `syncInvoices()` (pousse les factures restées `dirty` après un upgrade). « Gérer mon abonnement » → `POST /subscription/portal` (portail Stripe).
+
+**Upsell quota** : quand un push de facture échoue en `403` (limite du plan), le store pose `quotaReached` → **bannière non bloquante** en tête de la liste des factures (« Limite atteinte — Mettre à niveau ») qui mène à cet écran. Les factures restent créées localement ; un push réussi ultérieur lève la bannière.
+
+**Erreurs de sync par entité** (option 1) : un échec de push non-réseau (400/5xx) pose `syncError` sur la facture/le contact → petit **⚠ ambre** tapable qui affiche le message serveur. Effacé au prochain push réussi.
 
 ---
 

@@ -32,9 +32,22 @@ export type Plan = {
   };
 };
 
+export type BillingInterval = 'monthly' | 'annual';
+
 const getSubscriptionUsage = () => request<SubscriptionUsage>('/subscription/usage');
 
 /** Public — tarifs tirés de Stripe côté serveur (cache 1 h). */
 const getPlans = () => request<Plan[]>('/subscription/plans');
 
-export { getSubscriptionUsage, getPlans };
+/** Crée une session Stripe Checkout → `url` à ouvrir dans le navigateur. */
+const createCheckoutSession = (plan: SubPlan, billingInterval: BillingInterval) =>
+  request<{ url: string; sessionId: string }>('/subscription/checkout', {
+    method: 'POST',
+    body: { plan, billingInterval },
+  });
+
+/** Portail client Stripe (gérer / annuler l'abonnement) → `url`. */
+const openBillingPortal = () =>
+  request<{ url: string }>('/subscription/portal', { method: 'POST' });
+
+export { getSubscriptionUsage, getPlans, createCheckoutSession, openBillingPortal };

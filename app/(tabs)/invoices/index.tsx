@@ -66,6 +66,15 @@ const InvoiceListItem = ({
         <View className="flex-row items-center gap-2">
           <View className={`h-2 w-2 rounded-full ${getStatusColor(displayStatus)}`} />
           <Text className="text-sm capitalize text-gray-600">{displayStatus}</Text>
+          {invoice.syncError && (
+            <Pressable
+              onPress={() => Alert.alert('Non synchronisée', invoice.syncError)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Facture non synchronisée, voir le détail">
+              <Feather name="alert-triangle" size={16} color="#f59e0b" />
+            </Pressable>
+          )}
         </View>
         <Pressable
           onPress={handleDelete}
@@ -83,6 +92,7 @@ export default function InvoicesScreen() {
   const router = useRouter();
   const invoices = useStore((state) => state.invoices);
   const addInvoice = useStore((state) => state.addInvoice);
+  const quotaReached = useStore((state) => state.quotaReached);
   const [deletedInvoice, setDeletedInvoice] = useState<Invoice | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -120,6 +130,23 @@ export default function InvoicesScreen() {
           <Feather name="plus-circle" size={28} color="#4f46e5" />
         </Pressable>
       </View>
+
+      {/* Bannière upsell : limite du plan atteinte au push (403). Non bloquante :
+          les factures sont créées localement, mais ne se synchronisent plus. */}
+      {quotaReached && (
+        <Pressable
+          onPress={() => router.push('/settings/subscription')}
+          accessibilityRole="button"
+          className="mb-4 flex-row items-center gap-3 rounded-lg bg-amber-50 p-3">
+          <Feather name="alert-triangle" size={20} color="#f59e0b" />
+          <View className="flex-1">
+            <Text className="text-sm font-medium text-amber-900">Limite du plan atteinte</Text>
+            <Text className="text-xs text-amber-700">
+              Vos nouvelles factures ne sont pas synchronisées. Mettre à niveau →
+            </Text>
+          </View>
+        </Pressable>
+      )}
 
       <View className="mb-4 flex-row flex-wrap gap-2">
         {['Toutes', 'Payées', 'Impayées', 'En retard'].map((label, index) => (

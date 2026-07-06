@@ -1,6 +1,6 @@
 import { useStore } from './index';
 import type { BusinessEntity } from '../app/schema/invoice';
-import { ConflictError, NotFoundError, reportSyncError } from '../domain/http';
+import { ApiError, ConflictError, NotFoundError, reportSyncError } from '../domain/http';
 import { fromBackendRecipient, toBackendRecipientInput } from '../domain/mappers';
 import {
   BackendRecipient,
@@ -29,7 +29,12 @@ const pushContact = async (contact: BusinessEntity): Promise<void> => {
     if (contact.remoteId) {
       try {
         await updateRecipientById(contact.remoteId, payload);
-        updateContact({ id: contact.id, syncedAt: new Date().toISOString(), dirty: false });
+        updateContact({
+          id: contact.id,
+          syncedAt: new Date().toISOString(),
+          dirty: false,
+          syncError: undefined,
+        });
         return;
       } catch (error) {
         // Supprimé côté serveur (ex : depuis Angular, ou undo local après
@@ -43,6 +48,7 @@ const pushContact = async (contact: BusinessEntity): Promise<void> => {
       remoteId: created._id,
       syncedAt: new Date().toISOString(),
       dirty: false,
+      syncError: undefined,
     });
   } catch (error) {
     // 409 = email déjà côté serveur (ex : créé depuis le front Angular) :
@@ -58,6 +64,7 @@ const pushContact = async (contact: BusinessEntity): Promise<void> => {
             remoteId: match._id,
             syncedAt: new Date().toISOString(),
             dirty: false,
+            syncError: undefined,
           });
         }
       } catch (retryError) {
@@ -65,9 +72,12 @@ const pushContact = async (contact: BusinessEntity): Promise<void> => {
       }
       return;
     }
-    // Validation (400) / 5xx / etc. : remonté pour diagnostic (le contact
-    // reste dirty, retenté plus tard). Un échec ici bloque aussi le push des
-    // factures qui référencent ce contact.
+    // Validation (400) / 5xx : marqué sur le contact (indicateur « non
+    // synchronisé »), + remonté pour diagnostic. Un échec ici bloque aussi le
+    // push des factures qui référencent ce contact.
+    if (error instanceof ApiError) {
+      updateContact({ id: contact.id, syncError: error.message });
+    }
     reportSyncError('pushContact', error);
   }
 };

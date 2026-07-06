@@ -3,7 +3,13 @@ import * as Sentry from '@sentry/react-native';
 import { syncContactById } from './contacts-sync';
 import { useStore } from './index';
 import type { Invoice } from '../app/schema/invoice';
-import { ConflictError, NotFoundError, QuotaError, reportSyncError } from '../domain/http';
+import {
+  ApiError,
+  ConflictError,
+  NotFoundError,
+  QuotaError,
+  reportSyncError,
+} from '../domain/http';
 import {
   createInvoice,
   getInvoices,
@@ -48,13 +54,17 @@ const ensureRecipientRemoteId = async (invoice: Invoice): Promise<string | null>
 };
 
 const markSynced = (invoiceId: string, remote: BackendInvoice) => {
-  useStore.getState().updateInvoice({
+  const store = useStore.getState();
+  store.updateInvoice({
     id: invoiceId,
     remoteId: remote._id,
     remotePdfUrl: remote.downloadUrl || undefined,
     syncedAt: new Date().toISOString(),
     dirty: false,
+    syncError: undefined, // un push réussi efface un éventuel échec précédent
   });
+  // Un push réussi prouve qu'il reste du quota → on lève la bannière.
+  if (store.quotaReached) store.setQuotaReached(false);
 };
 
 /** Pousse une facture locale (création ou mise à jour selon remoteId). */
@@ -98,9 +108,16 @@ const pushInvoice = async (invoice: Invoice): Promise<void> => {
       }
       return;
     }
-    // QuotaError (403) : facture locale (dirty) — l'upsell (phase 6) prendra le relais.
-    if (error instanceof QuotaError) return;
-    // Validation (400) / 5xx / etc. : remonté pour diagnostic ; la facture reste dirty.
+    // QuotaError (403) : facture locale (dirty) → bannière upsell (Réglages > Abonnement).
+    if (error instanceof QuotaError) {
+      useStore.getState().setQuotaReached(true);
+      return;
+    }
+    // Validation (400) / 5xx : marqué sur la facture (indicateur « non synchronisée »)
+    // pour que l'utilisateur puisse corriger, + remonté pour diagnostic.
+    if (error instanceof ApiError) {
+      useStore.getState().updateInvoice({ id: invoice.id, syncError: error.message });
+    }
     reportSyncError('pushInvoice', error);
   }
 };

@@ -20,6 +20,12 @@ export default function ProfileLayout() {
           title: 'Tax et devise',
         }}
       />
+      <Stack.Screen
+        name="subscription"
+        options={{
+          title: 'Abonnement',
+        }}
+      />
     </Stack>
   );
 }

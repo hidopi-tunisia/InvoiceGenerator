@@ -95,27 +95,29 @@ export default function SettingScreen() {
         </Text>
       </View>
 
-      {/* Abonnement (best-effort : absent hors ligne) */}
+      {/* Abonnement (best-effort : absent hors ligne) → écran des plans */}
       {usage && (
-        <View className="mb-4 bg-white px-4 py-4">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-base font-semibold text-gray-900">
-                Plan {PLAN_LABELS[usage.plan]}
+        <Pressable
+          onPress={() => router.push('/settings/subscription')}
+          accessibilityRole="button"
+          accessibilityLabel="Gérer l'abonnement"
+          className="mb-4 flex-row items-center justify-between bg-white px-4 py-4">
+          <View>
+            <Text className="text-base font-semibold text-gray-900">
+              Plan {PLAN_LABELS[usage.plan]}
+            </Text>
+            <Text className="mt-1 text-sm text-gray-600">
+              {usage.invoicesThisMonth}
+              {usage.invoiceLimit != null ? ` / ${usage.invoiceLimit}` : ''} factures ce mois-ci
+            </Text>
+            {usage.status === 'trialing' && usage.trialEndDate && (
+              <Text className="mt-1 text-sm text-gray-500">
+                Essai jusqu'au {new Date(usage.trialEndDate).toLocaleDateString('fr-FR')}
               </Text>
-              <Text className="mt-1 text-sm text-gray-600">
-                {usage.invoicesThisMonth}
-                {usage.invoiceLimit != null ? ` / ${usage.invoiceLimit}` : ''} factures ce mois-ci
-              </Text>
-              {usage.status === 'trialing' && usage.trialEndDate && (
-                <Text className="mt-1 text-sm text-gray-500">
-                  Essai jusqu'au {new Date(usage.trialEndDate).toLocaleDateString('fr-FR')}
-                </Text>
-              )}
-            </View>
-            <Feather name="award" size={22} color="#4f46e5" />
+            )}
           </View>
-        </View>
+          <Feather name="chevron-right" size={22} color="#6b7280" />
+        </Pressable>
       )}
 
       {/* Liste des paramètres style iOS */}

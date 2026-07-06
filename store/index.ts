@@ -19,6 +19,9 @@ export type InvoiceState = {
   // Sync backend (phase 5) : date ISO du dernier pull différentiel réussi
   lastSyncAt: string | null;
   setLastSyncAt: (date: string) => void;
+  // Limite du plan atteinte au push (403) : bannière upsell (phase 6)
+  quotaReached: boolean;
+  setQuotaReached: (reached: boolean) => void;
 
   //Contacts :
   contacts: BusinessEntity[];
@@ -69,6 +72,7 @@ export const createInitialData = () => ({
   onboardingCompleted: false,
   lastReviewRequestAt: null,
   lastSyncAt: null,
+  quotaReached: false,
   invoices: [] as Invoice[],
   newInvoice: null,
   contacts: [] as BusinessEntity[],
@@ -140,6 +144,7 @@ export const useStore = create<InvoiceState>()(
       setLastReviewRequestAt: (date) => set(() => ({ lastReviewRequestAt: date })), // Clé pour stocker les données du dernier avis de faire un feedback
       // SYNC
       setLastSyncAt: (date) => set(() => ({ lastSyncAt: date })),
+      setQuotaReached: (reached) => set(() => ({ quotaReached: reached })),
       // CONTACTS
       deleteContact: (contact) => {
         set((state) => ({

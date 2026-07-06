@@ -17,6 +17,7 @@ export const businessEntitySchema = z.object({
   remoteId: z.string().optional(), // ObjectId côté serveur — le local garde son UUID
   syncedAt: z.string().optional(), // ISO du dernier push/pull réussi
   dirty: z.boolean().optional(), // modification locale non poussée
+  syncError: z.string().optional(), // dernier échec de push non-réseau (400/5xx) à corriger
 });
 
 //BusinessEntity : une entité autrement dit, c'est les info de l'entreprise qui va facturer à son client.
@@ -68,5 +69,6 @@ export type Invoice = InvoiceInfo & {
   remoteId?: string; // ObjectId côté serveur — le local garde son UUID
   syncedAt?: string; // ISO du dernier push/pull réussi
   dirty?: boolean; // modification locale non poussée
+  syncError?: string; // dernier échec de push non-réseau (400/5xx) à corriger
   remotePdfUrl?: string; // PDF Cloudinary (si le plan a pdfGeneration) — prioritaire sur expo-print
 };
