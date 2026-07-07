@@ -65,6 +65,10 @@ L'app fonctionne local-first ; la sync se branche progressivement.
 
 ## ✅ Résolus
 
+### 2026-07-07 — fuite d'adoption inter-comptes (découvert en test)
+
+- **Un nouveau compte héritait des factures/contacts d'un compte précédent** (`store/user-scope.ts`). Cause racine : `adoptLegacyData` adoptait `legacy ?? backup` — le blob `facture-store-legacy-backup`, **sans propriétaire**, était ré-avalé par le tiroir vierge de tout compte suivant (le 1er compte adopte `legacy`, la déplace en backup ; le 2ᵉ compte adoptait ce backup). Escalade : ces factures v1 sans `remoteId` étaient ensuite **poussées comme doublons** sous le nouveau compte au boot. **Correctif** : on n'adopte plus que depuis la clé `legacy` vivante (le vrai propriétaire, consommée une seule fois) — jamais depuis le backup. **Migration one-shot** `purgeLegacyBackup()` (appelée au démarrage dans `app/_layout.tsx`) purge l'artefact ownerless au repos. Les tiroirs **déjà pollués** ne sont pas identifiables de façon fiable (contenu identique à celui du vrai propriétaire, données legacy local-only) → **récupération manuelle** (réinstallation), pas de reset automatique.
+
 ### 2026-07-04 — lot P3 (solde de l'audit)
 
 - **Écrans orphelins (n°9-10)** — `app/(modals)/country.tsx`, `language.tsx` et `onbording/welcome.tsx` supprimés (docs FILES/PROJECT/workflow mises à jour).

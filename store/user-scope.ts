@@ -15,7 +15,8 @@ import { createInitialData, useStore } from './index';
 // ---------------------------------------------------------------------------
 
 const LEGACY_KEY = 'facture-store'; // clé unique d'avant le cloisonnement
-const LEGACY_BACKUP_KEY = 'facture-store-legacy-backup'; // filet de sécurité, à purger dans quelques versions
+const LEGACY_BACKUP_KEY = 'facture-store-legacy-backup'; // snapshot de récupération manuelle (jamais auto-adopté), à purger dans quelques versions
+const LEGACY_CLEANUP_FLAG = 'facture-store-legacy-cleanup-v1'; // migration one-shot déjà exécutée
 const ANONYMOUS_KEY = 'facture-store-anonymous'; // état neutre hors connexion (jamais de données métier)
 
 const userKey = (uid: string) => `facture-store-${uid}`;
@@ -41,25 +42,49 @@ const isPristine = (raw: string | null): boolean => {
  * Adoption des données héritées : l'app était mono-utilisateur, la clé unique
  * n'a pas de propriétaire connu → le premier compte connecté après la mise à
  * jour adopte les données de l'appareil (elles sont les siennes dans le cas
- * nominal). Le backup sert aussi de source de secours si le tiroir utilisateur
- * est resté vierge (auto-guérison).
+ * nominal), puis la clé `legacy` est consommée (déplacée en backup) pour
+ * qu'aucun autre compte ne puisse la réclamer.
+ *
+ * ⚠️ On n'adopte QUE depuis la clé `legacy` vivante, jamais depuis le backup :
+ * le backup n'a pas de propriétaire, il serait ré-avalé par le tiroir vierge de
+ * TOUT compte suivant (un nouveau compte hériterait des factures du premier).
+ * Le backup ne sert donc plus qu'à une récupération manuelle.
  */
 const adoptLegacyData = async (uid: string) => {
-  const [legacy, backup, existing] = await Promise.all([
+  const [legacy, existing] = await Promise.all([
     AsyncStorage.getItem(LEGACY_KEY),
-    AsyncStorage.getItem(LEGACY_BACKUP_KEY),
     AsyncStorage.getItem(userKey(uid)),
   ]);
-  const source = legacy ?? backup;
-  if (!source) return;
+  if (!legacy) return;
 
-  if (isPristine(existing) && !isPristine(source)) {
-    await AsyncStorage.setItem(userKey(uid), source);
+  if (isPristine(existing) && !isPristine(legacy)) {
+    await AsyncStorage.setItem(userKey(uid), legacy);
   }
-  if (legacy) {
-    await AsyncStorage.setItem(LEGACY_BACKUP_KEY, legacy);
-    await AsyncStorage.removeItem(LEGACY_KEY);
-  }
+  // Consommer la clé legacy : snapshot de secours puis suppression, pour qu'un
+  // second compte ne trouve plus rien à adopter.
+  await AsyncStorage.setItem(LEGACY_BACKUP_KEY, legacy);
+  await AsyncStorage.removeItem(LEGACY_KEY);
+};
+
+/**
+ * Migration de nettoyage (one-shot) : supprime le blob `legacy-backup` sans
+ * propriétaire, resté sur les appareils déjà touchés par la fuite d'adoption
+ * (un nouveau compte héritait des données du premier). Combinée au fait
+ * qu'`adoptLegacyData` ne lit plus jamais le backup, le vecteur est neutralisé
+ * au repos. Ne touche AUCUN tiroir utilisateur → aucune perte de données ;
+ * les tiroirs déjà pollués ne sont pas identifiables de façon fiable (contenu
+ * identique au tiroir du vrai propriétaire) et relèvent d'une récupération
+ * manuelle (réinstallation) ou de la réconciliation serveur (phase 5).
+ *
+ * À appeler une fois au démarrage, AVANT le premier login (à ce stade, sur un
+ * appareil en cours de migration, la clé `legacy` n'est pas encore consommée,
+ * donc le backup n'existe pas — no-op ; le futur backup légitime d'un
+ * upgradeur reste intact car la migration ne se rejoue pas).
+ */
+export const purgeLegacyBackup = async () => {
+  if (await AsyncStorage.getItem(LEGACY_CLEANUP_FLAG)) return;
+  await AsyncStorage.removeItem(LEGACY_BACKUP_KEY);
+  await AsyncStorage.setItem(LEGACY_CLEANUP_FLAG, new Date().toISOString());
 };
 
 /**

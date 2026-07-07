@@ -15,7 +15,7 @@ import { useStore } from '~/store';
 import { syncContacts } from '~/store/contacts-sync';
 import { syncInvoices } from '~/store/invoices-sync';
 import { syncProfileOnBoot } from '~/store/profile-sync';
-import { scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
+import { purgeLegacyBackup, scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
 const vexoApiKey = '4277a15f-8ec3-4fdc-ad1c-e6e2f5c61c40';
 
@@ -48,6 +48,10 @@ function Layout() {
     if (ref?.current) {
       navigationIntegration.registerNavigationContainer(ref);
     }
+
+    // Migration one-shot : purge du blob `legacy-backup` sans propriétaire sur
+    // les appareils touchés par l'ancienne fuite d'adoption (fire-and-forget).
+    purgeLegacyBackup();
 
     // Subscribe to authentication state changes
     const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
