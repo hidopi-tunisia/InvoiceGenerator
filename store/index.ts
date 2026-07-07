@@ -3,6 +3,8 @@ import * as Crypto from 'expo-crypto';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+import type { PendingDeletion } from './deletions-sync';
+
 import { Invoice, BusinessEntity, InvoiceInfo, InvoiceItem } from '~/app/schema/invoice';
 // Module pur (pas d'import du store) : casse le cycle store ↔ utils/invoice.
 import { generateInvoiceNumber } from '~/app/utils/invoice-number';
@@ -22,6 +24,11 @@ export type InvoiceState = {
   // Limite du plan atteinte au push (403) : bannière upsell (phase 6)
   quotaReached: boolean;
   setQuotaReached: (reached: boolean) => void;
+  // File de suppressions distantes en attente (phase 5) : survit au redémarrage,
+  // drainée au boot + retour au premier plan.
+  pendingDeletions: PendingDeletion[];
+  enqueueDeletion: (deletion: PendingDeletion) => void;
+  dequeueDeletion: (deletion: PendingDeletion) => void;
 
   //Contacts :
   contacts: BusinessEntity[];
@@ -73,6 +80,7 @@ export const createInitialData = () => ({
   lastReviewRequestAt: null,
   lastSyncAt: null,
   quotaReached: false,
+  pendingDeletions: [] as PendingDeletion[],
   invoices: [] as Invoice[],
   newInvoice: null,
   contacts: [] as BusinessEntity[],
@@ -145,6 +153,20 @@ export const useStore = create<InvoiceState>()(
       // SYNC
       setLastSyncAt: (date) => set(() => ({ lastSyncAt: date })),
       setQuotaReached: (reached) => set(() => ({ quotaReached: reached })),
+      enqueueDeletion: (deletion) =>
+        set((state) =>
+          state.pendingDeletions.some(
+            (d) => d.entity === deletion.entity && d.remoteId === deletion.remoteId
+          )
+            ? {} // déjà en file : ne pas dupliquer
+            : { pendingDeletions: [...state.pendingDeletions, deletion] }
+        ),
+      dequeueDeletion: (deletion) =>
+        set((state) => ({
+          pendingDeletions: state.pendingDeletions.filter(
+            (d) => !(d.entity === deletion.entity && d.remoteId === deletion.remoteId)
+          ),
+        })),
       // CONTACTS
       deleteContact: (contact) => {
         set((state) => ({
@@ -217,7 +239,7 @@ export const useStore = create<InvoiceState>()(
       // clé héritée et pourrait résoudre APRÈS le scoping par uid (course).
       // Seul store/user-scope.ts réhydrate, explicitement, sur la bonne clé.
       skipHydration: true,
-      version: 2, // sans version explicite, zustand n'appelle jamais migrate()
+      version: 3, // sans version explicite, zustand n'appelle jamais migrate()
       migrate: (persistedState: any, version) => {
         // Migration pour les utilisateurs existants
         if (persistedState?.profile && !persistedState.profile.currency) {
@@ -249,6 +271,10 @@ export const useStore = create<InvoiceState>()(
             persistedState.contacts = persistedState.contacts.map(markDirty);
           }
           persistedState.lastSyncAt = null;
+        }
+        // v3 : file de suppressions distantes (phase 5) — vide à la migration.
+        if (version < 3) {
+          persistedState.pendingDeletions = [];
         }
         return persistedState as InvoiceState;
       },
