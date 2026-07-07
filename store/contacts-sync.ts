@@ -1,3 +1,4 @@
+import { queueDeletion } from './deletions-sync';
 import { useStore } from './index';
 import type { BusinessEntity } from '../app/schema/invoice';
 import { ApiError, ConflictError, NotFoundError, reportSyncError } from '../domain/http';
@@ -6,7 +7,6 @@ import {
   BackendRecipient,
   createRecipient,
   getRecipients,
-  removeRecipient,
   searchRecipients,
   updateRecipientById,
 } from '../domain/recipients';
@@ -90,12 +90,9 @@ export const pushDirtyContacts = async (): Promise<void> => {
   }
 };
 
-/** Suppression distante best-effort (la file de mutations arrive en phase 5). */
+/** Met la suppression en file (persistée) : rejouée jusqu'au succès (phase 5). */
 export const pushContactDeletion = (contact: BusinessEntity): void => {
-  if (!contact.remoteId) return;
-  removeRecipient(contact.remoteId).catch(() => {
-    // Hors ligne : l'orphelin serveur sera résorbé par la file de mutations (phase 5).
-  });
+  queueDeletion('contact', contact.remoteId);
 };
 
 /** Rapatrie toutes les pages de recipients (volume borné : carnet d'un utilisateur). */
@@ -122,6 +119,7 @@ export const pullContacts = async (): Promise<void> => {
   const { contacts, addContact, updateContact } = useStore.getState();
 
   for (const remote of remotes) {
+    if (remote.deleted) continue; // soft-delete serveur : ne jamais (re)créer localement
     const local =
       contacts.find((c) => c.remoteId === remote._id) ??
       (remote.email

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react-native';
 
 import { syncContactById } from './contacts-sync';
+import { queueDeletion } from './deletions-sync';
 import { useStore } from './index';
 import type { Invoice } from '../app/schema/invoice';
 import {
@@ -13,7 +14,6 @@ import {
 import {
   createInvoice,
   getInvoices,
-  removeInvoice,
   updateInvoiceById,
   updateInvoiceStatus,
   type BackendInvoice,
@@ -149,12 +149,9 @@ export const pushInvoiceStatus = async (invoiceId: string): Promise<void> => {
   }
 };
 
-/** Suppression distante best-effort (la file de mutations arrive en phase 5). */
+/** Met la suppression en file (persistée) : rejouée jusqu'au succès (phase 5). */
 export const pushInvoiceDeletion = (invoice: Invoice): void => {
-  if (!invoice.remoteId) return;
-  removeInvoice(invoice.remoteId).catch(() => {
-    // Hors ligne : l'orpheline serveur sera résorbée par la file de mutations (phase 5).
-  });
+  queueDeletion('invoice', invoice.remoteId);
 };
 
 /** Rapatrie toutes les pages de factures (volume borné : celles d'un utilisateur). */
