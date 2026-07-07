@@ -3,7 +3,7 @@
     "name": "Myfakto",
     "slug": "InvoiceGenerator",
     "version": "1.0.0",
-    "scheme": "InvoiceGenerator",
+    "scheme": "invoicegenerator",
     "extra": {
       "VEXO_API_KEY": "process.env.VEXO_API_KEY",
       "router": {
@@ -35,7 +35,8 @@
           "project": "fatourty",
           "url": "https://sentry.io/"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -49,9 +50,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hidopi.myfakto"
