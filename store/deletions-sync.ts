@@ -4,7 +4,7 @@ import { removeInvoice } from '../domain/invoices';
 import { removeRecipient } from '../domain/recipients';
 
 // ---------------------------------------------------------------------------
-// File de suppressions distantes en attente (phase 5). Une suppression hors
+// File de suppressions distantes en attente. Une suppression hors
 // ligne perd son enregistrement local ET son remoteId : sans tombstone
 // persisté, l'orphelin serveur ne serait jamais résorbé.
 // ---------------------------------------------------------------------------

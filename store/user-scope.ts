@@ -74,7 +74,7 @@ const adoptLegacyData = async (uid: string) => {
  * au repos. Ne touche AUCUN tiroir utilisateur → aucune perte de données ;
  * les tiroirs déjà pollués ne sont pas identifiables de façon fiable (contenu
  * identique au tiroir du vrai propriétaire) et relèvent d'une récupération
- * manuelle (réinstallation) ou de la réconciliation serveur (phase 5).
+ * manuelle (réinstallation) ou de la réconciliation serveur.
  *
  * À appeler une fois au démarrage, AVANT le premier login (à ce stade, sur un
  * appareil en cours de migration, la clé `legacy` n'est pas encore consommée,

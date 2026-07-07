@@ -23,6 +23,7 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 **13. Couche `domain/` morte — chantier en cours**
 L'app fonctionne local-first ; la sync se branche progressivement.
+
 - **Phase 0 livrée (2026-07-04)** : helper réseau unique `domain/http.ts` (timeout 15 s, erreurs typées, retry GET, refresh token 401, X-App-Version), `mappers.ts`, ressources typées API.md, `senders.ts` legacy supprimé, warm-up `/info` au boot.
 - **Phase 1 livrée (2026-07-04)** : cloisonnement du store par uid + migration v2 (cf. n°20 résolu).
 - **Phase 2 livrée (2026-07-04)** : sync du profil — `store/profile-sync.ts` : au boot connecté, `GET /profile` (auto-création + trial serveur) ; store vierge + profil serveur renseigné (utilisateur venu du front Angular) → pré-remplissage local et onboarding sauté si `isProfileComplete` ; sinon push local (LWW simple, retenté via flag `dirty`). Push explicite après sauvegarde (onboarding, réglages, taxes/devise à la sortie d'écran). Carte Abonnement dans Réglages (`GET /subscription/usage`, best-effort).
@@ -33,7 +34,7 @@ L'app fonctionne local-first ; la sync se branche progressivement.
   - **Échecs de sync visibles** : `reportSyncError` (domain/http.ts) remonte à Sentry tout échec **non-réseau** (400/403/409/5xx) — l'offline reste silencieux. Branché sur push contacts/factures/profil/statut ; un push de facture sauté faute de `remoteId` destinataire émet un `captureMessage` warning. Rend diagnosticable le cas « facture absente du web ».
   - **Numéro `INV-YYYY-NNNN`** (aligné backend, anti-collision sur les factures pull) ; **statut poussé `Pending`** (et non `Unpaid`/« Non payé ») ; **dates `dd/mm/yyyy`** (`formatDate` fr-FR) partout ; **devise/TVA : le serveur fait foi** au boot et à l'ouverture des Réglages (`refreshProfileFromServer`) — un habitué de l'EUR ne retombe pas en TND.
 - **Phase 6 livrée (2026-07-04)** : UX abonnement & erreurs — écran `settings/subscription` (plans `GET /plans`, toggle mensuel/annuel, plan courant, Stripe Checkout via `POST /checkout` + `expo-web-browser`, portail via `POST /portal`) ; **bannière upsell non bloquante** sur la liste des factures quand un push échoue en `403` (flag `quotaReached`, levé au 1er push réussi) ; **erreurs de sync par entité** (option 1, offline-first) — `syncError` posé sur facture/contact au 400/5xx, indicateur ⚠ tapable, effacé au succès. Au retour du checkout : refetch usage + `syncInvoices()`.
-- **Restent** : phase 5 (moteur de sync : file de mutations persistée, retour au premier plan, pull-to-refresh).
+- **Restent** : pull-to-refresh et resync complète au premier plan.
 
 ~~**20. Store local non cloisonné par utilisateur**~~ ✅ **Résolu le 2026-07-04 (phase 1)** — clé de persistance par compte `facture-store-{uid}` (`store/user-scope.ts`) : bascule + réinitialisation mémoire + réhydratation **avant** la redirection de l'auth-gate ; les données héritées de l'ancienne clé unique sont adoptées par le premier compte connecté après la mise à jour (backup `facture-store-legacy-backup` conservé quelques versions). Migration store **v2** : métadonnées de sync (`remoteId`/`syncedAt`/`dirty`) — l'existant est marqué `dirty` pour la première synchronisation.
 
@@ -56,14 +57,18 @@ L'app fonctionne local-first ; la sync se branche progressivement.
 
 ## Prochains chantiers
 
-| Ordre | Chantier | Contenu |
-|-------|----------|---------|
-| 1 | **Intégration backend** (n°13) | Brancher `domain/` sur l'UI selon API.md : timeouts AbortController (§7 guidelines), helper de parsing `{ success, data, message, timestamp }`, stratégie de sync (métadonnées `syncedAt`/`dirty` via `migrate()`), cloisonnement du store par `uid` (n°20) |
-| 2 | **Upgrade SDK 52 → 56** | Après le backend (décision 2026-07-03) — bloquant Play Store (target API level), procédure en annexe de MOBILE_GUIDELINES.md |
+| Ordre | Chantier                       | Contenu                                                                                                                                                                                                                                                     |
+| ----- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | **Intégration backend** (n°13) | Brancher `domain/` sur l'UI selon API.md : timeouts AbortController (§7 guidelines), helper de parsing `{ success, data, message, timestamp }`, stratégie de sync (métadonnées `syncedAt`/`dirty` via `migrate()`), cloisonnement du store par `uid` (n°20) |
+| 2     | **Upgrade SDK 52 → 56**        | Après le backend (décision 2026-07-03) — bloquant Play Store (target API level), procédure en annexe de MOBILE_GUIDELINES.md                                                                                                                                |
 
 ---
 
 ## ✅ Résolus
+
+### 2026-07-07 — phase 5 : suppressions fiables (tombstones)
+
+- **Suppression hors ligne = orphelin serveur permanent** (l'enregistrement local et son `remoteId` disparaissaient → plus rien à retenter). **Corrigé** : file `pendingDeletions` persistée par utilisateur (`store/deletions-sync.ts`), enfilée à la suppression, drainée au boot (avant les pulls) et au retour au premier plan (`AppState`), avec 404 = succès et conservation offline-first. `pullContacts` ignore désormais les contacts soft-delete (`deleted: true`). Migration store **v3**. Hors périmètre (assumé) : pull différentiel (non supporté backend), pull-to-refresh, resync complète au premier plan.
 
 ### 2026-07-07 — fuite d'adoption inter-comptes (découvert en test)
 

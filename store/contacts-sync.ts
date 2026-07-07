@@ -90,7 +90,7 @@ export const pushDirtyContacts = async (): Promise<void> => {
   }
 };
 
-/** Met la suppression en file (persistée) : rejouée jusqu'au succès (phase 5). */
+/** Met la suppression en file (persistée) : rejouée jusqu'au succès. */
 export const pushContactDeletion = (contact: BusinessEntity): void => {
   queueDeletion('contact', contact.remoteId);
 };

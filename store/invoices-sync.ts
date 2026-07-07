@@ -149,7 +149,7 @@ export const pushInvoiceStatus = async (invoiceId: string): Promise<void> => {
   }
 };
 
-/** Met la suppression en file (persistée) : rejouée jusqu'au succès (phase 5). */
+/** Met la suppression en file (persistée) : rejouée jusqu'au succès. */
 export const pushInvoiceDeletion = (invoice: Invoice): void => {
   queueDeletion('invoice', invoice.remoteId);
 };

@@ -67,7 +67,7 @@ FAB « + » (bas droite) et CTA de l'état vide. Même formulaire que l'étape 2
 
 - **Push** : contacts `dirty` poussés vers `/recipients` (POST, ou PATCH si `remoteId`) — au boot, et après chaque création/édition d'écran. `409` (email existant, ex. créé côté front Angular) → adoption du recipient serveur via recherche par email. `404` sur PATCH → remoteId abandonné, recréation.
 - **Pull** : toutes les pages (`limit=20`), merge par `remoteId` puis par email ; un contact local `dirty` gagne (il sera poussé), sinon le serveur fait foi.
-- **Suppression** : DELETE distant différé à la fermeture du snackbar — un undo n'envoie jamais de suppression. Hors ligne, l'orphelin serveur attend la file de mutations (phase 5).
+- **Suppression** : DELETE distant différé à la fermeture du snackbar — un undo n'envoie jamais de suppression. Hors ligne, la suppression est **mise en file persistée** (`pendingDeletions`) et rejouée au boot + retour au premier plan jusqu'au succès (404 = déjà supprimé = succès).
 
 ---
 
@@ -98,13 +98,13 @@ La déduplication se fait par `recipient.id` (UUID).
 
 ## Écran Édition Contact (`/contacts/[id]/edit`)
 
-| Champ | Obligatoire |
-|---|---|
-| Nom | Oui |
-| Adresse | Oui |
-| Numéro TVA | Non |
-| Email | Non |
-| SIRET | Non |
+| Champ      | Obligatoire |
+| ---------- | ----------- |
+| Nom        | Oui         |
+| Adresse    | Oui         |
+| Numéro TVA | Non         |
+| Email      | Non         |
+| SIRET      | Non         |
 
 **Action store :** `updateContact(updatedBusinessEntity)` + `router.back()`
 
@@ -113,7 +113,8 @@ La déduplication se fait par `recipient.id` (UUID).
 ## État Vide
 
 Si `store.contacts.length === 0` :
-- Message : *"Les contacts vont apparaître lorsque vous créerez des factures"*
+
+- Message : _"Les contacts vont apparaître lorsque vous créerez des factures"_
 - Bouton bleu **"+ Créer un contact"** → redirige vers `/invoices/generate/new-contact`
 
 ---

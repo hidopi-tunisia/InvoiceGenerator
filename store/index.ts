@@ -18,13 +18,13 @@ export type InvoiceState = {
   onboardingCompleted: boolean;
   //Review
   lastReviewRequestAt: Date | null;
-  // Sync backend (phase 5) : date ISO du dernier pull différentiel réussi
+  // Sync backend : date ISO du dernier pull différentiel réussi
   lastSyncAt: string | null;
   setLastSyncAt: (date: string) => void;
   // Limite du plan atteinte au push (403) : bannière upsell (phase 6)
   quotaReached: boolean;
   setQuotaReached: (reached: boolean) => void;
-  // File de suppressions distantes en attente (phase 5) : survit au redémarrage,
+  // File de suppressions distantes en attente : survit au redémarrage,
   // drainée au boot + retour au premier plan.
   pendingDeletions: PendingDeletion[];
   enqueueDeletion: (deletion: PendingDeletion) => void;
@@ -272,7 +272,7 @@ export const useStore = create<InvoiceState>()(
           }
           persistedState.lastSyncAt = null;
         }
-        // v3 : file de suppressions distantes (phase 5) — vide à la migration.
+        // v3 : file de suppressions distantes — vide à la migration.
         if (version < 3) {
           persistedState.pendingDeletions = [];
         }
