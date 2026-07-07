@@ -175,9 +175,16 @@ const fetchAllInvoices = async (): Promise<BackendInvoice[]> => {
  */
 export const pullInvoices = async (): Promise<void> => {
   const remotes = await fetchAllInvoices();
-  const { invoices, contacts, profile, addInvoice, updateInvoice } = useStore.getState();
+  const { invoices, contacts, profile, pendingDeletions, addInvoice, updateInvoice } =
+    useStore.getState();
+  // Suppressions en attente : ne pas ré-adopter une facture qu'on cherche à supprimer
+  // (DELETE retenu) — sinon un pull réussi la ressusciterait.
+  const pendingInvoiceIds = new Set(
+    pendingDeletions.filter((d) => d.entity === 'invoice').map((d) => d.remoteId)
+  );
 
   for (const remote of remotes) {
+    if (pendingInvoiceIds.has(remote._id)) continue; // suppression en attente
     const local =
       invoices.find((inv) => inv.remoteId === remote._id) ??
       invoices.find((inv) => inv.invoiceNumber === remote.tag);

@@ -116,10 +116,15 @@ const fetchAllRecipients = async (): Promise<BackendRecipient[]> => {
  */
 export const pullContacts = async (): Promise<void> => {
   const remotes = await fetchAllRecipients();
-  const { contacts, addContact, updateContact } = useStore.getState();
+  const { contacts, pendingDeletions, addContact, updateContact } = useStore.getState();
+  // Suppressions en attente : ne pas ré-adopter un contact qu'on cherche à supprimer
+  // (DELETE retenu, ex. 403 plan expiré) — sinon un pull réussi le ressusciterait.
+  const pendingContactIds = new Set(
+    pendingDeletions.filter((d) => d.entity === 'contact').map((d) => d.remoteId)
+  );
 
   for (const remote of remotes) {
-    if (remote.deleted) continue; // soft-delete serveur : ne jamais (re)créer localement
+    if (remote.deleted || pendingContactIds.has(remote._id)) continue; // soft-delete OU suppression en attente
     const local =
       contacts.find((c) => c.remoteId === remote._id) ??
       (remote.email
