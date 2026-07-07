@@ -3,7 +3,12 @@ module.exports = function (api) {
   const plugins = [];
 
   return {
-    presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }], 'nativewind/babel'],
+    presets: [
+      // unstable_transformImportMeta : Hermes ne supporte pas `import.meta` (utilisé
+      // par le build ESM de zustand, résolu depuis que SDK 53 active package exports).
+      ['babel-preset-expo', { jsxImportSource: 'nativewind', unstable_transformImportMeta: true }],
+      'nativewind/babel',
+    ],
 
     plugins: [...plugins, 'react-native-reanimated/plugin'],
   };
