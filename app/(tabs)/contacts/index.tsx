@@ -128,7 +128,12 @@ export default function ContactsScreen() {
       setConfirmation(`Contact ${updated} modifié`);
       router.setParams({ updated: '' });
     }
-  }, [added, updated, router]);
+    // `router` (méthodes stables) est volontairement hors deps : en expo-router v5
+    // l'objet router n'est plus stable entre les rendus — l'inclure relançait
+    // l'effet à chaque rendu → boucle « Maximum update depth » quand added/updated
+    // est présent. On ne dépend donc que des valeurs de params.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [added, updated]);
 
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
