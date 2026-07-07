@@ -5,15 +5,16 @@ import { isRunningInExpoGo } from 'expo';
 import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 'expo-router';
 import { User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, AppState } from 'react-native';
 import { vexo } from 'vexo-analytics';
 
 import { auth } from './config'; // Import Firebase auth
 
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
-import { syncContacts } from '~/store/contacts-sync';
-import { syncInvoices } from '~/store/invoices-sync';
+import { syncContacts, pushDirtyContacts } from '~/store/contacts-sync';
+import { drainDeletions } from '~/store/deletions-sync';
+import { syncInvoices, pushDirtyInvoices } from '~/store/invoices-sync';
 import { syncProfileOnBoot } from '~/store/profile-sync';
 import { purgeLegacyBackup, scopeStoreToAnonymous, scopeStoreToUser } from '~/store/user-scope';
 
@@ -62,10 +63,13 @@ function Layout() {
         // réhydrater AVANT d'autoriser la redirection — sinon l'auth-gate
         // déciderait (onboarding ou tabs) sur les données du mauvais compte.
         await scopeStoreToUser(authUser.uid);
-        // Sync non bloquante, en séquence : profil (peut sauter l'onboarding
-        // pour un utilisateur venu du front web) → contacts → factures
+        // Drainer d'abord les suppressions en attente, avant tout pull
+        // (pour ne pas re-tirer un contact qu'on est en train de supprimer).
+        // Puis sync en séquence : profil (peut sauter l'onboarding pour un
+        // utilisateur venu du front web) → contacts → factures
         // (le push d'une facture exige le remoteId de son contact).
-        syncProfileOnBoot()
+        drainDeletions()
+          .then(() => syncProfileOnBoot())
           .then(() => syncContacts())
           .then(() => syncInvoices());
       } else {
@@ -75,8 +79,21 @@ function Layout() {
       setAuthReady(true);
     });
 
+    // Retour au premier plan : flush sortant (suppressions + upserts en attente).
+    // Pas de pull ici — la fraîcheur est hors périmètre de la phase 5.
+    const appStateSub = AppState.addEventListener('change', (next) => {
+      if (next === 'active' && auth.currentUser) {
+        drainDeletions();
+        pushDirtyInvoices();
+        pushDirtyContacts();
+      }
+    });
+
     // Unsubscribe on component unmount
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      appStateSub.remove();
+    };
   }, [ref]);
 
   // Redirection conditionnelle — faite APRÈS le montage du navigateur (impératif),
