@@ -2,8 +2,7 @@ import { Feather } from '@expo/vector-icons'; // Ajout pour la barre de recherch
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Redirect, router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Text, Pressable, View, TextInput } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Text, Pressable, View, TextInput, FlatList } from 'react-native';
 
 import { BusinessEntity } from '~/app/schema/invoice';
 import { useStore } from '~/store';
@@ -76,10 +75,9 @@ export default function ContactsScreen() {
           </Text>
         </View>
       ) : (
-        <Animated.FlatList
+        <FlatList
           data={filteredContacts}
           contentInsetAdjustmentBehavior="automatic"
-          itemLayoutAnimation={LinearTransition}
           renderItem={({ item: contact }) => (
             <Pressable
               onPress={() => onContactPress(contact)}

@@ -1,8 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, Pressable, Alert, Modal } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import { View, Text, Pressable, Alert, Modal, FlatList } from 'react-native';
 
 import { Invoice } from '~/app/schema/invoice';
 import {
@@ -214,10 +213,9 @@ export default function InvoicesScreen() {
         </Pressable>
       </Modal>
 
-      <Animated.FlatList
+      <FlatList
         data={filteredInvoices}
         keyExtractor={(item) => item.id}
-        itemLayoutAnimation={LinearTransition.duration(300)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center pt-20">
@@ -226,11 +224,7 @@ export default function InvoicesScreen() {
           </View>
         }
         contentContainerStyle={{ paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <Animated.View layout={LinearTransition}>
-            <InvoiceListItem invoice={item} onDeleted={setDeletedInvoice} />
-          </Animated.View>
-        )}
+        renderItem={({ item }) => <InvoiceListItem invoice={item} onDeleted={setDeletedInvoice} />}
       />
 
       {/* Undo de suppression — la suppression distante ne part qu'à la fermeture

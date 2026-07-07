@@ -1,9 +1,8 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Alert, Pressable } from 'react-native';
+import { View, Text, TextInput, Alert, Pressable, FlatList } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
-import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { BusinessEntity } from '~/app/schema/invoice';
 import Snackbar from '~/components/Snackbar';
@@ -180,10 +179,9 @@ export default function ContactsScreen() {
           )}
         </View>
       ) : (
-        <Animated.FlatList
+        <FlatList
           data={filteredContacts}
           keyExtractor={(item) => item.id}
-          itemLayoutAnimation={LinearTransition}
           renderItem={({ item }) => (
             <ContactListItem contact={item} onDeleted={setDeletedContact} />
           )}
