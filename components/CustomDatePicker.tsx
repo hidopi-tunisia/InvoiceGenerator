@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 import { formatDate } from '~/app/utils/invoice';
 
@@ -39,12 +39,11 @@ export default function CustomDatePicker({
         render={({ field: { onChange, value }, fieldState: { error } }) => (
           <>
             <Pressable onPress={() => setVisible(true)}>
-              <TextInput
-                value={value ? formatDate(value) : placeholder}
-                editable={false}
-                pointerEvents="none"
-                className="h-12 rounded-md border border-gray-300 bg-white p-4"
-              />
+              <View className="h-12 justify-center rounded-md border border-gray-300 bg-white px-4">
+                <Text className={`text-base ${value ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {value ? formatDate(value) : placeholder}
+                </Text>
+              </View>
             </Pressable>
             {error && <Text className="mt-1 text-sm text-red-500">{error.message}</Text>}
             {isVisible && (
