@@ -91,26 +91,20 @@ export default function GenerateInvoice() {
                     />
 
                     <View className="flex-row gap-3">
-                      <View className="flex-1">
-                        <CustomInputText
+                      {/* Quantité (plus étroite) — décimales gérées comme le prix */}
+                      <View className="flex-[2]">
+                        <NumericInputText
                           name={`items.${index}.quantity`}
                           label="Quantité"
-                          placeholder="Quantité"
-                          keyboardType="numeric"
-                          onChangeText={(value) => {
-                            const parsed = Number(value.replace(',', '.'));
-                            methods.setValue(
-                              `items.${index}.quantity`,
-                              Number.isNaN(parsed) ? 0 : parsed
-                            );
-                          }}
+                          placeholder="1"
                         />
                       </View>
-                      <View className="flex-1">
+                      {/* Prix unitaire (plus large) */}
+                      <View className="flex-[3]">
                         <NumericInputText
                           name={`items.${index}.price`}
                           label="Prix unitaire"
-                          placeholder="Prix"
+                          placeholder="0,00"
                         />
                       </View>
                     </View>
