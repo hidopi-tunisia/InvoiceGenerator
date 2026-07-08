@@ -4,7 +4,9 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "_comment_env": "EXPO_USE_PRECOMPILED_MODULES=0 : Xcode 26 + Reanimated 4 — les modules précompilés cassent la résolution des headers C++. À réévaluer après un patch Expo/Reanimated.",
     "development": {
+      "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" },
       "developmentClient": true,
       "distribution": "internal",
       "credentialsSource": "local",
@@ -14,15 +16,18 @@
       }
     },
     "preview": {
+      "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" },
       "distribution": "internal"
     },
     "production": {
+      "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" },
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       }
     },
     "simulator": {
+      "env": { "EXPO_USE_PRECOMPILED_MODULES": "0" },
       "ios": {
         "simulator": true
       }

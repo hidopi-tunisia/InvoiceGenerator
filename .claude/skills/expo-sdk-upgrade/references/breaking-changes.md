@@ -67,6 +67,18 @@ Table des matières :
 - Cause : Xcode trop récent pour le RN du SDK intermédiaire. Correctif :
   valider les hops sur Android, builder iOS au SDK final (RN récent = Xcode courant OK).
 
+**iOS `pod install` : `Unable to find a specification for 'RCT-Folly'` (lib tierce)**
+- Cause : le podspec d'une lib native tierce (ex. `vexo-analytics`) déclare
+  `RCT-Folly` en dur au lieu d'`install_modules_dependencies(s)` — cassé sous RN
+  récent. Correctif : monter la lib à une version au podspec modernisé.
+
+**iOS `RNReanimated/.../*.h file not found` (Reanimated 4 + Xcode 26)**
+- Cause : les **modules précompilés Expo** (`EXPO_USE_PRECOMPILED_MODULES=true`,
+  défaut SDK 57) + les **explicit C++ modules de Xcode 26** ne résolvent pas les
+  headers imbriqués de Reanimated 4. Correctif : `EXPO_USE_PRECOMPILED_MODULES=0`
+  (dans `.env` pour le local + `eas.json` `build.<profil>.env` pour EAS), clean
+  pods, rebuild. À réévaluer après un patch Expo/Reanimated.
+
 **Bundling `Cannot read properties of undefined (reading 'match')` (Sentry, SDK 54)**
 - Cause : Sentry 7 change le câblage metro Expo. Correctif : `metro.config.js` →
   `getSentryExpoConfig(__dirname)` **remplace** `getDefaultConfig` +
