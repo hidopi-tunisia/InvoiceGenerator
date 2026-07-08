@@ -5,7 +5,7 @@ export default function ProfileLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Settings',
+          title: 'Paramètres',
         }}
       />
       <Stack.Screen
