@@ -57,14 +57,17 @@ L'app fonctionne local-first ; la sync se branche progressivement.
 
 ## Prochains chantiers
 
-| Ordre | Chantier                       | Contenu                                                                                                                                                                                                                                                     |
-| ----- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | **Intégration backend** (n°13) | Brancher `domain/` sur l'UI selon API.md : timeouts AbortController (§7 guidelines), helper de parsing `{ success, data, message, timestamp }`, stratégie de sync (métadonnées `syncedAt`/`dirty` via `migrate()`), cloisonnement du store par `uid` (n°20) |
-| 2     | **Upgrade SDK 52 → 56**        | Après le backend (décision 2026-07-03) — bloquant Play Store (target API level), procédure en annexe de MOBILE_GUIDELINES.md                                                                                                                                |
+| Ordre | Chantier                                                | Contenu                                                                                                         |
+| ----- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| —     | _(backend n°13 et upgrade SDK : livrés — voir Résolus)_ | Reste éventuel : RevenueCat (paiement mobile store-compliant, non tracké), refactor fichiers non-routes (n°21). |
 
 ---
 
 ## ✅ Résolus
+
+### 2026-07-08 — migration Expo SDK 52 → 57 + New Architecture
+
+- **Chantier SDK livré** (branche `chore/upgrade-sdk-56`), incrémental un major à la fois : 52→53→54→55→56→57 (RN 0.76→0.86, React 18.3→19.2). **New Architecture activée au hop 54** (obligatoire dès 55). **targetSdkVersion 36 confirmé (SDK 56) → soumission Play Store débloquée** (échéance 31/08/2026). Reanimated v3→v4 + `react-native-worklets`, NativeWind resté v4, `@react-navigation` retiré, `expo-file-system/legacy`, metro `getSentryExpoConfig`, vexo 1.5.8 (podspec RN 0.86). Chaque hop validé par build+runtime **Android** ; **iOS** validé au SDK final (Xcode 26 incompatible avec les RN intermédiaires). Correctifs runtime : `import.meta`/Hermes (babel), boucles Reanimated layout-anim + `router` dans deps (expo-router v5). **Méthodologie et pièges capturés dans le skill `.claude/skills/expo-sdk-upgrade/`.** `.npmrc legacy-peer-deps=true` (transition React 19) à retirer une fois l'écosystème stabilisé.
 
 ### 2026-07-07 — phase 5 : suppressions fiables (tombstones)
 

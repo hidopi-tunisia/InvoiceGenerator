@@ -65,17 +65,51 @@ Table des matières :
 
 **iOS `fmt … consteval … not a constant expression`**
 - Cause : Xcode trop récent pour le RN du SDK intermédiaire. Correctif :
-  valider les hops sur Android, builder iOS au SDK final.
+  valider les hops sur Android, builder iOS au SDK final (RN récent = Xcode courant OK).
+
+**Bundling `Cannot read properties of undefined (reading 'match')` (Sentry, SDK 54)**
+- Cause : Sentry 7 change le câblage metro Expo. Correctif : `metro.config.js` →
+  `getSentryExpoConfig(__dirname)` **remplace** `getDefaultConfig` +
+  `withSentryConfig` (puis `withNativeWind` par-dessus).
+
+**Android `Minimum supported Gradle version is 8.13` / plugin `version-check`**
+- Cause : l'AGP du nouveau SDK exige un Gradle plus récent, mais un prebuild
+  **incrémental** (`expo run:android`) a réutilisé l'ancien `android/`. Correctif :
+  à chaque saut majeur, **`npx expo prebuild --clean -p android`** (régénère le
+  wrapper Gradle, `gradle.properties`, etc.). Recréer `android/local.properties`
+  (`sdk.dir=...`) après un clean.
+
+**Android `Can't find KSP version for Kotlin version '1.9.25'` (SDK 54)**
+- Cause : un `kotlinVersion` épinglé (souvent dans `expo-build-properties`) est
+  resté sur du 1.9.x ; SDK 54 exige Kotlin 2.x. Correctif : retirer le pin obsolète
+  (le SDK fournit un Kotlin 2.x compatible).
+
+**`expo-doctor` : `should NOT have additional property 'newArchEnabled'` (SDK 55)**
+- Retirer `newArchEnabled` de `app.json` : New Arch implicite dès 55, champ rejeté.
+
+**`expo-doctor` : `@react-navigation/*` interdits / `splash` interdit (SDK 56)**
+- Retirer les deps directes `@react-navigation/*` (expo-router s'en occupe seul ;
+  remplacer d'éventuels imports par `expo-router`). Déplacer le champ top-level
+  `splash` dans le plugin **`expo-splash-screen`** (`["expo-splash-screen", { image,
+  resizeMode, backgroundColor }]`).
+
+**tsc `expo-file-system` (SDK 54) / `absoluteFillObject` (RN 0.85) / `baseUrl` (TS 6)**
+- `FileSystem.documentDirectory/downloadAsync/moveAsync` : l'ancienne API est dans
+  **`expo-file-system/legacy`** (la nouvelle API File/Directory est par défaut).
+- `StyleSheet.absoluteFillObject` retiré des types → `StyleSheet.absoluteFill`
+  (forme tableau : `style={[StyleSheet.absoluteFill, { … }]}`).
+- `baseUrl` déprécié → ajouter `"ignoreDeprecations": "6.0"` au `tsconfig`
+  (le garder tant que Metro résout l'alias `~/` via `baseUrl`).
 
 ## 3. Ruptures par version
 
 | SDK | RN / React | Ruptures clés |
 |---|---|---|
 | **53** | 0.79 / **React 19.0** | New Arch par défaut (mais désactivable) ; `expo-router` **v4→v5** ; package exports Metro par défaut (→ `import.meta` zustand) ; scheme strict ; reanimated 3.17 (auto). |
-| **54** | 0.81 / 19.1 | **Dernière version supportant l'ancienne archi.** React Compiler stable (opt-in `experiments.reactCompiler`). Si bascule New Arch : **reanimated v3→v4 + `react-native-worklets`** (plugin babel `react-native-reanimated/plugin` → `react-native-worklets/plugin`), **nativewind v4→v5**. |
-| **55** | 0.83 / 19.2.0 | **New Architecture obligatoire** (RN 0.82 a retiré l'option ; `newArchEnabled:false` ignoré). native-tabs (Icon/Label via `NativeTabs.Trigger.*`) ; `expo-av` → `expo-audio`/`expo-video` ; Hermes v1 opt-in. |
-| **56** | 0.85 / 19.2.3 | Imports `@react-navigation/*` → `expo-router` (codemod). targetSdk Android 36. |
-| **57** | 0.85+ / 19.2+ | Dernière stable au moment de la migration. |
+| **54** | 0.81 / 19.1 | **Dernière version supportant l'ancienne archi.** React Compiler stable (opt-in). Bascule New Arch : **reanimated v3→v4 + `react-native-worklets`** (plugin babel `react-native-reanimated/plugin` → `react-native-worklets/plugin`). **NativeWind reste v4** (stable = 4.2.x, aucun peer Reanimated → PAS de migration v5/Tailwind4). `expo-file-system` API changée (→ `/legacy`). Sentry 7 (metro `getSentryExpoConfig`). AGP → Gradle 8.13+ (prebuild --clean) ; Kotlin 2.x (retirer un pin 1.9.x). |
+| **55** | 0.83 / 19.2.0 | **New Architecture obligatoire** (RN 0.82 a retiré l'option). Retirer `newArchEnabled` du `app.json`. native-tabs / `expo-av`→`expo-audio`/`video` : seulement si utilisés. |
+| **56** | 0.85 / 19.2.3 | **targetSdk Android 36** (débloque Play). Retirer deps `@react-navigation/*`. `splash` → plugin `expo-splash-screen`. `StyleSheet.absoluteFillObject` retiré. `baseUrl` déprécié (TS). |
+| **57** | 0.86 / 19.2.3 | Dernière stable. Bump propre depuis 56. |
 
 (Confirme toujours les versions exactes via `npm view expo dist-tags --json` et
 `docs.expo.dev/bare/upgrade?fromSdk=X&toSdk=Y`.)
