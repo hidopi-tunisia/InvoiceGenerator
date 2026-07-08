@@ -4,7 +4,6 @@
     "slug": "InvoiceGenerator",
     "version": "1.0.0",
     "scheme": "invoicegenerator",
-    "newArchEnabled": true,
     "extra": {
       "VEXO_API_KEY": "process.env.VEXO_API_KEY",
       "router": {
@@ -34,7 +33,8 @@
       "expo-asset",
       "@react-native-community/datetimepicker",
       "@sentry/react-native",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
