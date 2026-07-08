@@ -1,4 +1,6 @@
-import * as FileSystem from 'expo-file-system';
+// SDK 54 : la nouvelle API File/Directory est par défaut ; l'ancienne API
+// (documentDirectory, downloadAsync, moveAsync) est déplacée dans /legacy.
+import * as FileSystem from 'expo-file-system/legacy';
 import { printToFileAsync } from 'expo-print';
 
 import { formatAmount, formatDate, getInvoiceCurrency, getTotals } from './invoice';

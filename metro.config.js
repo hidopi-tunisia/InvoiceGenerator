@@ -1,12 +1,11 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
-const { withSentryConfig } = require('@sentry/react-native/metro');
-const { getDefaultConfig } = require('expo/metro-config');
+// Sentry 7 (SDK 54) : pour Expo, getSentryExpoConfig remplace
+// getDefaultConfig + withSentryConfig (câblage serializer/debugId correct).
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const { withNativeWind } = require('nativewind/metro');
 
-/** @type {import('expo/metro-config').MetroConfig} */
 // eslint-disable-next-line no-undef
-let config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
 config.resolver.assetExts.push('lottie');
-config = withSentryConfig(config);
 module.exports = withNativeWind(config, { input: './global.css' });

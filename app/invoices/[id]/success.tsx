@@ -90,7 +90,7 @@ export default function SuccessScreen() {
         }}
       />
       {/* Texte de succès */}
-      <AntDesign name="checkcircle" size={60} color="green" />
+      <AntDesign name="check-circle" size={60} color="green" />
       <Text className="mb-4 text-center text-2xl font-bold text-gray-800">Félicitations !</Text>
       <Text className="text-center text-base text-gray-600">
         Votre facture a été générée avec succès.

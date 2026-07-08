@@ -4,6 +4,7 @@
     "slug": "InvoiceGenerator",
     "version": "1.0.0",
     "scheme": "invoicegenerator",
+    "newArchEnabled": true,
     "extra": {
       "VEXO_API_KEY": "process.env.VEXO_API_KEY",
       "router": {
@@ -37,7 +38,10 @@
         }
       ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "@react-native-community/datetimepicker",
+      "@sentry/react-native",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -51,9 +55,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hidopi.myfakto"

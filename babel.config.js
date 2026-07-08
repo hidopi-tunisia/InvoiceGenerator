@@ -10,6 +10,8 @@ module.exports = function (api) {
       'nativewind/babel',
     ],
 
-    plugins: [...plugins, 'react-native-reanimated/plugin'],
+    // Reanimated v4 (SDK 54) : le traitement des worklets est déplacé dans
+    // react-native-worklets → le plugin babel devient worklets/plugin.
+    plugins: [...plugins, 'react-native-worklets/plugin'],
   };
 };
