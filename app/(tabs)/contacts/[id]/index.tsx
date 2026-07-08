@@ -78,6 +78,7 @@ export default function ContactDetailScreen() {
   const onNewInvoice = () => {
     startNewInvoice();
     addRecipientInfo(contact);
+    // Saute les étapes 1 (numéro/dates) et 2 (destinataire) du wizard : startNewInvoice() pré-remplit numéro/dates, addRecipientInfo() pose le destinataire.
     router.push('/invoices/generate/items');
   };
 

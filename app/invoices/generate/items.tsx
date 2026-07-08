@@ -38,7 +38,12 @@ export default function GenerateInvoice() {
 
   // Total général temps réel : recalcul à chaque frappe (watch de toutes les lignes)
   const watchedItems = methods.watch('items');
-  const { subtotal, tax, total } = getTotals({ items: watchedItems ?? [], taxRate });
+  const {
+    subtotal,
+    tax,
+    total,
+    taxRate: appliedTaxRate,
+  } = getTotals({ items: watchedItems ?? [], taxRate });
 
   const onSubmit = (data: FormValues) => {
     addItems(data.items);
@@ -143,7 +148,7 @@ export default function GenerateInvoice() {
             </Text>
           </View>
           <View className="mb-1 flex-row items-center justify-between">
-            <Text className="text-sm text-gray-500">TVA ({taxRate ?? 0} %)</Text>
+            <Text className="text-sm text-gray-500">TVA ({appliedTaxRate} %)</Text>
             <Text className="text-sm font-medium text-gray-700">
               {formatAmount(tax)} {currency}
             </Text>
