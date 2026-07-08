@@ -30,11 +30,13 @@ export const InvoiceInfoSchema = z
     invoiceNumber: z
       .string({ required_error: 'Le numéro de facture est obligatoire' })
       .min(1, 'Le numéro de facture est obligatoire'),
-    invoiceDate: z.date({
+    // coerce : les dates viennent tantôt du picker natif, tantôt de la
+    // persistance JSON (chaîne) → on accepte Date | chaîne | timestamp.
+    invoiceDate: z.coerce.date({
       required_error: 'La date de facture est obligatoire',
       invalid_type_error: 'La date de facture doit être une date valide',
     }),
-    invoiceDueDate: z
+    invoiceDueDate: z.coerce
       .date({
         invalid_type_error: "La date d'échéance doit être une date valide",
       })
