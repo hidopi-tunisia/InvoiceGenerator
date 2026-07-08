@@ -5,6 +5,7 @@ export default function ContactLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ title: 'Contacts' }} />
       <Stack.Screen name="new" options={{ title: 'Nouveau contact' }} />
+      <Stack.Screen name="[id]/index" options={{ title: 'Contact' }} />
       <Stack.Screen name="[id]/edit" options={{ title: 'Modifier un contact' }} />
     </Stack>
   );

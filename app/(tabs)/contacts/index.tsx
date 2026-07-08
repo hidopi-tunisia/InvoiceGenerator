@@ -71,7 +71,11 @@ function ContactListItem({
       }}
       previewBackgroundColor="transparent"
       dropdownMenuMode={false}>
-      <View className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
+      <Pressable
+        onPress={() => router.push(`/contacts/${contact.id}`)}
+        accessibilityRole="button"
+        accessibilityLabel={`Voir le contact ${contact.name}`}
+        className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
         {/* Avatar avec initiales */}
         <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
           <Text className="text-lg font-semibold text-primary">{getInitials(contact.name)}</Text>
@@ -103,7 +107,7 @@ function ContactListItem({
           className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
           <FontAwesome6 name="file-invoice" size={18} color="#fff" />
         </Pressable>
-      </View>
+      </Pressable>
     </ContextMenu>
   );
 }
