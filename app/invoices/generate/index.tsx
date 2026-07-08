@@ -61,6 +61,8 @@ export default function GenerateInvoice() {
           placeholder="Choisissez une date"
           control={methods.control}
           rules={{ required: 'Veuillez choisir une date' }}
+          // L'échéance ne peut pas précéder la date de facture
+          minimumDate={methods.watch('invoiceDate')}
         />
         {/* <CustomInputText
           name="invoiceDueDate"

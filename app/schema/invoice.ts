@@ -25,20 +25,25 @@ export const businessEntitySchema = z.object({
 export type BusinessEntity = z.infer<typeof businessEntitySchema>;
 
 // Les informations d'une facture (numero, date de la facture et date de fin de paiement)
-export const InvoiceInfoSchema = z.object({
-  invoiceNumber: z
-    .string({ required_error: 'Le numéro de facture est obligatoire' })
-    .min(1, 'Le numéro de facture est obligatoire'),
-  invoiceDate: z.date({
-    required_error: 'La date de facture est obligatoire',
-    invalid_type_error: 'La date de facture doit être une date valide',
-  }),
-  invoiceDueDate: z
-    .date({
-      invalid_type_error: "La date d'échéance doit être une date valide",
-    })
-    .optional(),
-});
+export const InvoiceInfoSchema = z
+  .object({
+    invoiceNumber: z
+      .string({ required_error: 'Le numéro de facture est obligatoire' })
+      .min(1, 'Le numéro de facture est obligatoire'),
+    invoiceDate: z.date({
+      required_error: 'La date de facture est obligatoire',
+      invalid_type_error: 'La date de facture doit être une date valide',
+    }),
+    invoiceDueDate: z
+      .date({
+        invalid_type_error: "La date d'échéance doit être une date valide",
+      })
+      .optional(),
+  })
+  .refine((data) => !data.invoiceDueDate || data.invoiceDueDate >= data.invoiceDate, {
+    message: "L'échéance doit être postérieure ou égale à la date de facture",
+    path: ['invoiceDueDate'],
+  });
 export type InvoiceInfo = z.infer<typeof InvoiceInfoSchema>;
 
 // Désignations :
