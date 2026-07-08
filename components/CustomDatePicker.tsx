@@ -52,8 +52,10 @@ export default function CustomDatePicker({
                 mode="date"
                 // iOS : calendrier inline ; Android : dialog natif (se ferme seul)
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
+                // Coercition en Date : les dates du store peuvent être des chaînes
+                // (persistance JSON) — le module natif attend un timestamp.
+                minimumDate={minimumDate ? new Date(minimumDate) : undefined}
+                maximumDate={maximumDate ? new Date(maximumDate) : undefined}
                 onChange={(event, selectedDate) => {
                   setVisible(false); // masque dans les deux cas (Android se ferme déjà seul)
                   if (event.type !== 'dismissed' && selectedDate) onChange(selectedDate);
