@@ -83,11 +83,10 @@ export default function SuccessScreen() {
       <LottieView
         ref={animation}
         source={require('../../../assets/nice.lottie')}
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          //zIndex: 1, // Met au premier plan
-          backgroundColor: '#eee',
-        }}
+        style={[
+          StyleSheet.absoluteFill, // absoluteFillObject retiré des types RN 0.85
+          { backgroundColor: '#eee' },
+        ]}
       />
       {/* Texte de succès */}
       <AntDesign name="check-circle" size={60} color="green" />
