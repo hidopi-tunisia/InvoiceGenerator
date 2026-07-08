@@ -1,12 +1,13 @@
+import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import React from 'react';
-import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
 import { InvoiceItem, invoiceItemSchema } from '~/app/schema/invoice';
-import { formatAmount, getInvoiceCurrency } from '~/app/utils/invoice';
+import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { Button } from '~/components/Button';
 import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
@@ -17,106 +18,150 @@ const itemsSchema = z.object({
   items: z.array(invoiceItemSchema).min(1, 'Ajoutez au moins un article à la facture'),
 });
 
-type FormValues = {
-  items: InvoiceItem[];
-};
+type FormValues = { items: InvoiceItem[] };
 
-// Ligne vierge présentée par défaut — le prix à 0 force une saisie réelle (min 1 au schéma)
+// Ligne vierge par défaut — le prix à 0 force une saisie réelle (min 1 au schéma)
 const emptyItem: InvoiceItem = { name: '', quantity: 1, price: 0 };
 
 export default function GenerateInvoice() {
-  // Configuration du formulaire avec React Hook Form et Zod
   const addItems = useStore((data) => data.addItems);
   const items = useStore((data) => data.newInvoice?.items);
+  const taxRate = useStore((data) => data.newInvoice?.taxRate);
   const currency = useStore((data) => getInvoiceCurrency(data.newInvoice ?? undefined));
+
   const methods = useForm<FormValues>({
     resolver: zodResolver(itemsSchema),
-    defaultValues: {
-      items: items?.length ? items : [emptyItem],
-    },
+    defaultValues: { items: items?.length ? items : [emptyItem] },
   });
   const { control } = methods;
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'items',
-  });
-  const onSubmit = (data: any) => {
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+
+  // Total général temps réel : recalcul à chaque frappe (watch de toutes les lignes)
+  const watchedItems = methods.watch('items');
+  const { subtotal, tax, total } = getTotals({ items: watchedItems ?? [], taxRate });
+
+  const onSubmit = (data: FormValues) => {
     addItems(data.items);
     router.push('/invoices/generate/summary');
   };
 
   return (
     <FormProvider {...methods}>
-      <KeyboardAwareScrollView>
-        {/* Champs de formulaire */}
+      <View className="flex-1 bg-gray-50">
+        <KeyboardAwareScrollView>
+          <View className="gap-4 px-4 py-4">
+            {fields.map((item, index) => {
+              const lineTotal =
+                (methods.watch(`items.${index}.quantity`) || 0) *
+                (methods.watch(`items.${index}.price`) || 0);
+              return (
+                <View key={item.id} className="rounded-xl bg-white shadow-sm shadow-black/5">
+                  {/* En-tête de carte : label Article N + poubelle */}
+                  <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <View className="flex-row items-center gap-2">
+                      <View className="h-5 w-1 rounded-full bg-primary" />
+                      <Text className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                        Article {index + 1}
+                      </Text>
+                    </View>
+                    {fields.length > 1 && (
+                      <TouchableOpacity
+                        onPress={() => remove(index)}
+                        hitSlop={10}
+                        className="h-9 w-9 items-center justify-center rounded-full bg-red-50"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Supprimer l'article ${index + 1}`}>
+                        <Feather name="trash-2" size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
 
-        {/* Champs dynamiques */}
-        <View className="mb-5 gap-1 shadow">
-          {fields.map((item, index) => (
-            <View key={item.id} className="mb-5 gap-3 rounded-lg bg-gray-100 p-4 shadow-md">
-              {/* Ajout de la marge inférieure pour séparer les items */}
-              <Text className="mb-2 text-lg font-semibold">Item {index + 1}</Text>
-              <CustomInputText
-                name={`items.${index}.name`}
-                label="Désignation"
-                placeholder="Entrez la désignation"
-                multiline
-              />
-              {/* Champs Quantité et prix et Total */}
-              <View className="flex-row gap-4">
-                <View className="flex-1">
-                  <CustomInputText
-                    name={`items.${index}.quantity`}
-                    label="Quantité"
-                    placeholder="Entrez la quantité"
-                    keyboardType="numeric"
-                    onChangeText={(value) => {
-                      const parsed = Number(value.replace(',', '.'));
-                      methods.setValue(
-                        `items.${index}.quantity`,
-                        Number.isNaN(parsed) ? 0 : parsed
-                      );
-                    }}
-                  />
-                </View>
-                <View className="flex-1">
-                  <NumericInputText name={`items.${index}.price`} label="Prix" placeholder="Prix" />
-                </View>
-                <View className="flex-1">
-                  <Text className="mb-1 text-right text-lg font-semibold text-gray-600">Total</Text>
-                  <View className="h-12 justify-center rounded-md bg-gray-100 px-3">
-                    <Text className="text-right font-bold text-gray-700">
-                      {formatAmount(
-                        (methods.watch(`items.${index}.quantity`) || 0) *
-                          (methods.watch(`items.${index}.price`) || 0)
-                      )}{' '}
-                      {currency}
-                    </Text>
+                  {/* Corps de la carte */}
+                  <View className="gap-4 px-4 pb-4 pt-3">
+                    <CustomInputText
+                      name={`items.${index}.name`}
+                      label="Désignation"
+                      placeholder="Entrez la désignation"
+                      multiline
+                    />
+
+                    <View className="flex-row gap-3">
+                      <View className="flex-1">
+                        <CustomInputText
+                          name={`items.${index}.quantity`}
+                          label="Quantité"
+                          placeholder="Quantité"
+                          keyboardType="numeric"
+                          onChangeText={(value) => {
+                            const parsed = Number(value.replace(',', '.'));
+                            methods.setValue(
+                              `items.${index}.quantity`,
+                              Number.isNaN(parsed) ? 0 : parsed
+                            );
+                          }}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <NumericInputText
+                          name={`items.${index}.price`}
+                          label="Prix unitaire"
+                          placeholder="Prix"
+                        />
+                      </View>
+                    </View>
+
+                    {/* Sous-total ligne */}
+                    <View className="flex-row items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                      <Text className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                        Sous-total ligne
+                      </Text>
+                      <Text className="text-sm font-bold text-gray-800">
+                        {formatAmount(lineTotal)} {currency}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-              {/* Bouton pour supprimer un item */}
-              {fields.length > 1 && (
-                <TouchableOpacity onPress={() => remove(index)} className="mt-2">
-                  <Text className="text-sm text-red-500">Supprimer cet item</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          {/* Erreur de niveau liste (minimum 1 article) */}
-          {methods.formState.errors.items?.message && (
-            <Text className="text-sm text-red-500">{methods.formState.errors.items.message}</Text>
-          )}
-          {/* Bouton pour ajouter un nouvel item (link) */}
-          <Button variant="link" title="+ Ajouter un item" onPress={() => append(emptyItem)} />
-        </View>
+              );
+            })}
 
-        <Button
-          title="Suivant"
-          className="mt-auto" // assure que le bouton soit toujours en bas.
-          onPress={methods.handleSubmit(onSubmit)}
-        />
-      </KeyboardAwareScrollView>
+            {methods.formState.errors.items?.message && (
+              <Text className="px-1 text-sm text-red-500">
+                {methods.formState.errors.items.message}
+              </Text>
+            )}
+
+            <Button variant="link" title="+ Ajouter un article" onPress={() => append(emptyItem)} />
+          </View>
+        </KeyboardAwareScrollView>
+
+        {/* Récap fixe en bas : HT / TVA / TTC en temps réel, devise utilisateur */}
+        <View className="border-t border-gray-200 bg-white px-5 pb-8 pt-4 shadow-lg shadow-black/10">
+          <View className="mb-2 flex-row items-center justify-between">
+            <Text className="text-sm text-gray-500">Sous-total HT</Text>
+            <Text className="text-sm font-medium text-gray-700">
+              {formatAmount(subtotal)} {currency}
+            </Text>
+          </View>
+          <View className="mb-1 flex-row items-center justify-between">
+            <Text className="text-sm text-gray-500">TVA ({taxRate ?? 0} %)</Text>
+            <Text className="text-sm font-medium text-gray-700">
+              {formatAmount(tax)} {currency}
+            </Text>
+          </View>
+
+          {/* Séparateur + Total TTC mis en valeur */}
+          <View className="mb-4 border-t border-gray-200 pt-3">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-base font-bold text-gray-900">Total TTC</Text>
+              <Text className="text-lg font-bold text-primary">
+                {formatAmount(total)} {currency}
+              </Text>
+            </View>
+          </View>
+
+          <Button title="Suivant" onPress={methods.handleSubmit(onSubmit)} />
+        </View>
+      </View>
     </FormProvider>
   );
 }
