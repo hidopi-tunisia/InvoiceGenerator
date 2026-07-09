@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -39,12 +39,27 @@ export default function OnbordingScreen() {
   const setCurrency = useStore((state) => state.setCurrency);
   const setTaxRate = useStore((state) => state.setTaxRate);
 
-  // Sélections locales (codes), initialisées depuis le profil pour un utilisateur qui revient
+  // Sélections locales (codes), initialisées depuis le profil pour un utilisateur qui revient.
+  // Langue : « Français » par défaut pour un nouvel utilisateur (module de traduction absent,
+  // seule la valeur stockée compte) — une langue serveur existante reste prioritaire.
   const [selectedCountry, setSelectedCountry] = useState<string | null>(profile.country || null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(profile.language || null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(profile.language || 'fr');
   const [selectedCurrency, setSelectedCurrency] = useState<string>(profile.currency || 'TND');
   const [vatRate, setVatRate] = useState<string>(String(profile.taxRate ?? 20));
   const [vatError, setVatError] = useState('');
+
+  // Champs déjà modifiés par l'utilisateur : ne jamais les écraser par le pull serveur.
+  const touched = useRef({ country: false, language: false, currency: false, taxRate: false });
+
+  // Adoption réactive : syncProfileOnBoot() est non-bloquant, le pull serveur peut
+  // atterrir APRÈS l'affichage de cet écran — on adopte alors les valeurs serveur
+  // pour les champs que l'utilisateur n'a pas touchés.
+  useEffect(() => {
+    if (!touched.current.country && profile.country) setSelectedCountry(profile.country);
+    if (!touched.current.language && profile.language) setSelectedLanguage(profile.language);
+    if (!touched.current.currency && profile.currency) setSelectedCurrency(profile.currency);
+    if (!touched.current.taxRate && profile.taxRate != null) setVatRate(String(profile.taxRate));
+  }, [profile.country, profile.language, profile.currency, profile.taxRate]);
 
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -125,7 +140,10 @@ export default function OnbordingScreen() {
               {currencies.map((currency) => (
                 <Pressable
                   key={currency.code}
-                  onPress={() => setSelectedCurrency(currency.code)}
+                  onPress={() => {
+                    touched.current.currency = true;
+                    setSelectedCurrency(currency.code);
+                  }}
                   className={`rounded-full border px-4 py-3 ${
                     selectedCurrency === currency.code
                       ? 'border-black bg-gray-100'
@@ -144,7 +162,10 @@ export default function OnbordingScreen() {
             <Text className="mb-2 text-base text-gray-700">Taux de TVA (%)</Text>
             <TextInput
               value={vatRate}
-              onChangeText={setVatRate}
+              onChangeText={(value) => {
+                touched.current.taxRate = true;
+                setVatRate(value);
+              }}
               keyboardType="numeric"
               className={`rounded-lg border p-4 ${vatError ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="Ex: 20"
@@ -173,6 +194,7 @@ export default function OnbordingScreen() {
               <Pressable
                 key={country.code}
                 onPress={() => {
+                  touched.current.country = true;
                   setSelectedCountry(country.code);
                   setShowCountryModal(false);
                 }}
@@ -202,6 +224,7 @@ export default function OnbordingScreen() {
               <Pressable
                 key={lang.code}
                 onPress={() => {
+                  touched.current.language = true;
                   setSelectedLanguage(lang.code);
                   setShowLanguageModal(false);
                 }}

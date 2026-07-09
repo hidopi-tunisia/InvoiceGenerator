@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useRef } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,14 +17,21 @@ export default function ProfileScreen() {
   const setProfile = useStore((data) => data.setProfile);
   const setOnboardingCompleted = useStore((data) => data.setOnboardingCompleted);
   const profile = useStore((data) => data.profile);
+
+  // Id de repli STABLE entre rendus (un randomUUID() inline dans `values`
+  // changerait à chaque rendu → resets en boucle).
+  const fallbackId = useRef(Crypto.randomUUID()).current;
   const methods = useForm<BusinessEntity>({
     resolver: zodResolver(businessEntitySchema),
-    defaultValues: {
-      id: profile?.id || Crypto.randomUUID(),
+    // `values` (réactif, vs defaultValues figé) : le pull serveur peut arriver
+    // après le montage — RHF resynchronise alors les champs non modifiés.
+    values: {
+      id: profile?.id || fallbackId,
       name: profile?.name,
       address: profile?.address,
       tva: profile?.tva,
-    },
+    } as BusinessEntity,
+    resetOptions: { keepDirtyValues: true },
   });
   const onSubmit = (data: BusinessEntity) => {
     setProfile(data);
