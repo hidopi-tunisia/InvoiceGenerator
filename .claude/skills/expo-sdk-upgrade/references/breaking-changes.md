@@ -55,6 +55,12 @@ Table des matières :
 - Cause : JS neuf servi sur un **ancien binaire dev-client** (`expo start` seul).
   Correctif : rebuild natif (`expo run:*`), pas juste `start`.
 
+**Warning dev « Can't perform a React state update on a component that hasn't mounted yet » (stack : `expo-router/build/fork/useLinking.native.js`)**
+- Cause : résolution asynchrone de l'URL initiale DANS expo-router (React 19 la signale
+  en dev). Upstream connu (expo/expo #35224). Dev-only, aucun impact utilisateur.
+- Correctif : aucun côté app — vérifier qu'on est sur le dernier expo-router du SDK,
+  sinon ignorer jusqu'au patch upstream. Ne pas « corriger » nos écrans pour ça.
+
 **`Cannot create a new React context on an invalidated ReactInstanceManager`**
 - Cause : race du **Fast Refresh** sur le bridge (ancienne archi) après reloads
   répétés. Pas un bug du code. Correctif : **cold restart** de l'app.
