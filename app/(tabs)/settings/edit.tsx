@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BusinessEntity, businessEntitySchema } from '~/app/schema/invoice';
 import { Button } from '~/components/Button';
@@ -53,92 +52,85 @@ export default function ProfileScreen() {
 
   return (
     <KeyboardAwareScrollView edges={['bottom', 'top']}>
-      <SafeAreaView edges={['bottom']} style={{ flex: 1, paddingHorizontal: 0 }}>
-        <FormProvider {...methods}>
-          {/* ── En-tête ──────────────────────────────────────────────── */}
-          <View className="mb-6">
-            <Text className="text-2xl font-bold text-gray-900">Mon Entreprise</Text>
-            <Text className="mt-1 text-sm text-gray-500">
-              Ces informations apparaîtront sur vos factures.
-            </Text>
-          </View>
+      <FormProvider {...methods}>
+        {/* ── En-tête ──────────────────────────────────────────────── */}
+        <View className="mb-6">
+          <Text className="text-2xl font-bold text-gray-900">Mon Entreprise</Text>
+          <Text className="mt-1 text-sm text-gray-500">
+            Ces informations apparaîtront sur vos factures.
+          </Text>
+        </View>
 
-          {/* ── Logo ─────────────────────────────────────────────────── */}
+        {/* ── Logo centré ──────────────────────────────────────────── */}
+        <View className="mb-8 items-center">
           <LogoPicker logoUri={logoUri} logoUrl={profile?.logoUrl} onPick={setLogoUri} />
+        </View>
 
-          {/* ── Carte : Informations générales ───────────────────────── */}
-          <View className="mb-4 rounded-xl bg-white px-4 pb-2 pt-4 shadow-sm">
-            <Text className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Informations générales
-            </Text>
+        {/* ── Section : Informations générales ─────────────────────── */}
+        <Text className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Informations générales
+        </Text>
+        <View className="mb-6 gap-4">
+          <CustomInputText name="name" label="Nom / Raison sociale" placeholder="Entrez le nom" />
+          <CustomInputText
+            name="phone"
+            label="Téléphone (optionnel)"
+            placeholder="+216 XX XXX XXX"
+            keyboardType="phone-pad"
+          />
+        </View>
 
-            <CustomInputText name="name" label="Nom / Raison sociale" placeholder="Entrez le nom" />
-            <CustomInputText
-              name="phone"
-              label="Téléphone (optionnel)"
-              placeholder="+216 XX XXX XXX"
-              keyboardType="phone-pad"
-            />
-          </View>
+        {/* ── Section : Adresse ────────────────────────────────────── */}
+        <Text className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Adresse
+        </Text>
+        <View className="mb-6 gap-4">
+          <CustomInputText
+            name="address"
+            label="Adresse"
+            placeholder="Numéro et nom de rue"
+            multiline
+            numberOfLines={3}
+            className="min-h-28"
+          />
 
-          {/* ── Carte : Adresse ──────────────────────────────────────── */}
-          <View className="mb-4 rounded-xl bg-white px-4 pb-2 pt-4 shadow-sm">
-            <Text className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Adresse
-            </Text>
-
-            <CustomInputText
-              name="address"
-              label="Adresse"
-              placeholder="Numéro et nom de rue"
-              multiline
-              numberOfLines={3}
-              className="min-h-28"
-            />
-
-            {/* Code postal + Ville sur une même ligne */}
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <CustomInputText name="zipCode" label="Code postal" placeholder="75001" />
-              </View>
-              <View className="flex-[2]">
-                <CustomInputText name="city" label="Ville" placeholder="Paris" />
-              </View>
+          {/* Code postal + Ville sur une même ligne */}
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <CustomInputText name="zipCode" label="Code postal" placeholder="75001" />
+            </View>
+            <View className="flex-[2]">
+              <CustomInputText name="city" label="Ville" placeholder="Paris" />
             </View>
           </View>
+        </View>
 
-          {/* ── Carte : Informations fiscales ────────────────────────── */}
-          <View className="mb-6 rounded-xl bg-white px-4 pb-2 pt-4 shadow-sm">
-            <Text className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Informations fiscales
-            </Text>
-
-            {country === 'FR' && (
-              <CustomInputText name="siret" label="Siret" placeholder="14 chiffres" />
-            )}
-            {country === 'TN' && (
-              <CustomInputText
-                name="mf"
-                label="Matricule fiscal (MF)"
-                placeholder="XXXXXXX/X/X/XXX"
-              />
-            )}
-
+        {/* ── Section : Informations fiscales ──────────────────────── */}
+        <Text className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Informations fiscales
+        </Text>
+        <View className="mb-8 gap-4">
+          {country === 'FR' && (
+            <CustomInputText name="siret" label="Siret" placeholder="14 chiffres" />
+          )}
+          {country === 'TN' && (
             <CustomInputText
-              name="tva"
-              label="Numéro de TVA (optionnel)"
-              placeholder="FR12345678901"
+              name="mf"
+              label="Matricule fiscal (MF)"
+              placeholder="XXXXXXX/X/X/XXX"
             />
-          </View>
+          )}
 
-          {/* ── CTA ──────────────────────────────────────────────────── */}
-          <Button
-            title="Sauvegarder"
-            className="mt-auto"
-            onPress={methods.handleSubmit(onSubmit)}
+          <CustomInputText
+            name="tva"
+            label="Numéro de TVA (optionnel)"
+            placeholder="FR12345678901"
           />
-        </FormProvider>
-      </SafeAreaView>
+        </View>
+
+        {/* ── CTA ──────────────────────────────────────────────────── */}
+        <Button title="Sauvegarder" className="mt-auto" onPress={methods.handleSubmit(onSubmit)} />
+      </FormProvider>
     </KeyboardAwareScrollView>
   );
 }
