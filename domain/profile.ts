@@ -1,4 +1,4 @@
-import { request } from './http';
+import { request, NetworkError } from './http';
 import { BackendAddress } from './recipients';
 
 // Types alignés sur le contrat API.md §4-5 (routes /profile).
@@ -58,8 +58,10 @@ const removeProfile = () => request<null>('/profile', { method: 'DELETE' });
  * Upload du logo en multipart (PATCH /profile/logo, API.md §157).
  * Le helper `request` ne gère pas le multipart — fetch dédié avec token Firebase.
  * Retourne l'URL Cloudinary du logo uploadé.
+ * Convertit les erreurs réseau natives (`TypeError`) en `NetworkError` du domaine
+ * pour que `reportSyncError` (sync/profile-sync.ts) les silence correctement.
  */
-export const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
+const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
   const { getAuthorization } = await import('./authorization');
   const { ENDPOINT } = await import('../constants');
   const token = await getAuthorization(false);
@@ -68,22 +70,30 @@ export const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
   // React Native accepte { uri, name, type } comme valeur FormData
   formData.append('logo', { uri, name: 'logo.jpg', type: 'image/jpeg' } as unknown as Blob);
 
-  const response = await fetch(`${ENDPOINT}/profile/logo`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // Pas de Content-Type : le browser/RN le génère avec le boundary multipart
-    },
-    body: formData,
-  });
+  try {
+    const response = await fetch(`${ENDPOINT}/profile/logo`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Pas de Content-Type : le browser/RN le génère avec le boundary multipart
+      },
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(`Upload logo échoué (${response.status}) : ${text}`);
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Upload logo échoué (${response.status}) : ${text}`);
+    }
+
+    const json = (await response.json()) as { success: boolean; data: { logoUrl: string } };
+    return { logoUrl: json.data.logoUrl };
+  } catch (error) {
+    // Convertir les erreurs réseau natives en NetworkError du domaine
+    if (error instanceof TypeError) {
+      throw new NetworkError('Réseau indisponible');
+    }
+    throw error;
   }
-
-  const json = (await response.json()) as { success: boolean; data: { logoUrl: string } };
-  return { logoUrl: json.data.logoUrl };
 };
 
-export { getProfile, createProfile, updateProfile, removeProfile };
+export { getProfile, createProfile, updateProfile, removeProfile, uploadLogo };
