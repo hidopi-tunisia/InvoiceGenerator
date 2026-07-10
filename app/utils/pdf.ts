@@ -6,6 +6,16 @@ import { printToFileAsync } from 'expo-print';
 import { formatAmount, formatDate, getInvoiceCurrency, getTotals } from './invoice';
 import { Invoice } from '../schema/invoice';
 
+/**
+ * Compose l'adresse complète de l'émetteur depuis les champs structurés.
+ * Rétro-compatible : si seul `address` est renseigné (anciens profils concaténés),
+ * il est retourné tel quel.
+ */
+const formatSenderAddress = (sender: Invoice['sender']): string => {
+  const line2 = [sender.zipCode, sender.city].filter(Boolean).join(' ');
+  return [sender.address, line2].filter(Boolean).join(', ');
+};
+
 const generateHtml = (invoice: Invoice) => {
   const { subtotal, taxRate, tax, total } = getTotals(invoice);
   const currency = getInvoiceCurrency(invoice);
@@ -150,8 +160,7 @@ ${
           <div class="section">
             <h2>De :</h2>
             <p>${invoice.sender.name}</p>
-            <p>${invoice.sender.address}</p>
-            
+            <p>${formatSenderAddress(invoice.sender)}</p>
             <p>${invoice.sender.tva}</p>
           </div>
           <div class="section">

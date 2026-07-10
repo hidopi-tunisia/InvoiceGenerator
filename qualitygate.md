@@ -16,6 +16,8 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 ## Défauts ouverts (post phase 4)
 
+**Adresses legacy concaténées** : les profils pullés avant la structuration (rue+CP+ville dans `address`) repartent tels quels dans `address` au prochain push — accepté (base utilisateurs mobile = testeurs), pas de migration planifiée ; à réévaluer si la base d'utilisateurs grandit.
+
 **21. Fichiers non-routes sous `app/` → warnings expo-router**
 `app/config.ts`, `app/schema/*`, `app/utils/*` déclenchent chacun un `Route ... is missing the required default export` : expo-router scanne tout `app/` comme des routes. Bénin (dev uniquement, sans impact prod) mais bruyant. **Fix correct** : relocaliser les modules non-routes hors de `app/` (ex. `schema/`, `utils/`, `lib/config.ts`) + réécrire les imports `~/app/utils` → `~/utils` etc. Refactor mécanique ~40 imports, à faire en chantier dédié avec sa passe de vérif (docs CLAUDE.md/FILES.md/MOBILE_GUIDELINES à ajuster).
 

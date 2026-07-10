@@ -58,7 +58,13 @@ export const pushLogo = async (): Promise<void> => {
   if (!logoUri || logoUri === logoSyncedUri) return;
   try {
     const { logoUrl } = await uploadLogo(logoUri);
-    setProfile({ logoUrl, logoSyncedUri: logoUri });
+    // Préserver le dirty courant : setProfile force dirty=true quand absent,
+    // ce qui déclencherait un push au lieu d'un pull au prochain boot.
+    setProfile({
+      logoUrl,
+      logoSyncedUri: logoUri,
+      dirty: useStore.getState().profile.dirty ?? false,
+    });
   } catch (error) {
     reportSyncError('pushLogo', error);
   }
@@ -100,5 +106,13 @@ export const refreshProfileFromServer = async (): Promise<void> => {
   }
 };
 
-/** Alias sémantique pour l'appel au boot (après le scoping par uid). */
-export const syncProfileOnBoot = refreshProfileFromServer;
+/**
+ * Sync complète au boot : profil + retry logo si non synchronisé.
+ * `pushLogo` est idempotent (garde logoUri === logoSyncedUri), donc sans effet
+ * si le logo a déjà été uploadé.
+ */
+export const syncProfileOnBoot = async (): Promise<void> => {
+  await refreshProfileFromServer();
+  // Retry logo fire-and-forget : ne bloque pas le boot, silencieux si déjà synced.
+  pushLogo().catch(() => {});
+};

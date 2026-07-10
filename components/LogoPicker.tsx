@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
 import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -32,14 +33,26 @@ export default function LogoPicker({ logoUri, logoUrl, onPick }: LogoPickerProps
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'], // Fix 5 : remplace MediaTypeOptions.Images (déprécié)
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
-      onPick(result.assets[0].uri);
+      const pickedUri = result.assets[0].uri;
+      // Fix 4 : copier hors du cache purgeable (chemin change à chaque MAJ iOS).
+      // Nom stable avec horodatage ; fallback sur l'URI d'origine si la copie échoue.
+      const ext = pickedUri.split('.').pop() ?? 'jpg';
+      const destUri = `${FileSystem.documentDirectory}logo-${Date.now()}.${ext}`;
+      let finalUri = pickedUri;
+      try {
+        await FileSystem.copyAsync({ from: pickedUri, to: destUri });
+        finalUri = destUri;
+      } catch {
+        // Copie impossible : on garde l'URI du picker (l'upload logo gérera l'erreur réseau)
+      }
+      onPick(finalUri);
     }
   };
 

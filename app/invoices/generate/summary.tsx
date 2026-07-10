@@ -2,11 +2,18 @@ import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { BusinessEntity } from '~/app/schema/invoice';
 import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { Button } from '~/components/Button';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
 import { syncInvoiceById } from '~/store/invoices-sync';
+
+/** Compose l'adresse complète depuis les champs structurés (rétro-compatible). */
+const formatSenderAddress = (sender: BusinessEntity): string => {
+  const line2 = [sender.zipCode, sender.city].filter(Boolean).join(' ');
+  return [sender.address, line2].filter(Boolean).join(', ');
+};
 
 export default function InvoiceSummary() {
   // Récupération de la facture en cours
@@ -66,7 +73,7 @@ export default function InvoiceSummary() {
             <Text className="mb-2 text-lg font-semibold text-slate-500">Émetteur</Text>
             <View className="mb-4 gap-1 rounded-lg bg-white p-4">
               <Text className="text-gray-700">Nom : {invoice.sender.name}</Text>
-              <Text className="text-gray-700">Adresse : {invoice.sender.address}</Text>
+              <Text className="text-gray-700">Adresse : {formatSenderAddress(invoice.sender)}</Text>
               <Text className="text-gray-700">N° TVA : {invoice.sender.tva}</Text>
             </View>
           </View>
