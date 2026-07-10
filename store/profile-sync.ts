@@ -1,7 +1,7 @@
 import { useStore } from './index';
 import { reportSyncError } from '../domain/http';
 import { fromBackendProfile, toBackendProfileInput } from '../domain/mappers';
-import { getProfile, updateProfile, type BackendProfile } from '../domain/profile';
+import { getProfile, updateProfile, uploadLogo, type BackendProfile } from '../domain/profile';
 
 // ---------------------------------------------------------------------------
 // Sync du profil (phase 2 du chantier backend).
@@ -43,6 +43,24 @@ export const pushProfile = async (): Promise<void> => {
   } catch (error) {
     setProfile({ dirty: true });
     reportSyncError('pushProfile', error);
+  }
+};
+
+/**
+ * Upload best-effort du logo : si `logoUri` est présent et différent de
+ * `logoSyncedUri`, tente l'upload. Succès → met à jour `logoUrl` et
+ * `logoSyncedUri`. Échec réseau → silencieux (retenté à la prochaine
+ * sauvegarde). Autre échec → `reportSyncError`.
+ */
+export const pushLogo = async (): Promise<void> => {
+  const { profile, setProfile } = useStore.getState();
+  const { logoUri, logoSyncedUri } = profile;
+  if (!logoUri || logoUri === logoSyncedUri) return;
+  try {
+    const { logoUrl } = await uploadLogo(logoUri);
+    setProfile({ logoUrl, logoSyncedUri: logoUri });
+  } catch (error) {
+    reportSyncError('pushLogo', error);
   }
 };
 

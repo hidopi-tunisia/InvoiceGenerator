@@ -166,34 +166,44 @@ export const fromBackendRecipient = (remote: BackendRecipient): BusinessEntity =
   };
 };
 
-const fiscalTypeForCountry = (country?: string): 'MF' | 'TVA' | 'none' => {
-  if (country === 'TN') return 'MF';
-  if (country === 'FR') return 'TVA';
-  return 'none';
-};
-
 /** Profil local → body PATCH/POST /profile (jamais de champs protégés). */
-export const toBackendProfileInput = (profile: BusinessEntity): ProfileInput => ({
-  companyName: profile.name || undefined,
-  currency: profile.currency || undefined,
-  language: profile.language === 'en' ? 'en' : 'fr',
-  vat: profile.taxRate,
-  address: profile.address
-    ? { street: profile.address, country: profile.country || undefined }
-    : undefined,
-  fiscalIdentifier: profile.tva
+export const toBackendProfileInput = (profile: BusinessEntity): ProfileInput => {
+  // Adresse : n'envoyer l'objet que si au moins un champ est renseigné
+  const hasAddress = !!(profile.address || profile.zipCode || profile.city || profile.country);
+  const address = hasAddress
     ? {
-        type: fiscalTypeForCountry(profile.country),
-        value: profile.tva,
-        country: profile.country || 'TN',
+        street: profile.address || undefined,
+        zip: profile.zipCode || undefined,
+        city: profile.city || undefined,
+        country: profile.country || undefined,
       }
-    : undefined,
-});
+    : undefined;
+
+  // Identifiant fiscal : SIRET pour FR, MF pour TN — TVA n'est plus poussé ici
+  let fiscalIdentifier: ProfileInput['fiscalIdentifier'] = undefined;
+  if (profile.country === 'FR' && profile.siret) {
+    fiscalIdentifier = { type: 'SIRET', value: profile.siret, country: 'FR' };
+  } else if (profile.country === 'TN' && profile.mf) {
+    fiscalIdentifier = { type: 'MF', value: profile.mf, country: 'TN' };
+  }
+
+  return {
+    companyName: profile.name || undefined,
+    currency: profile.currency || undefined,
+    language: profile.language === 'en' ? 'en' : 'fr',
+    vat: profile.taxRate,
+    phone: profile.phone || undefined,
+    address,
+    fiscalIdentifier,
+  };
+};
 
 /**
  * Profil backend → champs locaux (bootstrap d'un utilisateur venu du front
  * Angular : store mobile vierge mais profil serveur renseigné). Ne retourne
  * que les champs non vides — le merge préserve le reste du profil local.
+ * Adresse répartie : street → address, zip → zipCode, city → city.
+ * fiscalIdentifier : SIRET → siret, MF → mf, TVA → tva (rétro-compat).
  */
 export const fromBackendProfile = (remote: BackendProfile): Partial<BusinessEntity> => {
   const local: Partial<BusinessEntity> = {};
@@ -202,15 +212,36 @@ export const fromBackendProfile = (remote: BackendProfile): Partial<BusinessEnti
   if (remote.currency) local.currency = remote.currency;
   if (remote.language) local.language = remote.language;
   if (remote.vat !== undefined) local.taxRate = remote.vat;
-  if (remote.fiscalIdentifier?.value) local.tva = remote.fiscalIdentifier.value;
+  if (remote.phone) local.phone = remote.phone;
+  if (remote.logoUrl) local.logoUrl = remote.logoUrl;
+
+  // Adresse structurée (répartie — plus de concaténation)
+  if (remote.address?.street) local.address = remote.address.street;
+  if (remote.address?.zip) local.zipCode = remote.address.zip;
+  if (remote.address?.city) local.city = remote.address.city;
+
+  // Pays : priorité fiscalIdentifier.country, sinon address.country
   const country = remote.fiscalIdentifier?.country || remote.address?.country;
   if (country) local.country = country;
-  const addressParts = [
-    remote.address?.street,
-    remote.address?.zip,
-    remote.address?.city,
-    remote.address?.country,
-  ].filter(Boolean);
-  if (addressParts.length) local.address = addressParts.join(', ');
+
+  // Identifiant fiscal : type détermine le champ local cible
+  if (remote.fiscalIdentifier?.value) {
+    switch (remote.fiscalIdentifier.type) {
+      case 'SIRET':
+      case 'SIREN':
+        local.siret = remote.fiscalIdentifier.value;
+        break;
+      case 'MF':
+        local.mf = remote.fiscalIdentifier.value;
+        break;
+      case 'TVA':
+        // Rétro-compat : les anciennes valeurs poussées en type TVA restent dans tva
+        local.tva = remote.fiscalIdentifier.value;
+        break;
+      default:
+        break;
+    }
+  }
+
   return local;
 };

@@ -54,4 +54,36 @@ const updateProfile = (payload: ProfileInput) =>
 
 const removeProfile = () => request<null>('/profile', { method: 'DELETE' });
 
+/**
+ * Upload du logo en multipart (PATCH /profile/logo, API.md §157).
+ * Le helper `request` ne gère pas le multipart — fetch dédié avec token Firebase.
+ * Retourne l'URL Cloudinary du logo uploadé.
+ */
+export const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
+  const { getAuthorization } = await import('./authorization');
+  const { ENDPOINT } = await import('../constants');
+  const token = await getAuthorization(false);
+
+  const formData = new FormData();
+  // React Native accepte { uri, name, type } comme valeur FormData
+  formData.append('logo', { uri, name: 'logo.jpg', type: 'image/jpeg' } as unknown as Blob);
+
+  const response = await fetch(`${ENDPOINT}/profile/logo`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // Pas de Content-Type : le browser/RN le génère avec le boundary multipart
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Upload logo échoué (${response.status}) : ${text}`);
+  }
+
+  const json = (await response.json()) as { success: boolean; data: { logoUrl: string } };
+  return { logoUrl: json.data.logoUrl };
+};
+
 export { getProfile, createProfile, updateProfile, removeProfile };

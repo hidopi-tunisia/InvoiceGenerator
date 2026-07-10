@@ -13,6 +13,13 @@ export const businessEntitySchema = z.object({
   taxRate: z.number().optional(),
   country: z.string().optional(),
   language: z.string().optional(),
+  phone: z.string().optional(),
+  zipCode: z.string().optional(),
+  city: z.string().optional(),
+  mf: z.string().optional(),
+  logoUri: z.string().optional(),
+  logoUrl: z.string().optional(),
+  logoSyncedUri: z.string().optional(),
   // Métadonnées de sync backend (jamais saisies en formulaire)
   remoteId: z.string().optional(), // ObjectId côté serveur — le local garde son UUID
   syncedAt: z.string().optional(), // ISO du dernier push/pull réussi
