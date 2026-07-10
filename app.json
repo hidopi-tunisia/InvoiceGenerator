@@ -35,6 +35,12 @@
       "@sentry/react-native",
       "expo-web-browser",
       "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fatourty a besoin d'accéder à votre galerie pour ajouter un logo à votre profil."
+        }
+      ],
       "expo-status-bar",
       [
         "expo-splash-screen",
