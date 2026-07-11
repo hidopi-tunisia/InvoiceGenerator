@@ -6,6 +6,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { Text, View } from 'react-native';
 
 import { BusinessEntity, businessEntitySchema } from '~/app/schema/invoice';
+import { phonePlaceholderForCountry } from '~/app/utils/profile';
 import { Button } from '~/components/Button';
 import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
@@ -87,7 +88,7 @@ export default function ProfileScreen() {
           <CustomInputText
             name="phone"
             label="Téléphone (optionnel)"
-            placeholder="+216 XX XXX XXX"
+            placeholder={phonePlaceholderForCountry(profile?.country)}
             keyboardType="phone-pad"
           />
         </View>

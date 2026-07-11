@@ -1,11 +1,13 @@
+import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 
 import { BusinessEntity, businessEntitySchema } from '~/app/schema/invoice';
+import { phonePlaceholderForCountry } from '~/app/utils/profile';
 import { Button } from '~/components/Button';
 import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
@@ -13,12 +15,20 @@ import LogoPicker from '~/components/LogoPicker';
 import { useStore } from '~/store';
 import { adoptLogoAndPush, pushLogo, pushProfile } from '~/store/profile-sync';
 
+const countries = [
+  { code: 'TN', name: 'Tunisie' },
+  { code: 'FR', name: 'France' },
+];
+
 export default function ProfileScreen() {
   const setProfile = useStore((data) => data.setProfile);
   const profile = useStore((data) => data.profile);
 
   // logoUri : état local d'écran (pas dans RHF — fusionné à la sauvegarde)
   const [logoUri, setLogoUri] = useState<string | undefined>(profile?.logoUri);
+
+  // Modal pays
+  const [showCountryModal, setShowCountryModal] = useState(false);
 
   // Id de repli STABLE entre rendus (un randomUUID() inline dans `defaultValues`
   // changerait à chaque rendu → resets en boucle).
@@ -38,10 +48,14 @@ export default function ProfileScreen() {
       phone: profile?.phone,
       zipCode: profile?.zipCode,
       city: profile?.city,
+      country: profile?.country,
     },
   });
 
-  const country = profile?.country;
+  // Réactif : basculer le pays dans le form met à jour immédiatement le conditionnel fiscal
+  const watchedCountry = methods.watch('country');
+
+  const countryName = countries.find((c) => c.code === watchedCountry)?.name;
 
   const onSubmit = (data: BusinessEntity) => {
     setProfile({ ...data, logoUri: logoUri ?? profile?.logoUri });
@@ -79,10 +93,31 @@ export default function ProfileScreen() {
         </Text>
         <View className="mb-6 gap-4">
           <CustomInputText name="name" label="Nom / Raison sociale" placeholder="Entrez le nom" />
+
+          {/* Sélecteur de pays */}
+          <View>
+            <Text className="mb-1 text-sm font-medium text-gray-700">Pays</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Sélectionner le pays"
+              className="flex-row items-center justify-between rounded-lg border border-gray-300 bg-white p-4"
+              onPress={() => setShowCountryModal(true)}>
+              <View className="flex-row items-center">
+                <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                  <Feather name="globe" size={18} color="#4f46e5" />
+                </View>
+                <Text className="text-base text-gray-800">
+                  {countryName ?? 'Sélectionner un pays'}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#9ca3af" />
+            </Pressable>
+          </View>
+
           <CustomInputText
             name="phone"
             label="Téléphone (optionnel)"
-            placeholder="+216 XX XXX XXX"
+            placeholder={phonePlaceholderForCountry(watchedCountry)}
             keyboardType="phone-pad"
           />
         </View>
@@ -117,10 +152,10 @@ export default function ProfileScreen() {
           Informations fiscales
         </Text>
         <View className="mb-8 gap-4">
-          {country === 'FR' && (
+          {watchedCountry === 'FR' && (
             <CustomInputText name="siret" label="Siret" placeholder="14 chiffres" />
           )}
-          {country === 'TN' && (
+          {watchedCountry === 'TN' && (
             <CustomInputText
               name="mf"
               label="Matricule fiscal (MF)"
@@ -138,6 +173,43 @@ export default function ProfileScreen() {
         {/* ── CTA ──────────────────────────────────────────────────── */}
         <Button title="Sauvegarder" className="mt-auto" onPress={methods.handleSubmit(onSubmit)} />
       </FormProvider>
+
+      {/* ── Modal sélection du pays ───────────────────────────────── */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showCountryModal}
+        onRequestClose={() => setShowCountryModal(false)}>
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/50"
+          onPress={() => setShowCountryModal(false)}>
+          <Pressable
+            accessibilityRole="none"
+            onPress={() => {}}
+            className="w-4/5 rounded-2xl bg-white p-6">
+            <Text className="mb-4 text-xl font-bold text-black">Sélectionnez un pays</Text>
+            {countries.map((c) => (
+              <Pressable
+                key={c.code}
+                accessibilityRole="button"
+                accessibilityLabel={c.name}
+                onPress={() => {
+                  methods.setValue('country', c.code, { shouldDirty: true });
+                  setShowCountryModal(false);
+                }}
+                className="mb-2 rounded-lg border border-gray-300 p-4">
+                <Text className="text-base text-gray-700">{c.name}</Text>
+              </Pressable>
+            ))}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
+              onPress={() => setShowCountryModal(false)}>
+              <Text className="mt-4 text-center text-primary">Fermer</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAwareScrollView>
   );
 }
