@@ -18,6 +18,13 @@ Aucun ✅ — l'intégralité de l'audit du 2026-07-02 est résolue.
 
 **Adresses legacy concaténées** : les profils pullés avant la structuration (rue+CP+ville dans `address`) repartent tels quels dans `address` au prochain push — accepté (base utilisateurs mobile = testeurs), pas de migration planifiée ; à réévaluer si la base d'utilisateurs grandit.
 
+**Follow-ups « profil enrichi » (revue finale 2026-07-11, mineurs)** :
+
+- Round-trip langue : `toBackendProfileInput` mappe `'ar'` → `'fr'` (un utilisateur Angular en arabe re-poussé perd sa langue) — préexistant, à corriger avec le module de traduction.
+- `CustomInputText` écrase la prop `className` (`{...props}` avant le className en dur) — le `min-h-28` des écrans profil est sans effet. Préexistant.
+- `formatSenderAddress` dupliqué entre `app/utils/pdf.ts` et `app/invoices/generate/summary.tsx` — à factoriser dans `app/utils/` lors du chantier n°21.
+- `uploadLogo` sans timeout/AbortController (le helper `request` en a un de 15 s) ; adresse des contacts toujours concaténée (incohérence assumée avec le profil structuré).
+
 **21. Fichiers non-routes sous `app/` → warnings expo-router**
 `app/config.ts`, `app/schema/*`, `app/utils/*` déclenchent chacun un `Route ... is missing the required default export` : expo-router scanne tout `app/` comme des routes. Bénin (dev uniquement, sans impact prod) mais bruyant. **Fix correct** : relocaliser les modules non-routes hors de `app/` (ex. `schema/`, `utils/`, `lib/config.ts`) + réécrire les imports `~/app/utils` → `~/utils` etc. Refactor mécanique ~40 imports, à faire en chantier dédié avec sa passe de vérif (docs CLAUDE.md/FILES.md/MOBILE_GUIDELINES à ajuster).
 
