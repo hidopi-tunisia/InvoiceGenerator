@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type LogoPickerProps = {
   /** URI locale (sélectionnée dans cette session ou stockée). */
@@ -22,16 +22,10 @@ export default function LogoPicker({ logoUri, logoUrl, onPick }: LogoPickerProps
   const source = logoUri || logoUrl;
 
   const handlePress = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission refusée',
-        "Fatourty a besoin d'accéder à votre galerie pour ajouter un logo à votre profil. Veuillez l'autoriser dans les réglages.",
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
+    // Pas de requestMediaLibraryPermissionsAsync : le picker système
+    // (PHPicker iOS 14+ / Photo Picker Android 13+) n'exige AUCUNE permission,
+    // et demander une permission sans clé NSPhotoLibraryUsageDescription dans
+    // l'Info.plist fait tuer l'app par iOS (crash TCC constaté sur device).
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'], // Fix 5 : remplace MediaTypeOptions.Images (déprécié)
       allowsEditing: true,
