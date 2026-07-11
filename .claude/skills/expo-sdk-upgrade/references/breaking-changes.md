@@ -55,6 +55,14 @@ Table des matières :
 - Cause : JS neuf servi sur un **ancien binaire dev-client** (`expo start` seul).
   Correctif : rebuild natif (`expo run:*`), pas juste `start`.
 
+**`Error: Unsupported FormDataPart implementation` à l'upload multipart (SDK 57)**
+- Cause : le `fetch` **global** du SDK 57 est le runtime WinterCG d'Expo
+  (`expo/src/winter/fetch`) — il **refuse** la pièce jointe historique React
+  Native `formData.append(name, { uri, name, type })` et exige un vrai `Blob`.
+- Correctif : `import { File } from 'expo-file-system'` (nouvelle API — la
+  classe **implémente Blob**) puis `formData.append('champ', new File(uri), nom)`.
+  Ne pas forcer de `Content-Type` (boundary auto).
+
 **Warning dev « Can't perform a React state update on a component that hasn't mounted yet » (stack : `expo-router/build/fork/useLinking.native.js`)**
 - Cause : résolution asynchrone de l'URL initiale DANS expo-router (React 19 la signale
   en dev). Upstream connu (expo/expo #35224). Dev-only, aucun impact utilisateur.

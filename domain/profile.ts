@@ -66,9 +66,14 @@ const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
   const { ENDPOINT } = await import('../constants');
   const token = await getAuthorization(false);
 
+  // Le fetch global du SDK 57 (runtime WinterCG d'Expo) REFUSE la pièce jointe
+  // style RN { uri, name, type } (« Unsupported FormDataPart implementation ») :
+  // il exige un vrai Blob. La classe File d'expo-file-system (nouvelle API)
+  // implémente Blob et lit le fichier depuis son URI.
+  const { File: FSFile } = await import('expo-file-system');
+  const file = new FSFile(uri);
   const formData = new FormData();
-  // React Native accepte { uri, name, type } comme valeur FormData
-  formData.append('logo', { uri, name: 'logo.jpg', type: 'image/jpeg' } as unknown as Blob);
+  formData.append('logo', file as unknown as Blob, file.name || 'logo.jpg');
 
   try {
     const response = await fetch(`${ENDPOINT}/profile/logo`, {
