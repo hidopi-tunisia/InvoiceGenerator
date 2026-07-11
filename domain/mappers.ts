@@ -90,6 +90,7 @@ export const toBackendInvoiceInput = (
   dueDate: toIsoDate(invoice.invoiceDueDate),
   recipientId: recipientRemoteId,
   items: toBackendItems(invoice.items),
+  discount: invoice.discount || undefined,
   status: toBackendStatus(invoice.status),
 });
 
@@ -121,6 +122,7 @@ export const fromBackendInvoice = (
     sender: localProfile,
     recipient,
     items: fromBackendItems(remote.items ?? []),
+    discount: remote.discount || undefined,
     status: remote.status === 'Paid' || remote.status === 'Refunded' ? 'payée' : 'en attente',
     remoteId: remote._id,
     remotePdfUrl: remote.downloadUrl || undefined,

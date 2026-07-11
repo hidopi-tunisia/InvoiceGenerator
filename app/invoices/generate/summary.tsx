@@ -20,7 +20,7 @@ export default function InvoiceSummary() {
   const invoice = useStore((data) => data.newInvoice);
   const items = invoice?.items || [];
   // Calcul des totaux (TVA incluse) à l'aide d'une fonction utilitaire
-  const { subtotal, taxRate, tax, total } = getTotals(invoice || {});
+  const { subtotal, discountRate, discountAmount, taxRate, tax, total } = getTotals(invoice || {});
   const currency = getInvoiceCurrency(invoice || undefined);
   // Récupération de la fonction de sauvegarde de la facture
   const saveInvoice = useStore((data) => data.saveInvoice);
@@ -75,6 +75,12 @@ export default function InvoiceSummary() {
               <Text className="text-gray-700">Nom : {invoice.sender.name}</Text>
               <Text className="text-gray-700">Adresse : {formatSenderAddress(invoice.sender)}</Text>
               <Text className="text-gray-700">N° TVA : {invoice.sender.tva}</Text>
+              {invoice.sender.siret ? (
+                <Text className="text-gray-700">Siret : {invoice.sender.siret}</Text>
+              ) : null}
+              {invoice.sender.mf ? (
+                <Text className="text-gray-700">MF : {invoice.sender.mf}</Text>
+              ) : null}
             </View>
           </View>
         )}
@@ -123,6 +129,14 @@ export default function InvoiceSummary() {
                 {formatAmount(subtotal)} {currency}
               </Text>
             </View>
+            {discountAmount > 0 && (
+              <View className="flex-row justify-between">
+                <Text className="text-gray-700">Remise ({discountRate} %)</Text>
+                <Text className="font-semibold text-green-600">
+                  − {formatAmount(discountAmount)} {currency}
+                </Text>
+              </View>
+            )}
             {taxRate > 0 && (
               <View className="flex-row justify-between">
                 <Text className="text-gray-700">TVA ({taxRate}%)</Text>

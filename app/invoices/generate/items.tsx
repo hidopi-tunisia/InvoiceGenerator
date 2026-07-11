@@ -1,9 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
 import { InvoiceItem, invoiceItemSchema } from '~/app/schema/invoice';
@@ -25,9 +25,24 @@ const emptyItem: InvoiceItem = { name: '', quantity: 1, price: 0 };
 
 export default function GenerateInvoice() {
   const addItems = useStore((data) => data.addItems);
+  const addInvoiceInfo = useStore((data) => data.addInvoiceInfo);
   const items = useStore((data) => data.newInvoice?.items);
   const taxRate = useStore((data) => data.newInvoice?.taxRate);
   const currency = useStore((data) => getInvoiceCurrency(data.newInvoice ?? undefined));
+
+  // --- État remise ---
+  const [discount, setDiscount] = useState<number | undefined>(
+    useStore.getState().newInvoice?.discount
+  );
+  const [discountInput, setDiscountInput] = useState<string>(
+    useStore.getState().newInvoice?.discount != null
+      ? String(useStore.getState().newInvoice?.discount)
+      : ''
+  );
+  const [discountVisible, setDiscountVisible] = useState<boolean>(
+    (useStore.getState().newInvoice?.discount ?? 0) > 0
+  );
+  const [discountError, setDiscountError] = useState<string>('');
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(itemsSchema),
@@ -40,13 +55,48 @@ export default function GenerateInvoice() {
   const watchedItems = methods.watch('items');
   const {
     subtotal,
+    discountAmount,
     tax,
     total,
     taxRate: appliedTaxRate,
-  } = getTotals({ items: watchedItems ?? [], taxRate });
+  } = getTotals({ items: watchedItems ?? [], taxRate, discount });
+
+  const handleDiscountChange = (text: string) => {
+    // Accepte virgule ou point comme séparateur décimal
+    const normalized = text.replace(',', '.');
+    setDiscountInput(text);
+    if (normalized === '' || normalized === '.') {
+      setDiscount(undefined);
+      setDiscountError('');
+      return;
+    }
+    const value = parseFloat(normalized);
+    if (isNaN(value)) {
+      setDiscountError('Valeur invalide');
+      setDiscount(undefined);
+      return;
+    }
+    if (value < 0 || value > 100) {
+      setDiscountError('La remise doit être comprise entre 0 et 100 %');
+      setDiscount(undefined);
+      return;
+    }
+    setDiscountError('');
+    setDiscount(value);
+  };
+
+  const handleRemoveDiscount = () => {
+    setDiscount(undefined);
+    setDiscountInput('');
+    setDiscountError('');
+    setDiscountVisible(false);
+  };
 
   const onSubmit = (data: FormValues) => {
     addItems(data.items);
+    // Fusion à plat dans newInvoice — addInvoiceInfo accepte Partial<InvoiceInfo> & extra fields via spread
+    // On caste pour passer discount (champ valide de Invoice mais pas d'InvoiceInfo)
+    (addInvoiceInfo as (info: Record<string, unknown>) => void)({ discount });
     router.push('/invoices/generate/summary');
   };
 
@@ -133,14 +183,68 @@ export default function GenerateInvoice() {
           </View>
         </KeyboardAwareScrollView>
 
-        {/* Récap fixe en bas : HT / TVA / TTC en temps réel, devise utilisateur */}
+        {/* Récap fixe en bas : HT / Remise / TVA / TTC en temps réel, devise utilisateur */}
         <View className="border-t border-gray-200 bg-white px-5 pb-8 pt-4 shadow-lg shadow-black/10">
+          {/* Sous-total HT */}
           <View className="mb-2 flex-row items-center justify-between">
             <Text className="text-sm text-gray-500">Sous-total HT</Text>
             <Text className="text-sm font-medium text-gray-700">
               {formatAmount(subtotal)} {currency}
             </Text>
           </View>
+
+          {/* Zone remise : lien discret ou champ actif */}
+          {!discountVisible ? (
+            <TouchableOpacity
+              onPress={() => setDiscountVisible(true)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ajouter une remise"
+              className="mb-2 self-start">
+              <Text className="text-xs font-medium text-primary">+ Ajouter une remise</Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="mb-2">
+              {/* Champ % compact + bouton retirer */}
+              <View className="mb-1 flex-row items-center gap-2">
+                <View className="flex-1 flex-row items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
+                  <TextInput
+                    value={discountInput}
+                    onChangeText={handleDiscountChange}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    maxLength={6}
+                    returnKeyType="done"
+                    accessibilityLabel="Remise en pourcentage"
+                    className="flex-1 text-sm text-gray-800"
+                    style={{ minHeight: 24 }}
+                  />
+                  <Text className="ml-1 text-sm text-gray-400">%</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={handleRemoveDiscount}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retirer la remise"
+                  className="h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                  <Feather name="x" size={14} color="#6b7280" />
+                </TouchableOpacity>
+              </View>
+              {/* Erreur de validation */}
+              {discountError ? <Text className="text-xs text-red-500">{discountError}</Text> : null}
+              {/* Ligne remise — affichée uniquement si > 0 */}
+              {discountAmount > 0 && !discountError ? (
+                <View className="mt-0.5 flex-row items-center justify-between">
+                  <Text className="text-xs text-gray-500">Remise ({discount} %)</Text>
+                  <Text className="text-xs font-medium text-green-600">
+                    − {formatAmount(discountAmount)} {currency}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          )}
+
+          {/* TVA */}
           <View className="mb-1 flex-row items-center justify-between">
             <Text className="text-sm text-gray-500">TVA ({appliedTaxRate} %)</Text>
             <Text className="text-sm font-medium text-gray-700">

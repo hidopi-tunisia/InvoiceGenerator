@@ -9,14 +9,21 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export const getTotals = (invoice: Partial<Invoice>) => {
   const items = invoice.items || [];
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  // Remise globale en % appliquée AVANT TVA (aligné sur le calcul serveur, API.md §360)
+  const discountRate = invoice.discount ?? 0;
+  const discountAmount = subtotal * (discountRate / 100);
+  const subtotalAfterDiscount = subtotal - discountAmount;
   const taxRate = invoice.taxRate ?? useStore.getState().profile.taxRate ?? 0;
-  const tax = subtotal * (taxRate / 100);
+  const tax = subtotalAfterDiscount * (taxRate / 100);
 
   return {
     subtotal: round2(subtotal),
+    discountRate,
+    discountAmount: round2(discountAmount),
+    subtotalAfterDiscount: round2(subtotalAfterDiscount),
     taxRate,
     tax: round2(tax),
-    total: round2(subtotal + tax),
+    total: round2(subtotalAfterDiscount + tax),
   };
 };
 

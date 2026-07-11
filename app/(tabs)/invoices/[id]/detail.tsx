@@ -28,7 +28,7 @@ export default function InvoiceDetailScreen() {
   const [pdfUri, setPdfUri] = useState<string | null>(null);
 
   // Totaux avec la TVA de la facture (fallback : taux du profil)
-  const { subtotal, taxRate, tax, total } = getTotals(invoice ?? {});
+  const { subtotal, discountRate, discountAmount, taxRate, tax, total } = getTotals(invoice ?? {});
   const currency = getInvoiceCurrency(invoice);
   const displayStatus = getDisplayStatus(invoice ?? {});
 
@@ -206,6 +206,14 @@ export default function InvoiceDetailScreen() {
               {formatAmount(subtotal)} {currency}
             </Text>
           </View>
+          {discountAmount > 0 && (
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-600">Remise ({discountRate} %) :</Text>
+              <Text className="font-medium text-green-600">
+                − {formatAmount(discountAmount)} {currency}
+              </Text>
+            </View>
+          )}
           {taxRate > 0 && (
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-600">TVA ({taxRate}%) :</Text>

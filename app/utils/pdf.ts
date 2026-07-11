@@ -67,7 +67,7 @@ const resolveLogoSrc = async (sender: Invoice['sender']): Promise<string | null>
 };
 
 const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
-  const { subtotal, taxRate, tax, total } = getTotals(invoice);
+  const { subtotal, discountRate, discountAmount, taxRate, tax, total } = getTotals(invoice);
   const currency = getInvoiceCurrency(invoice);
 
   const senderAddress = formatSenderAddress(invoice.sender);
@@ -106,6 +106,15 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
   const dueDateBlock = invoice.invoiceDueDate
     ? `<p class="meta-line"><span class="meta-label">Échéance&nbsp;:</span> ${formatDate(invoice.invoiceDueDate)}</p>`
     : '';
+
+  /* ---------- Ligne remise (affichée uniquement si > 0) ---------- */
+  const discountLine =
+    discountAmount > 0
+      ? `<div class="total-row">
+           <span class="total-label">Remise (${discountRate}&nbsp;%)</span>
+           <span class="total-value" style="color:#16a34a;">−&nbsp;${formatAmount(discountAmount)}&nbsp;${currency}</span>
+         </div>`
+      : '';
 
   /* ---------- TVA line ---------- */
   const taxLine =
@@ -444,6 +453,7 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
           <span class="total-label">Sous-total HT</span>
           <span class="total-value">${formatAmount(subtotal)}&nbsp;${currency}</span>
         </div>
+        ${discountLine}
         ${taxLine}
         <div class="total-row-ttc">
           <span class="total-ttc-label">Total TTC</span>

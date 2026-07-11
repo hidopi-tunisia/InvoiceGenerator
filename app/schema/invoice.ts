@@ -79,6 +79,7 @@ export type Invoice = InvoiceInfo & {
   // Figés à la création depuis le profil (une facture émise ne change pas de taux/devise)
   taxRate?: number;
   currency?: string;
+  discount?: number; // remise globale en % (0-100), appliquée sur le HT avant TVA (API.md §237)
   // Métadonnées de sync backend
   remoteId?: string; // ObjectId côté serveur — le local garde son UUID
   syncedAt?: string; // ISO du dernier push/pull réussi
