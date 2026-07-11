@@ -56,6 +56,7 @@ export default function GenerateInvoice() {
   const {
     subtotal,
     discountAmount,
+    discountRate,
     tax,
     total,
     taxRate: appliedTaxRate,
@@ -95,8 +96,7 @@ export default function GenerateInvoice() {
   const onSubmit = (data: FormValues) => {
     addItems(data.items);
     // Fusion à plat dans newInvoice — addInvoiceInfo accepte Partial<InvoiceInfo> & extra fields via spread
-    // On caste pour passer discount (champ valide de Invoice mais pas d'InvoiceInfo)
-    (addInvoiceInfo as (info: Record<string, unknown>) => void)({ discount });
+    addInvoiceInfo({ discount: discount || undefined });
     router.push('/invoices/generate/summary');
   };
 
@@ -235,7 +235,7 @@ export default function GenerateInvoice() {
               {/* Ligne remise — affichée uniquement si > 0 */}
               {discountAmount > 0 && !discountError ? (
                 <View className="mt-0.5 flex-row items-center justify-between">
-                  <Text className="text-xs text-gray-500">Remise ({discount} %)</Text>
+                  <Text className="text-xs text-gray-500">Remise ({discountRate} %)</Text>
                   <Text className="text-xs font-medium text-green-600">
                     − {formatAmount(discountAmount)} {currency}
                   </Text>
