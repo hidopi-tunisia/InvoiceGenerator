@@ -7,10 +7,8 @@
     "target": "ESNext",
     "lib": ["ESNext", "DOM"],
     "strict": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["*"]
+      "~/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
