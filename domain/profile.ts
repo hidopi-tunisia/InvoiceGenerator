@@ -1,4 +1,4 @@
-import { request, NetworkError } from './http';
+import { request } from './http';
 import { BackendAddress } from './recipients';
 
 // Types alignés sur le contrat API.md §4-5 (routes /profile).
@@ -54,51 +54,34 @@ const updateProfile = (payload: ProfileInput) =>
 
 const removeProfile = () => request<null>('/profile', { method: 'DELETE' });
 
+/** Extension de fichier → type MIME (défaut jpeg). */
+const mimeForUri = (uri: string): string => {
+  const ext = uri.split('.').pop()?.toLowerCase();
+  if (ext === 'png') return 'image/png';
+  if (ext === 'webp') return 'image/webp';
+  return 'image/jpeg';
+};
+
 /**
- * Upload du logo en multipart (PATCH /profile/logo, API.md §157).
- * Le helper `request` ne gère pas le multipart — fetch dédié avec token Firebase.
+ * Upload du logo (PATCH /profile/logo). Le backend déployé attend un JSON
+ * `{ logoBase64 }` en data URI (validateur : « logoBase64 est requis ») —
+ * PAS le multipart historique d'API.md. En JSON, on repasse par le helper
+ * `request` : timeout 15 s, refresh token 401 et NetworkError inclus.
  * Retourne l'URL Cloudinary du logo uploadé.
- * Convertit les erreurs réseau natives (`TypeError`) en `NetworkError` du domaine
- * pour que `reportSyncError` (sync/profile-sync.ts) les silence correctement.
  */
 const uploadLogo = async (uri: string): Promise<{ logoUrl: string }> => {
-  const { getAuthorization } = await import('./authorization');
-  const { ENDPOINT } = await import('../constants');
-  const token = await getAuthorization(false);
+  // Lecture base64 via l'API legacy (idiome du projet, cf. app/utils/pdf.ts).
+  const FileSystem = await import('expo-file-system/legacy');
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const logoBase64 = `data:${mimeForUri(uri)};base64,${base64}`;
 
-  // Le fetch global du SDK 57 (runtime WinterCG d'Expo) REFUSE la pièce jointe
-  // style RN { uri, name, type } (« Unsupported FormDataPart implementation ») :
-  // il exige un vrai Blob. La classe File d'expo-file-system (nouvelle API)
-  // implémente Blob et lit le fichier depuis son URI.
-  const { File: FSFile } = await import('expo-file-system');
-  const file = new FSFile(uri);
-  const formData = new FormData();
-  formData.append('logo', file as unknown as Blob, file.name || 'logo.jpg');
-
-  try {
-    const response = await fetch(`${ENDPOINT}/profile/logo`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Pas de Content-Type : le browser/RN le génère avec le boundary multipart
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Upload logo échoué (${response.status}) : ${text}`);
-    }
-
-    const json = (await response.json()) as { success: boolean; data: { logoUrl: string } };
-    return { logoUrl: json.data.logoUrl };
-  } catch (error) {
-    // Convertir les erreurs réseau natives en NetworkError du domaine
-    if (error instanceof TypeError) {
-      throw new NetworkError('Réseau indisponible');
-    }
-    throw error;
-  }
+  const { data } = await request<{ logoUrl: string }>('/profile/logo', {
+    method: 'PATCH',
+    body: { logoBase64 },
+  });
+  return { logoUrl: data.logoUrl };
 };
 
 export { getProfile, createProfile, updateProfile, removeProfile, uploadLogo };
