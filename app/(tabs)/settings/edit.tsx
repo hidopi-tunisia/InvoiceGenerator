@@ -11,7 +11,7 @@ import CustomInputText from '~/components/CustomInputText';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import LogoPicker from '~/components/LogoPicker';
 import { useStore } from '~/store';
-import { pushLogo, pushProfile } from '~/store/profile-sync';
+import { adoptLogoAndPush, pushLogo, pushProfile } from '~/store/profile-sync';
 
 export default function ProfileScreen() {
   const setProfile = useStore((data) => data.setProfile);
@@ -63,7 +63,14 @@ export default function ProfileScreen() {
 
         {/* ── Logo centré ──────────────────────────────────────────── */}
         <View className="mb-8 items-center">
-          <LogoPicker logoUri={logoUri} logoUrl={profile?.logoUrl} onPick={setLogoUri} />
+          <LogoPicker
+            logoUri={logoUri ?? profile?.logoUri}
+            logoUrl={profile?.logoUrl}
+            onPick={(uri) => {
+              setLogoUri(uri);
+              adoptLogoAndPush(uri); // sauvegarde + upload immédiats (demande produit)
+            }}
+          />
         </View>
 
         {/* ── Section : Informations générales ─────────────────────── */}

@@ -71,6 +71,18 @@ export const pushLogo = async (): Promise<void> => {
 };
 
 /**
+ * Sélection d'un logo (demande produit : sauvegarde automatique) : persiste
+ * l'URI locale immédiatement puis lance l'upload sans attendre « Sauvegarder ».
+ * Best-effort : hors ligne, `pushLogo` sera retenté au boot / à la sauvegarde.
+ */
+export const adoptLogoAndPush = (uri: string): void => {
+  const { setProfile, profile } = useStore.getState();
+  // dirty préservé : le logo ne transite pas par PATCH /profile.
+  setProfile({ logoUri: uri, dirty: profile.dirty ?? false });
+  pushLogo().catch(() => {});
+};
+
+/**
  * Récupère le profil serveur et réconcilie le store local. Réutilisable :
  * boot connecté et rafraîchissement à la demande (ouverture des Réglages).
  * - store local vierge + profil serveur renseigné (utilisateur venu du front
@@ -96,6 +108,15 @@ export const refreshProfileFromServer = async (): Promise<void> => {
     if (useStore.getState().profile.dirty === true || !remoteHasData(remote)) {
       // Changement local en attente, ou serveur tout juste auto-créé : push local.
       await pushProfile();
+      // Les champs POSSÉDÉS par le serveur (logoUrl, écrit via PATCH /profile/logo)
+      // doivent quand même être rapatriés : sinon un profil souvent dirty ne
+      // récupère jamais le logo d'un utilisateur existant (front Angular).
+      if (remote.logoUrl && remote.logoUrl !== useStore.getState().profile.logoUrl) {
+        useStore.getState().setProfile({
+          logoUrl: remote.logoUrl,
+          dirty: useStore.getState().profile.dirty ?? false,
+        });
+      }
       return;
     }
 
