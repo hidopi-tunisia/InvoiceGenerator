@@ -147,7 +147,20 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
   <style>
     @page {
       size: A4;
-      margin: 0;
+      /* Marge basse : réserve la surface de la boîte de pagination (une
+         margin-box vit DANS la marge — avec margin 0 elle serait invisible). */
+      margin: 0 0 14mm 0;
+
+      /* Numéro de page « 1 / 3 » en bas à droite. Supporté par le moteur
+         d'impression Android (Chromium) ; WebKit iOS ne rend pas encore les
+         margin-boxes → PDF iOS local sans numéros (le PDF serveur fait foi). */
+      @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 9px;
+        color: #9ca3af;
+        padding-right: 12mm;
+      }
     }
 
     * {
