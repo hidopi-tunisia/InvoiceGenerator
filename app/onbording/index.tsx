@@ -106,6 +106,8 @@ export default function OnbordingScreen() {
             <Text className="mb-2 text-base text-gray-700">Sélectionnez le pays</Text>
             <Pressable
               className="flex-row items-center justify-between rounded-lg border border-gray-300 p-4"
+              accessibilityRole="button"
+              accessibilityLabel="Sélectionnez le pays"
               onPress={() => setShowCountryModal(true)}>
               <View className="flex-row items-center">
                 <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -122,6 +124,8 @@ export default function OnbordingScreen() {
             <Text className="mb-2 text-base text-gray-700">Choisissez la langue</Text>
             <Pressable
               className="flex-row items-center justify-between rounded-lg border border-gray-300 p-4"
+              accessibilityRole="button"
+              accessibilityLabel="Choisissez la langue"
               onPress={() => setShowLanguageModal(true)}>
               <View className="flex-row items-center">
                 <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -140,6 +144,9 @@ export default function OnbordingScreen() {
               {currencies.map((currency) => (
                 <Pressable
                   key={currency.code}
+                  accessibilityRole="button"
+                  accessibilityLabel={currency.name}
+                  accessibilityState={{ selected: selectedCurrency === currency.code }}
                   onPress={() => {
                     touched.current.currency = true;
                     setSelectedCurrency(currency.code);
@@ -193,6 +200,8 @@ export default function OnbordingScreen() {
             {countries.map((country) => (
               <Pressable
                 key={country.code}
+                accessibilityRole="button"
+                accessibilityLabel={country.name}
                 onPress={() => {
                   touched.current.country = true;
                   setSelectedCountry(country.code);
@@ -202,7 +211,10 @@ export default function OnbordingScreen() {
                 <Text className="text-base text-gray-700">{country.name}</Text>
               </Pressable>
             ))}
-            <Pressable onPress={() => setShowCountryModal(false)}>
+            <Pressable
+              onPress={() => setShowCountryModal(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Text className="mt-4 text-center text-primary">Fermer</Text>
             </Pressable>
           </Pressable>
@@ -223,6 +235,8 @@ export default function OnbordingScreen() {
             {languages.map((lang) => (
               <Pressable
                 key={lang.code}
+                accessibilityRole="button"
+                accessibilityLabel={lang.name}
                 onPress={() => {
                   touched.current.language = true;
                   setSelectedLanguage(lang.code);
@@ -232,7 +246,10 @@ export default function OnbordingScreen() {
                 <Text className="text-base text-gray-700">{lang.name}</Text>
               </Pressable>
             ))}
-            <Pressable onPress={() => setShowLanguageModal(false)}>
+            <Pressable
+              onPress={() => setShowLanguageModal(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Text className="mt-4 text-center text-primary">Fermer</Text>
             </Pressable>
           </Pressable>

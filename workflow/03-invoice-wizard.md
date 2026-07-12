@@ -34,10 +34,11 @@ flowchart TD
     STEP3[Étape 3\n/invoices/generate/items\nDésignations] --> ITEMS_FORM[Tableau dynamique d'items\nDésignation · Quantité · Prix\nTotal calculé automatiquement]
     ITEMS_FORM -->|Ajouter item| ADD_ITEM[Append dans useFieldArray]
     ITEMS_FORM -->|Supprimer item| DEL_ITEM[Remove si nb items > 1]
-    ITEMS_FORM -->|Suivant| SAVE_ITEMS[store.addItems\nliste des InvoiceItem]
+    ITEMS_FORM -->|+ Ajouter une remise| DISCOUNT[Remise globale en %\n0-100, décimales acceptées\nrecalcul temps réel HT/TVA/TTC]
+    ITEMS_FORM -->|Suivant| SAVE_ITEMS[store.addItems\nliste des InvoiceItem\n+ addInvoiceInfo discount]
     SAVE_ITEMS --> STEP4
 
-    STEP4[Étape 4\n/invoices/generate/summary\nRécapitulatif] --> RECAP_VIEW[Carte bleue header\nÉmetteur · Destinataire\nListe désignations\nSous-total · TVA · Total]
+    STEP4[Étape 4\n/invoices/generate/summary\nRécapitulatif] --> RECAP_VIEW[Carte bleue header\nÉmetteur · Destinataire\nListe désignations\nSous-total · Remise · TVA · Total]
     RECAP_VIEW -->|Confirmer et générer| SAVE_INV[store.saveInvoice\nAjoute newInvoice → invoices\nAuto-ajoute recipient → contacts\nVide newInvoice]
     SAVE_INV -->|router.replace| SUCCESS[/invoices/:id/success\nÉcran Succès]
 
@@ -98,12 +99,14 @@ Tableau dynamique (React Hook Form `useFieldArray`). Chaque item :
 |---|---|---|
 | Désignation | TextInput multilignes | Oui |
 | Quantité | NumericInput | Oui (min 1) |
-| Prix unitaire | NumericInput | Oui (min 1) |
+| Prix unitaire | NumericInput | Oui (≥ 0 — 0, 0,99 et 0,00 acceptés, virgule ou point) |
 | Total ligne | Calculé (qté × prix) | Lecture seule |
 
-**Minimum 1 item requis** — validé par Zod (`.min(1)` sur le tableau) ; l'écran présente une ligne vierge par défaut (quantité 1, prix 0 — le prix min 1 force une saisie réelle). L'item peut être supprimé seulement si `nb items > 1`. La devise affichée est celle de la facture (fallback profil).
+**Minimum 1 item requis** — validé par Zod (`.min(1)` sur le tableau) ; l'écran présente une ligne vierge par défaut (quantité 1, prix 0 — un prix à 0 est valide, seul le négatif est refusé). L'item peut être supprimé seulement si `nb items > 1`. La devise affichée est celle de la facture (fallback profil).
 
-**Action store :** `addItems(items[])`
+**Remise globale (optionnelle)** : le récap fixe en bas d'écran affiche Sous-total HT / TVA / Total TTC en temps réel et propose « + Ajouter une remise » — un pourcentage (0-100, décimales acceptées) appliqué sur le HT avant TVA. La ligne « Remise (x %) » n'apparaît que si le montant est > 0 ; le bouton × retire la remise.
+
+**Action store :** `addItems(items[])` + `addInvoiceInfo({ discount })`
 
 ---
 
@@ -118,7 +121,7 @@ Affichage en lecture seule :
 │  Échéance: 15/07/2026           │
 ├─────────────────────────────────┤
 │  ÉMETTEUR : Mon Entreprise      │
-│  Adresse, N° TVA                │
+│  Adresse, N° TVA, SIRET/MF      │
 ├─────────────────────────────────┤
 │  DESTINATAIRE : Client SARL     │
 │  Adresse, Email, N° TVA         │
@@ -128,13 +131,14 @@ Affichage en lecture seule :
 │  Design          2    150  300  │
 ├─────────────────────────────────┤
 │  Sous-total :         800.00    │
-│  TVA (19%) :          152.00    │
-│  Total :              952.00    │
+│  Remise (10 %) :     − 80.00    │
+│  TVA (19%) :          136.80    │
+│  Total :              856.80    │
 └─────────────────────────────────┘
          [Confirmer et générer]
 ```
 
-La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa création (fallback : taux du profil pour les factures antérieures). La ligne TVA n'apparaît que si le taux est > 0. Montants suffixés de la devise de la facture.
+La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa création (fallback : taux du profil pour les factures antérieures), après application de la remise sur le HT. Les lignes Remise et TVA n'apparaissent que si leur valeur est > 0. Le SIRET (ou à défaut le MF) de l'émetteur est affiché s'il est renseigné. Montants suffixés de la devise de la facture ; une désignation longue passe à la ligne sans décaler la colonne des prix.
 
 **Action store :** `saveInvoice()` → persiste dans `store.invoices[]` + auto-ajout contact, puis **`router.replace`** vers l'écran succès (le retour arrière ne revient pas au récap).
 
@@ -143,7 +147,7 @@ La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa
 ### Succès (`/invoices/[id]/success`)
 
 1. Animation Lottie au chargement
-2. `generateInvoicePdf(invoice)` appelé automatiquement (la fonction calcule elle-même les totaux)
+2. `generateInvoicePdf(invoice)` appelé automatiquement (la fonction calcule elle-même les totaux) — le fichier est nommé d'après le tag : `{invoiceNumber}.pdf`
 3. Bouton **"Partager la facture"** (visible quand PDF prêt) → `expo-sharing`
 4. En cas d'échec de génération : message d'erreur français + bouton **"Réessayer"**
 5. Après partage → `requestFeedbackOrReview()` (demande note, throttle 3 jours)

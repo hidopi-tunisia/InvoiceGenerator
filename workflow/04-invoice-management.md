@@ -134,6 +134,6 @@ Couleurs partagées liste/détail (`getStatusColor`) :
 
 ## Génération PDF depuis le Détail
 
-Le PDF est généré via `app/utils/pdf.ts:generateInvoicePdf()` et stocké dans `FileSystem.documentDirectory/facture-{invoiceNumber}.pdf`. Le partage utilise `expo-sharing`.
+Le PDF est généré via `app/utils/pdf.ts:generateInvoicePdf()` et stocké dans `FileSystem.documentDirectory/{invoiceNumber}.pdf` (nom = tag de la facture, visible au partage ; les anciens `facture-*.pdf` sont purgés au boot par `purgeLegacyPdfFilenames`). Le partage utilise `expo-sharing`.
 
 > Si le PDF n'a pas encore été généré (facture créée en dehors du wizard), une alerte informe l'utilisateur.

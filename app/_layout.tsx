@@ -10,6 +10,7 @@ import { vexo } from 'vexo-analytics';
 
 import { auth } from './config'; // Import Firebase auth
 
+import { purgeLegacyPdfFilenames } from '~/app/utils/pdf';
 import { warmUpBackend } from '~/domain/http';
 import { useStore } from '~/store';
 import { syncContacts, pushDirtyContacts } from '~/store/contacts-sync';
@@ -53,6 +54,10 @@ function Layout() {
     // Migration one-shot : purge du blob `legacy-backup` sans propriétaire sur
     // les appareils touchés par l'ancienne fuite d'adoption (fire-and-forget).
     purgeLegacyBackup();
+
+    // Migration one-shot : purge des PDFs sous l'ancien nommage facture-*.pdf
+    // (le fichier est désormais nommé d'après le tag seul, fire-and-forget).
+    purgeLegacyPdfFilenames();
 
     // Subscribe to authentication state changes
     const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
@@ -145,7 +150,11 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
       </Text>
 
       {/* Bouton pour réessayer */}
-      <TouchableOpacity onPress={retry} className="rounded-lg bg-red-500 px-6 py-3 shadow-md">
+      <TouchableOpacity
+        onPress={retry}
+        accessibilityRole="button"
+        accessibilityLabel="Réessayer"
+        className="rounded-lg bg-red-500 px-6 py-3 shadow-md">
         <Text className="text-lg font-semibold text-white">Réessayer</Text>
       </TouchableOpacity>
     </View>

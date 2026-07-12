@@ -128,7 +128,7 @@ sequenceDiagram
     PDFUtil->>PDFUtil: Construit template HTML\navec toutes les données facture
     PDFUtil->>ExpoPrint: printToFileAsync(html, { base64: false })
     ExpoPrint->>FS: PDF écrit dans répertoire temp
-    PDFUtil->>FS: moveAsync(temp → documentDirectory/facture-INV-xxx.pdf)
+    PDFUtil->>FS: moveAsync(temp → documentDirectory/INV-xxx.pdf)
     PDFUtil->>Screen: Retourne URI permanente
     Screen->>Share: shareAsync(uri)
     Share->>Share: Sharesheet natif OS

@@ -72,6 +72,7 @@ export default function LoginScreen() {
             onPress={() => router.push('/(auth)/forgot-password')}
             hitSlop={8}
             accessibilityRole="link"
+            accessibilityLabel="Mot de passe oublié ?"
             className="mb-6 self-end">
             <Text className="text-sm font-medium text-primary">Mot de passe oublié ?</Text>
           </Pressable>

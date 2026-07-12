@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Linking, Alert } from 'react-native';
 
 import { auth } from '~/app/config';
+import { formatDate } from '~/app/utils/invoice';
 import { useReviews } from '~/app/utils/review';
 import { getSubscriptionUsage, SubscriptionUsage } from '~/domain/subscription';
 import { useStore } from '~/store';
@@ -112,7 +113,7 @@ export default function SettingScreen() {
             </Text>
             {usage.status === 'trialing' && usage.trialEndDate && (
               <Text className="mt-1 text-sm text-gray-500">
-                Essai jusqu'au {new Date(usage.trialEndDate).toLocaleDateString('fr-FR')}
+                Essai jusqu'au {formatDate(usage.trialEndDate)}
               </Text>
             )}
           </View>

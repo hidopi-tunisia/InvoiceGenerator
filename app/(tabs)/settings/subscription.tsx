@@ -102,6 +102,10 @@ export default function SubscriptionScreen() {
             key={value}
             onPress={() => setBilling(value)}
             accessibilityRole="button"
+            accessibilityLabel={
+              value === 'monthly' ? 'Facturation mensuelle' : 'Facturation annuelle'
+            }
+            accessibilityState={{ selected: billing === value }}
             className={`flex-1 rounded-full py-2 ${billing === value ? 'bg-white shadow-sm' : ''}`}>
             <Text
               className={`text-center text-sm font-medium ${

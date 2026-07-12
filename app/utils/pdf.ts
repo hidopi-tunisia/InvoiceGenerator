@@ -496,6 +496,23 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
 </html>`;
 };
 
+// Migration one-shot : supprime les PDFs générés sous l'ancien nommage
+// `facture-{tag}.pdf` (remplacé par `{tag}.pdf`). Fire-and-forget — jamais d'exception.
+export const purgeLegacyPdfFilenames = async () => {
+  try {
+    const dir = FileSystem.documentDirectory;
+    if (!dir) return;
+    const entries = await FileSystem.readDirectoryAsync(dir);
+    await Promise.all(
+      entries
+        .filter((name) => name.startsWith('facture-') && name.endsWith('.pdf'))
+        .map((name) => FileSystem.deleteAsync(dir + name, { idempotent: true }))
+    );
+  } catch {
+    // best-effort : un échec de purge ne doit jamais gêner le boot
+  }
+};
+
 // Télécharge le PDF serveur (Cloudinary, plan avec pdfGeneration) — source de
 // vérité une fois la facture synchronisée (API.md §15.17). Lève en cas d'échec :
 // l'appelant retombe sur la génération locale.

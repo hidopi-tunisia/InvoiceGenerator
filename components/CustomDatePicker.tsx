@@ -38,7 +38,10 @@ export default function CustomDatePicker({
         rules={rules}
         render={({ field: { onChange, value }, fieldState: { error } }) => (
           <>
-            <Pressable onPress={() => setVisible(true)}>
+            <Pressable
+              onPress={() => setVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel={label}>
               <View className="h-12 justify-center rounded-md border border-gray-300 bg-white px-4">
                 <Text className={`text-base ${value ? 'text-gray-900' : 'text-gray-400'}`}>
                   {value ? formatDate(value) : placeholder}

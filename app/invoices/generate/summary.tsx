@@ -3,7 +3,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { BusinessEntity } from '~/app/schema/invoice';
-import { formatAmount, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import { formatAmount, formatDate, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
 import { Button } from '~/components/Button';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
@@ -51,16 +51,14 @@ export default function InvoiceSummary() {
             <View>
               <Text className="text-sm text-gray-100">Date :</Text>
               <Text className="text-lg font-semibold text-white">
-                {invoice.invoiceDate
-                  ? new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')
-                  : 'N/A'}
+                {invoice.invoiceDate ? formatDate(invoice.invoiceDate) : 'N/A'}
               </Text>
             </View>
             {invoice.invoiceDueDate && (
               <View>
                 <Text className="text-sm text-gray-100">Échéance :</Text>
                 <Text className="text-lg font-semibold text-white">
-                  {new Date(invoice.invoiceDueDate).toLocaleDateString('fr-FR')}
+                  {formatDate(invoice.invoiceDueDate)}
                 </Text>
               </View>
             )}

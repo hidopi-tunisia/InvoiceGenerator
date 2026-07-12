@@ -40,6 +40,7 @@ export const Button = forwardRef<View, ButtonProps>(
       <TouchableOpacity
         ref={ref}
         accessibilityRole="button"
+        accessibilityLabel={title}
         accessibilityState={{ disabled: isDisabled, busy: loading }}
         {...touchableProps}
         disabled={isDisabled}
