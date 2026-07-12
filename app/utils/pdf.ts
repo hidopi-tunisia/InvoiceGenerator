@@ -496,6 +496,18 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
 </html>`;
 };
 
+// Supprime le PDF local d'une facture (best-effort — jamais d'exception).
+// Utilisé quand le numéro change en édition : l'ancien {tag}.pdf devient orphelin.
+export const deleteInvoicePdf = async (invoiceNumber: string) => {
+  try {
+    await FileSystem.deleteAsync(FileSystem.documentDirectory + `${invoiceNumber}.pdf`, {
+      idempotent: true,
+    });
+  } catch {
+    // best-effort
+  }
+};
+
 // Migration one-shot : supprime les PDFs générés sous l'ancien nommage
 // `facture-{tag}.pdf` (remplacé par `{tag}.pdf`). Fire-and-forget — jamais d'exception.
 export const purgeLegacyPdfFilenames = async () => {

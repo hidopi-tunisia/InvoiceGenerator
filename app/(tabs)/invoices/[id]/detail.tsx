@@ -23,6 +23,7 @@ export default function InvoiceDetailScreen() {
   const invoice = useStore((state) => state.invoices.find((inv) => inv.id === id));
   const deleteInvoice = useStore((state) => state.deleteInvoice);
   const updateInvoice = useStore((state) => state.updateInvoice);
+  const startEditInvoice = useStore((state) => state.startEditInvoice);
 
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUri, setPdfUri] = useState<string | null>(null);
@@ -79,6 +80,14 @@ export default function InvoiceDetailScreen() {
     }
   };
 
+  // Édition : uniquement les factures non payées (une facture réglée est figée —
+  // 'en retard' étant dérivé de l'échéance, une facture en retard reste éditable).
+  const handleEdit = () => {
+    if (!invoice) return;
+    startEditInvoice(invoice.id);
+    router.push('/invoices/generate');
+  };
+
   const handleMarkAsPaid = () => {
     if (!invoice) return;
 
@@ -129,6 +138,16 @@ export default function InvoiceDetailScreen() {
               accessibilityState={{ disabled: isLoading }}>
               <Feather name="share-2" size={24} color={isLoading ? '#9ca3af' : '#4f46e5'} />
             </Pressable>
+
+            {invoice.status !== 'payée' && (
+              <Pressable
+                onPress={handleEdit}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Modifier la facture">
+                <Feather name="edit-2" size={24} color="#4f46e5" />
+              </Pressable>
+            )}
 
             <Pressable
               onPress={handleDelete}
@@ -183,15 +202,26 @@ export default function InvoiceDetailScreen() {
           </View>
         )}
 
-        {/* Articles */}
+        {/* Articles — même présentation que le récap du wizard : désignation en
+            flex-1 (une ligne longue passe à la ligne sans pousser les montants),
+            qté x prix en dessous, total de ligne à droite */}
         <View className="mb-4 rounded-lg bg-white p-4 shadow-sm">
           <Text className="mb-3 text-lg font-bold">Désignations</Text>
-          <View className="space-y-3">
+          <View className="gap-2">
             {invoice.items.map((item, index) => (
-              <View key={index} className="flex-row justify-between">
-                <Text className="flex-1">{item.name}</Text>
-                <Text className="font-medium">
-                  {item.quantity} x {formatAmount(item.price)} {currency}
+              <View
+                key={index}
+                className={`flex-row items-start justify-between ${
+                  index < invoice.items.length - 1 ? 'border-b border-gray-100 pb-2' : ''
+                }`}>
+                <View className="flex-1 pr-3">
+                  <Text className="font-medium text-gray-700">{item.name}</Text>
+                  <Text className="text-gray-500">
+                    {item.quantity} x {formatAmount(item.price)} {currency}
+                  </Text>
+                </View>
+                <Text className="font-semibold text-gray-700">
+                  {formatAmount(item.quantity * item.price)} {currency}
                 </Text>
               </View>
             ))}

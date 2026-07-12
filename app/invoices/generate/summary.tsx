@@ -2,8 +2,9 @@ import { Redirect, router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { BusinessEntity } from '~/app/schema/invoice';
+import { BusinessEntity, Invoice } from '~/app/schema/invoice';
 import { formatAmount, formatDate, getInvoiceCurrency, getTotals } from '~/app/utils/invoice';
+import { deleteInvoicePdf } from '~/app/utils/pdf';
 import { Button } from '~/components/Button';
 import KeyboardAwareScrollView from '~/components/KeyboardAwareScrollView';
 import { useStore } from '~/store';
@@ -24,10 +25,36 @@ export default function InvoiceSummary() {
   const currency = getInvoiceCurrency(invoice || undefined);
   // Récupération de la fonction de sauvegarde de la facture
   const saveInvoice = useStore((data) => data.saveInvoice);
+  const updateInvoice = useStore((data) => data.updateInvoice);
+  const resetNewInvoice = useStore((data) => data.resetNewInvoice);
+  // Mode édition (startEditInvoice) : la facture en cours existe déjà dans invoices
+  const originalInvoice = useStore((data) =>
+    data.invoices.find((inv) => inv.id === data.newInvoice?.id)
+  );
+  const isEditing = !!originalInvoice;
 
   // Fonction appelée lors de la confirmation de la facture
   const handleGenerateInvoice = () => {
     const invoiceId = invoice?.id;
+    if (isEditing) {
+      // Le PDF serveur ne reflète plus la facture : on l'invalide jusqu'au
+      // prochain pull (le détail retombe sur la génération locale, à jour).
+      updateInvoice({ ...(invoice as Invoice), remotePdfUrl: undefined });
+      // Le numéro a changé → l'ancien {tag}.pdf local devient orphelin
+      if (originalInvoice.invoiceNumber !== invoice?.invoiceNumber) {
+        deleteInvoicePdf(originalInvoice.invoiceNumber);
+      }
+      resetNewInvoice();
+      if (invoiceId) syncInvoiceById(invoiceId); // fire-and-forget : PATCH vers le backend
+      // Retour au détail d'origine, toujours sous le wizard dans la pile (entrée
+      // par push depuis le détail) : dismissAll ramène à la 1re étape du wizard,
+      // back referme le wizard (bulle au stack racine). La pile liste → détail
+      // reste intacte — un replace cross-groupe la reconstruirait sans la liste
+      // (back cassé, flèche header absente sur Android).
+      router.dismissAll();
+      router.back();
+      return;
+    }
     saveInvoice();
     if (invoiceId) syncInvoiceById(invoiceId); // fire-and-forget vers le backend
     // replace : la facture est sauvegardée, le retour arrière ne doit pas revenir au récap
@@ -153,8 +180,12 @@ export default function InvoiceSummary() {
           </View>
         </View>
 
-        {/* Bouton d'action pour générer la facture */}
-        <Button title="Confirmer et générer" className="mt-auto" onPress={handleGenerateInvoice} />
+        {/* Bouton d'action pour générer la facture (ou enregistrer l'édition) */}
+        <Button
+          title={isEditing ? 'Enregistrer les modifications' : 'Confirmer et générer'}
+          className="mt-auto"
+          onPress={handleGenerateInvoice}
+        />
       </View>
     </KeyboardAwareScrollView>
   );

@@ -45,6 +45,7 @@ export type InvoiceState = {
   setCurrency: (currency: string) => void;
   setTaxRate: (rate: number) => void;
   startNewInvoice: () => void;
+  startEditInvoice: (invoiceId: string) => void; // charge une facture existante dans newInvoice (mode édition du wizard)
   resetNewInvoice: () => void;
   saveInvoice: () => void;
   deleteInvoice: (invoice: Invoice) => void;
@@ -123,6 +124,16 @@ export const useStore = create<InvoiceState>()(
             currency: get().profile.currency,
           },
         })), // Objet pour stocker les données
+      // Mode édition : copie la facture (items inclus) dans newInvoice — le wizard
+      // déroule ses étapes pré-remplies, puis summary.tsx appelle updateInvoice()
+      // au lieu de saveInvoice() (détection : l'id existe déjà dans invoices).
+      startEditInvoice: (invoiceId) => {
+        const invoice = get().invoices.find((inv) => inv.id === invoiceId);
+        if (!invoice) return;
+        set(() => ({
+          newInvoice: { ...invoice, items: invoice.items.map((item) => ({ ...item })) },
+        }));
+      },
       resetNewInvoice: () => set(() => ({ newInvoice: null })),
 
       //addSenderInfo: (sender) => set((state) => ({ newInvoice: { ...state.newInvoice, sender } })), // Clé "senderInfo"

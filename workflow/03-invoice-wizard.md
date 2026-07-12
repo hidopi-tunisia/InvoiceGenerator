@@ -142,6 +142,8 @@ La TVA est calculée par `getTotals` avec le taux **figé sur la facture** à sa
 
 **Action store :** `saveInvoice()` → persiste dans `store.invoices[]` + auto-ajout contact, puis **`router.replace`** vers l'écran succès (le retour arrière ne revient pas au récap).
 
+> **Mode édition** (voir [04](./04-invoice-management.md)) : si la facture en cours existe déjà dans `invoices[]` (entrée via `startEditInvoice()` depuis le détail), le CTA devient « Enregistrer les modifications » et appelle `updateInvoice()` au lieu de `saveInvoice()`, puis `router.replace` vers le détail.
+
 ---
 
 ### Succès (`/invoices/[id]/success`)

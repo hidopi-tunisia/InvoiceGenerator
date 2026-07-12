@@ -25,7 +25,7 @@ flowchart TD
     DELETE_CONFIRM -->|Confirmer| DELETE[store.deleteInvoice\nRefresh liste]
     DELETE_CONFIRM -->|Annuler| LIST
 
-    DETAIL --> HEADER_ACTIONS[Header : Icône Share · Icône Poubelle]
+    DETAIL --> HEADER_ACTIONS[Header : Icône Share · Icône Crayon si non payée · Icône Poubelle]
     DETAIL --> STATUS_BADGE[Badge statut coloré]
     DETAIL --> INFO_SECTION[N° facture · Dates · Client · Items · Total]
     DETAIL --> PAY_BTN{Statut ≠ payée ?}
@@ -43,6 +43,11 @@ flowchart TD
     HEADER_ACTIONS -->|Poubelle| DEL_CONFIRM2{Confirmation\nalerte}
     DEL_CONFIRM2 -->|Confirmer| DELETE2[store.deleteInvoice\nrouter.back]
     DEL_CONFIRM2 -->|Annuler| DETAIL
+
+    HEADER_ACTIONS -->|Crayon| EDIT[store.startEditInvoice\ncharge la facture dans newInvoice]
+    EDIT --> WIZARD_EDIT[Wizard pré-rempli\nétapes 1 → 3 → 4\nl'étape 2 est sautée : destinataire déjà posé]
+    WIZARD_EDIT -->|Enregistrer les modifications| UPDATE_INV[store.updateInvoice\ndirty + remotePdfUrl invalidé\nPATCH fire-and-forget]
+    UPDATE_INV -->|dismissAll + back\nreferme le wizard → détail d'origine\npile liste → détail intacte| DETAIL
 
     PLUS_BTN --> WIZARD[Wizard création\n/invoices/generate]
 ```
@@ -66,6 +71,7 @@ Les filtres et l'affichage utilisent le **statut dérivé** (`getDisplayStatus` 
 
 - **Push** : factures `dirty` → `/invoices` au boot et à la sauvegarde du wizard. Le contact destinataire est poussé d'abord (le POST exige son ObjectId). `tag` = numéro local, conservé si unique (sinon recréation sans tag, numéro serveur adopté au pull). 403 quota → la facture reste locale (upsell phase 6).
 - **« Marquer payée »** : `PATCH /invoices/:id/status` fire-and-forget.
+- **Édition** : réservée aux factures **non payées** (une facture réglée est figée ; « en retard » étant dérivé, elle reste éditable). Le crayon du détail appelle `startEditInvoice()` et rouvre le wizard pré-rempli ; le destinataire n'est pas modifiable (l'étape 2 est sautée). À l'enregistrement : `updateInvoice()` (dirty), `remotePdfUrl` invalidé jusqu'au prochain push réussi (le détail régénère le PDF localement), et si le numéro a changé l'ancien `{tag}.pdf` local est supprimé. Push `PATCH /invoices/:id` via `syncInvoiceById` (404 → recréation, 409 sur le tag → numéro serveur adopté au pull).
 - **Suppression** : différée à la fermeture du snackbar depuis la liste (undo sans DELETE) ; immédiate depuis le détail (pas d'undo).
 - **Pull** : toutes les pages, merge par remoteId puis tag — le `dirty` local gagne.
 - **PDF** : si la facture a un `remotePdfUrl` (plan avec génération PDF), le détail télécharge le PDF serveur (source de vérité) avec fallback expo-print.
@@ -96,7 +102,8 @@ Couleurs partagées liste/détail (`getStatusColor`) :
 
 ```
 ┌──────────────────────────────────┐
-│  ← Retour    [📤 Share]  [🗑]   │
+│  ← Retour  [📤 Share] [✏️] [🗑] │
+│  (✏️ absent si statut = payée)   │
 ├──────────────────────────────────┤
 │  [Badge: EN ATTENTE]             │
 │  N° INV-001 0626                 │
