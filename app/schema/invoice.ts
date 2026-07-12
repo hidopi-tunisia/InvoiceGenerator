@@ -63,7 +63,10 @@ export const invoiceItemSchema = z.object({
   quantity: z
     .number({ required_error: 'La quantité est obligatoire' })
     .min(1, 'La quantité est obligatoire'),
-  price: z.number({ required_error: 'Le prix est obligatoire' }).min(1, 'Le prix est obligatoire'),
+  // 0 et les décimales < 1 (0,99…) sont des prix valides — seul le négatif est refusé
+  price: z
+    .number({ required_error: 'Le prix est obligatoire' })
+    .min(0, 'Le prix ne peut pas être négatif'),
 });
 
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;

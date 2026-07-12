@@ -283,6 +283,9 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 28px;
+      /* fixed : les largeurs de colonnes sont respectées même avec une
+         désignation très longue (sinon elle écrase les colonnes de prix) */
+      table-layout: fixed;
     }
 
     thead tr {
@@ -301,7 +304,10 @@ const generateHtml = (invoice: Invoice, logoSrc?: string | null): string => {
     th.col-desc,
     td.col-desc {
       text-align: left;
-      width: 50%;
+      width: 52%;
+      /* passe à la ligne, y compris un mot/une référence sans espace */
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
 
     th.col-num,
@@ -497,7 +503,8 @@ export const downloadRemoteInvoicePdf = async (
   url: string,
   invoiceNumber: string
 ): Promise<string> => {
-  const target = FileSystem.documentDirectory + `facture-${invoiceNumber}.pdf`;
+  // Nom de fichier = tag de la facture (INV-YYYY-NNNN.pdf), visible au partage
+  const target = FileSystem.documentDirectory + `${invoiceNumber}.pdf`;
   const { status, uri } = await FileSystem.downloadAsync(url, target);
   if (status !== 200) {
     throw new Error(`Téléchargement du PDF échoué (${status})`);
@@ -509,7 +516,8 @@ export const downloadRemoteInvoicePdf = async (
 export const generateInvoicePdf = async (invoice: Invoice) => {
   const logoSrc = await resolveLogoSrc(invoice.sender);
   const { uri } = await printToFileAsync({ html: generateHtml(invoice, logoSrc) });
-  const permanentUri = FileSystem.documentDirectory + `facture-${invoice.invoiceNumber}.pdf`;
+  // Nom de fichier = tag de la facture (INV-YYYY-NNNN.pdf), visible au partage
+  const permanentUri = FileSystem.documentDirectory + `${invoice.invoiceNumber}.pdf`;
   // move to document directory
   await FileSystem.moveAsync({
     from: uri,

@@ -20,7 +20,7 @@ const itemsSchema = z.object({
 
 type FormValues = { items: InvoiceItem[] };
 
-// Ligne vierge par défaut — le prix à 0 force une saisie réelle (min 1 au schéma)
+// Ligne vierge par défaut — prix 0 valide au schéma (article offert accepté)
 const emptyItem: InvoiceItem = { name: '', quantity: 1, price: 0 };
 
 export default function GenerateInvoice() {

@@ -105,8 +105,9 @@ export default function InvoiceSummary() {
             {items.map((item, index) => (
               <View
                 key={item.name + index}
-                className="mb-2 flex-row items-center justify-between border-b border-gray-200 pb-2">
-                <View>
+                className="mb-2 flex-row items-start justify-between border-b border-gray-200 pb-2">
+                {/* flex-1 : une désignation longue passe à la ligne sans pousser le prix hors écran */}
+                <View className="flex-1 pr-3">
                   <Text className="font-medium text-gray-700">{item.name}</Text>
                   <Text className="text-gray-500">
                     {item.quantity} x {formatAmount(item.price)} {currency}
