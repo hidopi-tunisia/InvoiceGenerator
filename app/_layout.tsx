@@ -6,6 +6,7 @@ import { ErrorBoundaryProps, Stack, useNavigationContainerRef, useRouter } from 
 import { User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, AppState } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { vexo } from 'vexo-analytics';
 
 import { auth } from './config'; // Import Firebase auth
@@ -115,22 +116,26 @@ function Layout() {
   }, [authReady, user, onboardingCompleted]);
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
-      {/* hide header for generate invoice screen */}
-      <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
-      <Stack.Screen name="onbording" options={{ headerShown: false, animation: 'fade' }} />
-      <Stack.Screen
-        name="invoices/[id]/success"
-        options={{
-          headerTitle: 'Facture générée',
-          headerBackTitle: 'Accueil', // Texte du bouton retour
-        }}
-      />
-      {/* Add auth screens */}
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-    </Stack>
+    // Racine gesture-handler : requise par les gestes (SwipeableRow des listes) —
+    // expo-router ne l'installe pas lui-même.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
+        {/* hide header for generate invoice screen */}
+        <Stack.Screen name="invoices/generate" options={{ headerShown: false }} />
+        <Stack.Screen name="onbording" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen
+          name="invoices/[id]/success"
+          options={{
+            headerTitle: 'Facture générée',
+            headerBackTitle: 'Accueil', // Texte du bouton retour
+          }}
+        />
+        {/* Add auth screens */}
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
 export default Sentry.wrap(Layout);

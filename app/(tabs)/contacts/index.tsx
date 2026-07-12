@@ -6,6 +6,7 @@ import ContextMenu from 'react-native-context-menu-view';
 
 import { BusinessEntity } from '~/app/schema/invoice';
 import Snackbar from '~/components/Snackbar';
+import SwipeableRow from '~/components/SwipeableRow';
 import { useStore } from '~/store';
 import { pushContactDeletion } from '~/store/contacts-sync';
 
@@ -35,6 +36,22 @@ function ContactListItem({
       .toUpperCase();
   };
 
+  // Handlers partagés : menu contextuel (appui long) ET actions du swipe
+  const handleEdit = () => router.push(`/contacts/${contact.id}/edit`);
+  const handleDelete = () => {
+    Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: () => {
+          deleteContact(contact);
+          onDeleted(contact); // le parent affiche le snackbar d'annulation
+        },
+      },
+    ]);
+  };
+
   const menuActions = [
     {
       title: 'Modifier',
@@ -49,66 +66,63 @@ function ContactListItem({
   ];
 
   return (
-    <ContextMenu
-      actions={menuActions}
-      onPress={(e) => {
-        const index = e.nativeEvent.index;
-        if (index === 0) {
-          router.push(`/contacts/${contact.id}/edit`);
-        } else if (index === 1) {
-          Alert.alert('Confirmer', `Supprimer ${contact.name} ?`, [
-            { text: 'Annuler', style: 'cancel' },
-            {
-              text: 'Supprimer',
-              style: 'destructive',
-              onPress: () => {
-                deleteContact(contact);
-                onDeleted(contact); // le parent affiche le snackbar d'annulation
-              },
-            },
-          ]);
-        }
-      }}
-      previewBackgroundColor="transparent"
-      dropdownMenuMode={false}>
-      <Pressable
-        onPress={() => router.push(`/contacts/${contact.id}`)}
-        accessibilityRole="button"
-        accessibilityLabel={`Voir le contact ${contact.name}`}
-        className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
-        {/* Avatar avec initiales */}
-        <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <Text className="text-lg font-semibold text-primary">{getInitials(contact.name)}</Text>
-        </View>
-
-        {/* Informations du contact */}
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
-            {contact.syncError && (
-              <Pressable
-                onPress={() => Alert.alert('Non synchronisé', contact.syncError)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Contact non synchronisé, voir le détail">
-                <Feather name="alert-triangle" size={14} color="#f59e0b" />
-              </Pressable>
-            )}
-          </View>
-          <Text className="text-sm text-gray-600">{contact.address}</Text>
-        </View>
-
-        {/* Bouton "Nouvelle facture" */}
+    <SwipeableRow
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      editLabel={`Modifier ${contact.name}`}
+      deleteLabel={`Supprimer ${contact.name}`}
+      actionsClassName="mb-4 rounded-r-lg">
+      <ContextMenu
+        actions={menuActions}
+        onPress={(e) => {
+          const index = e.nativeEvent.index;
+          if (index === 0) {
+            handleEdit();
+          } else if (index === 1) {
+            handleDelete();
+          }
+        }}
+        previewBackgroundColor="transparent"
+        dropdownMenuMode={false}>
         <Pressable
-          onPress={handleNewInvoice}
-          hitSlop={10}
+          onPress={() => router.push(`/contacts/${contact.id}`)}
           accessibilityRole="button"
-          accessibilityLabel={`Créer une facture pour ${contact.name}`}
-          className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
-          <FontAwesome6 name="file-invoice" size={18} color="#fff" />
+          accessibilityLabel={`Voir le contact ${contact.name}`}
+          className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm shadow-black/10">
+          {/* Avatar avec initiales */}
+          <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Text className="text-lg font-semibold text-primary">{getInitials(contact.name)}</Text>
+          </View>
+
+          {/* Informations du contact */}
+          <View className="flex-1">
+            <View className="flex-row items-center gap-2">
+              <Text className="text-lg font-semibold text-gray-800">{contact.name}</Text>
+              {contact.syncError && (
+                <Pressable
+                  onPress={() => Alert.alert('Non synchronisé', contact.syncError)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Contact non synchronisé, voir le détail">
+                  <Feather name="alert-triangle" size={14} color="#f59e0b" />
+                </Pressable>
+              )}
+            </View>
+            <Text className="text-sm text-gray-600">{contact.address}</Text>
+          </View>
+
+          {/* Bouton "Nouvelle facture" */}
+          <Pressable
+            onPress={handleNewInvoice}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`Créer une facture pour ${contact.name}`}
+            className="rounded-lg bg-emerald-500 px-4 py-2 shadow-sm shadow-black/10">
+            <FontAwesome6 name="file-invoice" size={18} color="#fff" />
+          </Pressable>
         </Pressable>
-      </Pressable>
-    </ContextMenu>
+      </ContextMenu>
+    </SwipeableRow>
   );
 }
 

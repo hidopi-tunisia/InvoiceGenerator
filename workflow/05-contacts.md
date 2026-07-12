@@ -13,9 +13,12 @@ flowchart TD
     LIST --> SEARCH[Barre de recherche\nfiltrage temps réel par nom]
     LIST --> CONTACT_ITEMS[Items contacts\nAvatar initiales · Nom · Adresse]
 
-    CONTACT_ITEMS -->|Tap long / tap| CONTEXT_MENU[Menu contextuel]
+    CONTACT_ITEMS -->|Appui long| CONTEXT_MENU[Menu contextuel]
+    CONTACT_ITEMS -->|Swipe gauche| SWIPE_ACTIONS[Actions révélées\nCrayon · Poubelle]
     CONTEXT_MENU -->|Modifier| EDIT[/contacts/:id/edit\nFormulaire édition]
+    SWIPE_ACTIONS -->|Crayon| EDIT
     CONTEXT_MENU -->|Supprimer| DEL_CONFIRM{Confirmation\nalerte}
+    SWIPE_ACTIONS -->|Poubelle| DEL_CONFIRM
     DEL_CONFIRM -->|Confirmer| DELETE[store.deleteContact\nRefresh liste]
     DEL_CONFIRM -->|Annuler| LIST
 

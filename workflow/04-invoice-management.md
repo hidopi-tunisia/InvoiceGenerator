@@ -21,7 +21,9 @@ flowchart TD
     YEAR_LIST --> INVOICE_ITEM
 
     INVOICE_ITEM -->|Tap| DETAIL[Détail Facture\n/tabs/invoices/:id/detail]
-    INVOICE_ITEM -->|Icône poubelle| DELETE_CONFIRM{Confirmation\nalerte}
+    INVOICE_ITEM -->|Swipe gauche| SWIPE_ACTIONS[Actions révélées\nCrayon si non payée · Poubelle]
+    SWIPE_ACTIONS -->|Crayon| EDIT
+    SWIPE_ACTIONS -->|Poubelle| DELETE_CONFIRM{Confirmation\nalerte}
     DELETE_CONFIRM -->|Confirmer| DELETE[store.deleteInvoice\nRefresh liste]
     DELETE_CONFIRM -->|Annuler| LIST
 
@@ -90,7 +92,7 @@ Couleurs partagées liste/détail (`getStatusColor`) :
 
 ```
 ┌──────────────────────────────────┐
-│  #001        1 234,56 TND    🗑  │
+│  #001        1 234,56 TND        │  ← swipe gauche : [✏️][🗑]
 │  Client SARL          01/07/2026 │
 │  ● (badge statut coloré)         │
 └──────────────────────────────────┘

@@ -13,6 +13,7 @@ import {
   getTotals,
 } from '~/app/utils/invoice';
 import Snackbar from '~/components/Snackbar';
+import SwipeableRow from '~/components/SwipeableRow';
 import { useStore } from '~/store';
 import { pushInvoiceDeletion } from '~/store/invoices-sync';
 
@@ -24,9 +25,16 @@ const InvoiceListItem = ({
   onDeleted: (invoice: Invoice) => void;
 }) => {
   const deleteInvoice = useStore((state) => state.deleteInvoice);
+  const startEditInvoice = useStore((state) => state.startEditInvoice);
   const router = useRouter();
   const { total } = getTotals(invoice);
   const displayStatus = getDisplayStatus(invoice);
+
+  // Même règle que le détail : une facture payée est figée (pas d'édition)
+  const handleEdit = () => {
+    startEditInvoice(invoice.id);
+    router.push('/invoices/generate');
+  };
 
   const handleDelete = () => {
     Alert.alert('Confirmer suppression', `Supprimer la facture ${invoice.invoiceNumber} ?`, [
@@ -43,47 +51,46 @@ const InvoiceListItem = ({
   };
 
   return (
-    <Pressable
-      //router.push(`/contacts/${contact.id}/edit`);
-      onPress={() => router.push(`/invoices/${invoice.id}/detail`)}
-      className="mb-3 rounded-xl bg-white p-5 shadow-sm shadow-black/5">
-      <View className="flex-row items-start justify-between">
-        <View className="flex-1">
-          <Text className="text-lg font-semibold text-gray-900">#{invoice.invoiceNumber}</Text>
-          <Text className="mt-1 text-sm text-gray-600">{invoice.recipient.name}</Text>
+    <SwipeableRow
+      onEdit={invoice.status !== 'payée' ? handleEdit : undefined}
+      onDelete={handleDelete}
+      editLabel={`Modifier la facture ${invoice.invoiceNumber}`}
+      deleteLabel={`Supprimer la facture ${invoice.invoiceNumber}`}
+      actionsClassName="mb-3 rounded-r-xl">
+      <Pressable
+        onPress={() => router.push(`/invoices/${invoice.id}/detail`)}
+        className="mb-3 rounded-xl bg-white p-5 shadow-sm shadow-black/5">
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1">
+            <Text className="text-lg font-semibold text-gray-900">#{invoice.invoiceNumber}</Text>
+            <Text className="mt-1 text-sm text-gray-600">{invoice.recipient.name}</Text>
+          </View>
+
+          <View className="items-end">
+            <Text className="text-lg font-semibold text-gray-900">
+              {formatAmount(total)} {getInvoiceCurrency(invoice)}
+            </Text>
+            <Text className="mt-1 text-sm text-gray-500">{formatDate(invoice.invoiceDate)}</Text>
+          </View>
         </View>
 
-        <View className="items-end">
-          <Text className="text-lg font-semibold text-gray-900">
-            {formatAmount(total)} {getInvoiceCurrency(invoice)}
-          </Text>
-          <Text className="mt-1 text-sm text-gray-500">{formatDate(invoice.invoiceDate)}</Text>
+        <View className="mt-4 flex-row items-center justify-between border-t border-gray-100 pt-3">
+          <View className="flex-row items-center gap-2">
+            <View className={`h-2 w-2 rounded-full ${getStatusColor(displayStatus)}`} />
+            <Text className="text-sm capitalize text-gray-600">{displayStatus}</Text>
+            {invoice.syncError && (
+              <Pressable
+                onPress={() => Alert.alert('Non synchronisée', invoice.syncError)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Facture non synchronisée, voir le détail">
+                <Feather name="alert-triangle" size={16} color="#f59e0b" />
+              </Pressable>
+            )}
+          </View>
         </View>
-      </View>
-
-      <View className="mt-4 flex-row items-center justify-between border-t border-gray-100 pt-3">
-        <View className="flex-row items-center gap-2">
-          <View className={`h-2 w-2 rounded-full ${getStatusColor(displayStatus)}`} />
-          <Text className="text-sm capitalize text-gray-600">{displayStatus}</Text>
-          {invoice.syncError && (
-            <Pressable
-              onPress={() => Alert.alert('Non synchronisée', invoice.syncError)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Facture non synchronisée, voir le détail">
-              <Feather name="alert-triangle" size={16} color="#f59e0b" />
-            </Pressable>
-          )}
-        </View>
-        <Pressable
-          onPress={handleDelete}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel={`Supprimer la facture ${invoice.invoiceNumber}`}>
-          <Feather name="trash-2" size={20} color="red" />
-        </Pressable>
-      </View>
-    </Pressable>
+      </Pressable>
+    </SwipeableRow>
   );
 };
 
