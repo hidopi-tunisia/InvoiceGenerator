@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, Pressable, Alert, Modal, FlatList } from 'react-native';
+import { View, Text, Pressable, Alert, Modal, FlatList, RefreshControl } from 'react-native';
 
 import { Invoice } from '~/app/schema/invoice';
 import {
@@ -15,7 +15,7 @@ import {
 import Snackbar from '~/components/Snackbar';
 import SwipeableRow from '~/components/SwipeableRow';
 import { useStore } from '~/store';
-import { pushInvoiceDeletion } from '~/store/invoices-sync';
+import { pushInvoiceDeletion, syncInvoices } from '~/store/invoices-sync';
 
 const InvoiceListItem = ({
   invoice,
@@ -100,7 +100,20 @@ export default function InvoicesScreen() {
   const addInvoice = useStore((state) => state.addInvoice);
   const quotaReached = useStore((state) => state.quotaReached);
   const [deletedInvoice, setDeletedInvoice] = useState<Invoice | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // Pull-to-refresh : push des dirty + pull différentiel (le backend est partagé
+  // avec le front web — sans ce geste, les changements web n'arrivent qu'au boot).
+  // syncInvoices est silencieux en cas d'échec réseau → jamais de spinner infini.
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await syncInvoices();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [filter, setFilter] = useState<'all' | 'paid' | 'unpaid' | 'overdue'>('all');
 
@@ -224,6 +237,14 @@ export default function InvoicesScreen() {
         data={filteredInvoices}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#4f46e5"
+            colors={['#4f46e5']}
+          />
+        }
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center pt-20">
             <Feather name="file-text" size={48} color="#9ca3af" />

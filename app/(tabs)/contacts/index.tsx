@@ -1,14 +1,14 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Alert, Pressable, FlatList } from 'react-native';
+import { View, Text, TextInput, Alert, Pressable, FlatList, RefreshControl } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 
 import { BusinessEntity } from '~/app/schema/invoice';
 import Snackbar from '~/components/Snackbar';
 import SwipeableRow from '~/components/SwipeableRow';
 import { useStore } from '~/store';
-import { pushContactDeletion } from '~/store/contacts-sync';
+import { pushContactDeletion, syncContacts } from '~/store/contacts-sync';
 
 function ContactListItem({
   contact,
@@ -132,6 +132,18 @@ export default function ContactsScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [deletedContact, setDeletedContact] = useState<BusinessEntity | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull-to-refresh : push des dirty + pull différentiel (le backend est partagé
+  // avec le front web). syncContacts est silencieux hors ligne → spinner jamais infini.
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await syncContacts();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Confirmations : /contacts/new revient avec ?added=<nom>, l'édition avec
   // ?updated=<nom>. Le param est consommé avec '' (une valeur `undefined`
@@ -205,6 +217,14 @@ export default function ContactsScreen() {
         <FlatList
           data={filteredContacts}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#4f46e5"
+              colors={['#4f46e5']}
+            />
+          }
           renderItem={({ item }) => (
             <ContactListItem contact={item} onDeleted={setDeletedContact} />
           )}

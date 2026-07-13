@@ -134,8 +134,8 @@
 
 ## 19. Pull To Refresh
 
-- 🟢 Hors MVP sur les listes locales (rien à rafraîchir — la donnée est déjà la source de vérité).
-- 🔵 Dès la sync branchée : `RefreshControl` sur factures et contacts, déclenchant `syncInvoices()` ; l'indicateur s'arrête toujours (`finally`).
+- 🟢 **En place** (sync branchée) : `RefreshControl` natif sur les listes factures et contacts, déclenchant `syncInvoices()` / `syncContacts()` (push des dirty + pull différentiel — le backend est partagé avec le front web). L'indicateur s'arrête toujours (`finally`), les fonctions de sync sont silencieuses hors ligne.
+- 🟢 Teinte du spinner : couleur primaire (`tintColor` iOS / `colors` Android).
 
 ## 20. Gestion des formulaires
 
